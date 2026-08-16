@@ -32,26 +32,7 @@ export const errorHandler = (
     });
   }
 
-  // Simplified error handling without Prisma type checking
-  if (err.name === 'PrismaClientKnownRequestError') {
-    console.error('Prisma Known Request Error:', (err as any).code, err.message);
-    if ((err as any).code === 'P2002') {
-      return res.status(409).json({ error: 'A record with this data already exists' });
-    }
-    if ((err as any).code === 'P2025') {
-      return res.status(404).json({ error: 'Record not found' });
-    }
-  }
-
-  if (err.name === 'PrismaClientValidationError') {
-    console.error('Prisma Validation Error:', err.message);
-    return res.status(400).json({ 
-      error: 'Invalid data provided',
-      details: err.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-  }
-
+  // Generic error handling - simplified for deployment
   console.error('Unhandled error type, returning 500');
   return res.status(500).json({
     error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,

@@ -32,7 +32,21 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow Railway domains
+    if (origin && origin.includes('.railway.app')) return callback(null, true);
+    
+    // Allow configured origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    
+    // Allow all for development
+    if (process.env.NODE_ENV !== 'production') return callback(null, true);
+    
+    callback(null, true); // Allow all for mobile apps
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

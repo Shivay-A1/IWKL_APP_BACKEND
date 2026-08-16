@@ -1,12 +1,12 @@
 export const authConfig = {
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET || 'your-access-secret-key',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
+    accessSecret: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'your-access-secret-key',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'your-refresh-secret-key',
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
   },
   bcrypt: {
-    saltRounds: 12,
+    saltRounds: 10,
   },
   cookie: {
     accessTokenName: 'access_token',

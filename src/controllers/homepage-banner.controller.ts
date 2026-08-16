@@ -12,6 +12,11 @@ export const uploadBanner = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Image is required' });
     }
 
+    // Convert local path to accessible URL
+    // Replace local path with backend URL
+    const backendUrl = process.env.BACKEND_URL || 'https://iwkl-backend-lg6t-production.up.railway.app';
+    const accessibleImageUrl = imageUrl.replace('/app/backend', backendUrl);
+
     // Get the highest display order
     const lastBanner = await prisma.homepageBanner.findFirst({
       orderBy: { displayOrder: 'desc' }
@@ -21,7 +26,7 @@ export const uploadBanner = async (req: Request, res: Response) => {
 
     const banner = await prisma.homepageBanner.create({
       data: {
-        imageUrl,
+        imageUrl: accessibleImageUrl,
         title: title || null,
         subtitle: subtitle || null,
         ctaText: ctaText || null,
@@ -35,6 +40,38 @@ export const uploadBanner = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error uploading banner:', error);
     res.status(500).json({ error: 'Failed to upload banner' });
+  }
+};
+
+export const uploadBannerLink = async (req: Request, res: Response) => {
+  try {
+    const { imageUrl, ctaText, ctaLink } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
+
+    // Get the highest display order
+    const lastBanner = await prisma.homepageBanner.findFirst({
+      orderBy: { displayOrder: 'desc' }
+    });
+
+    const displayOrder = lastBanner ? lastBanner.displayOrder + 1 : 0;
+
+    const banner = await prisma.homepageBanner.create({
+      data: {
+        imageUrl,
+        ctaText: ctaText || null,
+        ctaLink: ctaLink || null,
+        displayOrder,
+        isActive: true
+      }
+    });
+
+    res.status(201).json(banner);
+  } catch (error) {
+    console.error('Error uploading banner link:', error);
+    res.status(500).json({ error: 'Failed to upload banner link' });
   }
 };
 

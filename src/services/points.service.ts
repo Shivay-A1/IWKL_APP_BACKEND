@@ -29,7 +29,12 @@ export const getPointsTable = async (query: any) => {
     },
   });
 
-  return pointsTable;
+  // Filter out hidden teams and inactive teams
+  const filteredPointsTable = pointsTable.filter(entry => 
+    !entry.team.name.includes('HIDDEN') && entry.team.isActive === true
+  );
+
+  return filteredPointsTable;
 };
 
 export const getPointsTableBySeason = async (seasonId: string) => {
@@ -46,7 +51,12 @@ export const getPointsTableBySeason = async (seasonId: string) => {
     },
   });
 
-  return pointsTable;
+  // Filter out hidden teams and inactive teams
+  const filteredPointsTable = pointsTable.filter(entry => 
+    !entry.team.name.includes('HIDDEN') && entry.team.isActive === true
+  );
+
+  return filteredPointsTable;
 };
 
 export const updatePointsTable = async (id: string, data: any) => {

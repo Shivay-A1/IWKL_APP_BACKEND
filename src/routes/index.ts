@@ -24,6 +24,7 @@ import unpluggedRoutes from './unplugged.routes';
 import homepageRoutes from './homepage.routes';
 import seedRoutes from './seed.routes';
 import playerRegistrationRoutes from './player-registration.routes';
+import socialMediaPartnerRoutes from './social-media-partner.routes';
 import fileUploadRoutes from './file-upload.routes';
 import ottRoutes from './ott.routes';
 import appStoriesRoutes from './app-stories.routes';
@@ -32,6 +33,7 @@ import appSettingsRoutes from './app-settings.routes';
 import mobileBannerRoutes from './mobile-banner.routes';
 import storyRoutes from './story.routes';
 import appManagementRoutes from './app-management.routes';
+import otpRoutes from './otp.routes';
 
 const router = Router();
 
@@ -66,6 +68,7 @@ router.get('/', (req, res) => {
       homepage: '/api/homepage',
       seed: '/api/seed',
       playerRegistration: '/api/player-registration',
+      socialMediaPartner: '/api/social-media-partner',
       files: '/api/files',
       ott: '/api/ott',
       appStories: '/api/stories',
@@ -74,6 +77,7 @@ router.get('/', (req, res) => {
       mobileBanners: '/api/mobile-banners',
       stories: '/api/stories',
       appManagement: '/api/app-management',
+      otp: '/api/otp',
     },
   });
 });
@@ -103,6 +107,7 @@ router.use('/unplugged', unpluggedRoutes);
 router.use('/homepage', homepageRoutes);
 router.use('/seed', seedRoutes);
 router.use('/player-registration', playerRegistrationRoutes);
+router.use('/social-media-partner', socialMediaPartnerRoutes);
 router.use('/files', fileUploadRoutes);
 router.use('/ott', ottRoutes);
 router.use('/stories', appStoriesRoutes);
@@ -111,6 +116,7 @@ router.use('/app-settings', appSettingsRoutes);
 router.use('/mobile-banners', mobileBannerRoutes);
 router.use('/stories', storyRoutes);
 router.use('/app-management', appManagementRoutes);
+router.use('/otp', otpRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

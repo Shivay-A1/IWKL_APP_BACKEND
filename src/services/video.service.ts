@@ -79,13 +79,27 @@ export const getVideos = async (query: any) => {
   const [videos, total] = await Promise.all([
     prisma.video.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        youtubeUrl: true,
+        thumbnailUrl: true,
+        isFeatured: true,
+        isActive: true,
+        duration: true,
+        publishedAt: true,
+        tags: true,
+        displayOrder: true,
+        categoryId: true,
         category: {
           select: {
             id: true,
             name: true,
           },
         },
+        createdAt: true,
+        updatedAt: true,
       },
       orderBy: { [sortBy || 'displayOrder']: sortOrder || 'asc' },
       skip: ((page || 1) - 1) * (limit || 10),
@@ -206,6 +220,28 @@ export const getFeaturedVideos = async () => {
     where: { isFeatured: true },
     orderBy: { publishedAt: 'desc' },
     take: 10,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      youtubeUrl: true,
+      thumbnailUrl: true,
+      isFeatured: true,
+      isActive: true,
+      duration: true,
+      publishedAt: true,
+      tags: true,
+      displayOrder: true,
+      categoryId: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
   return videos;
@@ -218,13 +254,27 @@ export const getHomepageVideos = async () => {
       isActive: true,
       isFeatured: true,
     },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      youtubeUrl: true,
+      thumbnailUrl: true,
+      isFeatured: true,
+      isActive: true,
+      duration: true,
+      publishedAt: true,
+      tags: true,
+      displayOrder: true,
+      categoryId: true,
       category: {
         select: {
           id: true,
           name: true,
         },
       },
+      createdAt: true,
+      updatedAt: true,
     },
     orderBy: { displayOrder: 'asc' },
   });
@@ -235,13 +285,27 @@ export const getHomepageVideos = async () => {
       isActive: true,
       ...(featuredVideo && { id: { not: featuredVideo.id } }),
     },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      youtubeUrl: true,
+      thumbnailUrl: true,
+      isFeatured: true,
+      isActive: true,
+      duration: true,
+      publishedAt: true,
+      tags: true,
+      displayOrder: true,
+      categoryId: true,
       category: {
         select: {
           id: true,
           name: true,
         },
       },
+      createdAt: true,
+      updatedAt: true,
     },
     orderBy: { displayOrder: 'asc' },
     take: 4,

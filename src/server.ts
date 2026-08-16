@@ -9,10 +9,16 @@ import { createServer } from 'http';
 dotenv.config();
 
 const app = express();
+<<<<<<< Updated upstream
+// Set trust proxy to specific trusted proxies instead of true to avoid rate limiter warning
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+const PORT = Number(process.env.PORT) || 5000;
+=======
 const PORT = Number(process.env.PORT) || 3000;
 
 // Check if DATABASE_PRIVATE_URL is available (Railway)
 const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
+>>>>>>> Stashed changes
 
 // CORS - must be before helmet to avoid conflicts
 const allowedOrigins = [
@@ -26,9 +32,13 @@ const allowedOrigins = [
   'https://iwkl.in',
   'https://www.iwkl.in',
   'https://iwkl.org',
+<<<<<<< Updated upstream
+  'https://iwkl-platform.onrender.com',
+=======
   // Railway dynamic domains
   'https://*.up.railway.app',
   'https://*.railway.app',
+>>>>>>> Stashed changes
 ].filter(Boolean);
 
 app.use(cors({
@@ -48,13 +58,40 @@ app.use(cors({
     callback(null, true); // Allow all for mobile apps
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 }));
 
+<<<<<<< Updated upstream
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads', {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Cache-Control', 'public, max-age=86400');
+  }
+}));
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "frame-ancestors": ["'self'", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
+      "img-src": ["'self'", "data:", "https://*.up.railway.app", "https://*.railway.app", "https://iwkl-backend-lg6t-production.up.railway.app", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
+    },
+  } : false,
+=======
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled for Railway deployment
+>>>>>>> Stashed changes
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: false,
 }));
@@ -64,11 +101,29 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+<<<<<<< Updated upstream
+// Compression with better settings
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false
+    }
+    return compression.filter(req, res)
+  },
+  threshold: 1024,
+  level: 6
+}));
+
+// Rate limiting
+app.use('/api/', generalLimiter);
+=======
 // Compression
 app.use(compression());
+>>>>>>> Stashed changes
 
 // Root endpoint for healthcheck
 app.get('/', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
   res.json({ status: 'ok', message: 'IWKL Backend API', timestamp: new Date().toISOString() });
 });
 
@@ -83,6 +138,9 @@ app.get('/health', (req, res) => {
 
 // Keep-alive endpoint
 app.get('/keep-alive', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
   res.json({ 
     status: 'alive', 
     timestamp: new Date().toISOString(),
@@ -94,7 +152,7 @@ app.get('/keep-alive', (req, res) => {
 app.get('/api/setup-database', async (req, res) => {
   try {
     // Check all possible database environment variables
-    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL || process.env.POSTGRES_URL;
     
     // Debug environment variables
     const envCheck = {

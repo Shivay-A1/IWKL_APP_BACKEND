@@ -61,16 +61,17 @@ async function main() {
     console.log('Season already exists, skipping creation')
   }
 
-  // Create 9 Official Teams
+  // Create 10 Official Teams
   const teamsData = [
     { name: 'Ayodhya Shakti', shortName: 'AYO', city: 'Ayodhya', logo: '/team-logos/Ayodhya_shakti.jpeg' },
     { name: 'Delhi Warriors', shortName: 'DEL', city: 'Delhi', logo: '/team-logos/Delhi_warriors.jpeg' },
-    { name: 'Gujrat Gems', shortName: 'GUJ', city: 'Gujrat', logo: '/team-logos/Gujrat_gems.jpeg' },
+    { name: 'Garvi Gujarat', shortName: 'GGU', city: 'Gujarat', logo: '/team-logos/Garvi_Gujarat.jpeg' },
     { name: 'Haryanvi Fighters', shortName: 'HAR', city: 'Haryana', logo: '/team-logos/Haryanvi_fighters.jpeg' },
     { name: 'Kashmiri Queens', shortName: 'KAS', city: 'Kashmir', logo: '/team-logos/Kashmiri_Queens.jpeg' },
     { name: 'Kolkata Rangers', shortName: 'KOL', city: 'Kolkata', logo: '/team-logos/Kolkata_rengers.jpeg' },
     { name: 'Mumbai Strikers', shortName: 'MUM', city: 'Mumbai', logo: '/team-logos/mumbai_strkerrs.jpeg' },
     { name: 'Namma Bengaluru', shortName: 'BEN', city: 'Bengaluru', logo: '/team-logos/Namma_Bengaluru.jpeg' },
+    { name: 'Odisha Kalingas', shortName: 'OKL', city: 'Odisha', logo: '/teams/odisha-kalingas-logo.jpeg' },
     { name: 'Punjab Wings', shortName: 'PUN', city: 'Punjab', logo: '/team-logos/Punjab_wiings.jpeg' },
   ]
 

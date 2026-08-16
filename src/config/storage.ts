@@ -7,8 +7,8 @@ export const storageConfig = {
   allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   allowedVideoTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
   allowedDocumentTypes: ['application/pdf'],
-  maxFileSize: 50 * 1024 * 1024, // 50MB
-  maxImageSize: 10 * 1024 * 1024, // 10MB
+  maxFileSize: 10 * 1024 * 1024, // 10MB (reduced for better handling)
+  maxImageSize: 5 * 1024 * 1024, // 5MB (reduced for better handling)
 };
 
 // S3 client with proper environment variable checking

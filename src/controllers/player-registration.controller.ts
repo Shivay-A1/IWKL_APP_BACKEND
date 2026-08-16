@@ -199,6 +199,19 @@ export const deleteRegistration = async (req: AuthRequest, res: Response, next: 
 
 export const exportExcel = async (_req: AuthRequest, res: Response, next: any) => {
   try {
+    // Add CORS headers for export endpoints
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    
+    // Handle preflight requests
+    if (_req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
     const excel = await playerRegistrationService.exportExcel();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=player-registrations.xlsx');
@@ -210,6 +223,19 @@ export const exportExcel = async (_req: AuthRequest, res: Response, next: any) =
 
 export const exportPDF = async (_req: AuthRequest, res: Response, next: any) => {
   try {
+    // Add CORS headers for export endpoints
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    
+    // Handle preflight requests
+    if (_req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
     const pdf = await playerRegistrationService.exportPDF();
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=player-registrations.pdf');

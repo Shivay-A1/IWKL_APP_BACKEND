@@ -46,6 +46,7 @@ model User {
   notifications     Notification[]
   activities        Activity[]
   playerRegistrations PlayerRegistration[]
+  socialMediaPartnerRegistrations SocialMediaPartnerRegistration[]
   matchHistory      MatchHistory[] @relation("MatchHistoryAdmin")
   sentMessages      Message[]     @relation("MessageSender")
   receivedMessages  Message[]     @relation("MessageRecipient")
@@ -932,6 +933,75 @@ model UploadedFile {
 
   @@index([fileType])
   @@index([uploadedAt])
+}
+
+// ============================================
+// SOCIAL MEDIA PARTNER REGISTRATION
+// ============================================
+
+model SocialMediaPartnerRegistration {
+  id                          String             @id @default(cuid())
+  registrationNumber          String             @unique
+  userId                      String?            // Optional: linked to logged-in user
+  user                        User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName                    String
+  dob                         DateTime
+  age                         Int
+  gender                      String
+  city                        String
+  state                       String
+  mobile                      String
+  email                       String
+  instagramUsername           String?
+  instagramFollowers          BigInt?
+  youtubeChannel              String?
+  youtubeSubscribers          BigInt?
+  facebookUsername            String?
+  facebookFollowers           BigInt?
+  twitterUsername             String?
+  twitterFollowers            BigInt?
+  linkedin                    String?
+  contentCategory             String?
+  primaryAudienceLocation     String?
+  averageMonthlyReach         BigInt?
+  averageEngagementRate       Float?
+  previousSportsExperience     String?            @db.Text
+  reasonToJoin                String?            @db.Text
+  willAttendPressConference    Boolean            @default(false)
+  preferredCity               String?
+  declaration                 Boolean            @default(false)
+  status                      RegistrationStatus @default(PENDING)
+  adminRemarks                 String?            @db.Text
+  interviewDate               DateTime?
+  interviewVenue              String?
+  interviewTime               String?
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+
+  @@index([registrationNumber])
+  @@index([userId])
+  @@index([mobile])
+  @@index([email])
+  @@index([status])
+  @@index([state])
+  @@index([createdAt])
+
+  statusHistory SocialMediaPartnerStatusHistory[]
+}
+
+model SocialMediaPartnerStatusHistory {
+  id                  String                         @id @default(cuid())
+  registrationId      String
+  registration        SocialMediaPartnerRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  status              RegistrationStatus
+  changedBy           String?                        // Admin user ID who changed the status
+  changedByName       String?                        // Admin name
+  remarks             String?                        @db.Text
+  changedAt           DateTime                       @default(now())
+
+  @@index([registrationId])
+  @@index([status])
+  @@index([changedAt])
 }
 
 // ============================================

@@ -1,3 +1,19 @@
+// ============================================================================
+// ⚠️  REGISTRATION FLOW - DO NOT MODIFY WITHOUT APPROVAL ⚠️
+// ============================================================================
+// This file contains the critical file upload controller that is currently working.
+// Any changes to this file may break the registration system.
+//
+// BEFORE MAKING CHANGES:
+// 1. Read REGISTRATION_FLOW_LOCK.md in project root
+// 2. Test thoroughly in development environment
+// 3. Get approval from project owner
+// 4. Document changes in REGISTRATION_FLOW_LOCK.md
+//
+// LAST UPDATED: 2026-08-04
+// STATUS: ✅ WORKING - LOCKED
+// ============================================================================
+
 import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import { PrismaClient } from '@prisma/client';
@@ -48,7 +64,7 @@ export const uploadFileToDB = async (req: AuthRequest, res: Response, next: any)
     console.log('[DB UPLOAD] File saved to database:', uploadedFile.id)
 
     // Return the full URL that can be used to retrieve the file
-    const backendUrl = 'https://iwkl-backend-lg6t-production.up.railway.app';
+    const backendUrl = process.env.BACKEND_URL || 'https://iwkl-backend-lg6t-production.up.railway.app';
     const fullUrl = `${backendUrl}/api/files/${uploadedFile.id}`;
     res.json({ 
       success: true, 

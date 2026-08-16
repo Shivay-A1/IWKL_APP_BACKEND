@@ -4,9 +4,16 @@ import * as galleryService from '../services/gallery.service';
 
 export const createGalleryItem = async (req: FileRequest, res: Response, next: any) => {
   try {
+    console.log('Create gallery request:', {
+      body: req.body,
+      files: req.files,
+      hasFiles: !!req.files,
+      fileCount: req.files?.length
+    });
     const item = await galleryService.createGalleryItem(req.body, req.files);
     res.status(201).json(item);
   } catch (error) {
+    console.error('Error in createGalleryItem controller:', error);
     next(error);
   }
 };

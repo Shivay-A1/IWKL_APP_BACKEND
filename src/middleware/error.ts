@@ -32,9 +32,32 @@ export const errorHandler = (
     });
   }
 
+<<<<<<< Updated upstream
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    console.error('Prisma Known Request Error:', err.code, err.message);
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'A record with this data already exists' });
+    }
+    if (err.code === 'P2003') {
+      return res.status(400).json({ error: 'Invalid reference to related record' });
+    }
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+  }
+
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    console.error('Prisma Validation Error:', err.message);
+    return res.status(400).json({ 
+      error: 'Invalid data provided',
+      details: err.message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+=======
   // Handle file upload errors
   if (err.name === 'MulterError') {
     return res.status(400).json({ error: 'File upload error' });
+>>>>>>> Stashed changes
   }
 
   // Generic error handling - simplified for deployment

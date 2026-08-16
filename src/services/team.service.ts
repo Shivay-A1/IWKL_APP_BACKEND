@@ -82,8 +82,28 @@ export const getTeams = async (query: any) => {
       orderBy: { [sortBy as string]: sortOrder as 'asc' | 'desc' },
       skip: ((page || 1) - 1) * (limit || 10),
       take: limit || 10,
-      include: {
-        season: true,
+      select: {
+        id: true,
+        name: true,
+        shortName: true,
+        logo: true,
+        banner: true,
+        jerseyColor: true,
+        city: true,
+        stadiumId: true,
+        coach: true,
+        foundedYear: true,
+        description: true,
+        isActive: true,
+        seasonId: true,
+        season: {
+          select: {
+            id: true,
+            name: true,
+            year: true,
+            isActive: true,
+          },
+        },
         _count: {
           select: {
             players: true,
@@ -104,29 +124,115 @@ export const getTeams = async (query: any) => {
 export const getTeamById = async (id: string) => {
   const team = await prisma.team.findUnique({
     where: { id },
-    include: {
-      season: true,
+    select: {
+      id: true,
+      name: true,
+      shortName: true,
+      logo: true,
+      banner: true,
+      jerseyColor: true,
+      city: true,
+      stadiumId: true,
+      coach: true,
+      foundedYear: true,
+      description: true,
+      socialMedia: true,
+      isActive: true,
+      seasonId: true,
+      season: {
+        select: {
+          id: true,
+          name: true,
+          year: true,
+          isActive: true,
+        },
+      },
       players: {
         where: { isActive: true },
         orderBy: { jerseyNumber: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          jerseyNumber: true,
+          position: true,
+          height: true,
+          weight: true,
+          dateOfBirth: true,
+          nationality: true,
+          biography: true,
+          isActive: true,
+        },
       },
       pointsTable: {
-        include: {
-          season: true,
+        select: {
+          id: true,
+          position: true,
+          matchesPlayed: true,
+          wins: true,
+          losses: true,
+          points: true,
+          scoreDifference: true,
+          highestScore: true,
+          season: {
+            select: {
+              id: true,
+              name: true,
+              year: true,
+            },
+          },
         },
       },
       homeMatches: {
-        include: {
-          awayTeam: true,
-          result: true,
+        select: {
+          id: true,
+          matchDate: true,
+          status: true,
+          homeScore: true,
+          awayScore: true,
+          awayTeam: {
+            select: {
+              id: true,
+              name: true,
+              shortName: true,
+              logo: true,
+            },
+          },
+          result: {
+            select: {
+              id: true,
+              winnerId: true,
+              homeScore: true,
+              awayScore: true,
+            },
+          },
         },
         orderBy: { matchDate: 'desc' },
         take: 5,
       },
       awayMatches: {
-        include: {
-          homeTeam: true,
-          result: true,
+        select: {
+          id: true,
+          matchDate: true,
+          status: true,
+          homeScore: true,
+          awayScore: true,
+          homeTeam: {
+            select: {
+              id: true,
+              name: true,
+              shortName: true,
+              logo: true,
+            },
+          },
+          result: {
+            select: {
+              id: true,
+              winnerId: true,
+              homeScore: true,
+              awayScore: true,
+            },
+          },
         },
         orderBy: { matchDate: 'desc' },
         take: 5,
@@ -164,11 +270,12 @@ export const updateTeam = async (id: string, data: any, logoFile?: Express.Multe
     coach: data.coach,
     seasonId: data.seasonId,
     description: data.description,
-    jerseyColor: data.primaryColor, // Map primaryColor to jerseyColor
-    foundedYear: data.founded ? parseInt(data.founded) : undefined,
+    jerseyColor: data.primaryColor || data.jerseyColor, // Map primaryColor to jerseyColor
+    foundedYear: data.founded ? parseInt(data.founded) : data.foundedYear,
+    isActive: data.isActive,
   };
 
-  // Remove undefined values
+  // Remove undefined values (but keep false for isActive)
   Object.keys(validFields).forEach(key => {
     if (validFields[key] === undefined || validFields[key] === '') {
       delete validFields[key];

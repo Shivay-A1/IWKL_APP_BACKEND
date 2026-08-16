@@ -76,6 +76,54 @@ app.get('/keep-alive', (req, res) => {
   });
 });
 
+// Database setup endpoint (for Railway deployment)
+app.get('/api/setup-database', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database URL not configured' });
+    }
+
+    // Simple table creation for testing
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Create simple teams table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS teams (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL,
+        logoUrl VARCHAR(500),
+        abbreviation VARCHAR(10),
+        color VARCHAR(20),
+        isActive BOOLEAN DEFAULT true
+      )
+    `);
+
+    // Create simple videos table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS videos (
+        id VARCHAR(255) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        videoUrl VARCHAR(500) NOT NULL,
+        thumbnailUrl VARCHAR(500),
+        category VARCHAR(100),
+        isActive BOOLEAN DEFAULT true
+      )
+    `);
+
+    await client.end();
+    res.json({ message: 'Database setup completed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Simple API test endpoints
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });

@@ -20,5 +20,5 @@
     "noFallthroughCasesInSwitch": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/jobs", "src/controllers_disabled_folder", "src/services_disabled_folder", "src/routes/*.disabled"]
+  "exclude": ["node_modules", "dist", "src/jobs"]
 }

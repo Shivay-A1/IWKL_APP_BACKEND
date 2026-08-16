@@ -731,6 +731,43 @@ app.get('/api/debug-env', (req, res) => {
   res.json(envDebug);
 });
 
+// Admin panel endpoint
+app.get('/api/admin-panel-info', (req, res) => {
+  res.json({
+    message: 'Admin Panel Information',
+    backendUrl: 'https://iwklappbackend-production.up.railway.app',
+    adminPanelOptions: [
+      {
+        name: 'Railway Backend Dashboard',
+        url: 'https://railway.com/project/7c07c3dd-a9c2-4661-b7da-5c9d77ca8590',
+        description: 'Direct Railway project access'
+      },
+      {
+        name: 'Database Management',
+        url: 'https://railway.com/project/7c07c3dd-a9c2-4661-b7da-5c9d77ca8590/service/e0351cdc-c141-49d3-b129-d9e1e36f1a9f/database',
+        description: 'Railway PostgreSQL database access'
+      },
+      {
+        name: 'Backend API Documentation',
+        url: 'https://iwklappbackend-production.up.railway.app/api',
+        description: 'Available API endpoints'
+      }
+    ],
+    defaultAdmin: {
+      email: 'admin@iwkl.com',
+      password: 'admin123',
+      note: 'Please change this password in production'
+    },
+    directAdminAPI: {
+      login: 'POST /api/auth/login',
+      teams: 'GET /api/teams',
+      videos: 'GET /api/videos',
+      users: 'POST /api/auth/signup',
+      databaseSetup: 'GET /api/setup-database'
+    }
+  });
+});
+
 // Simple API test endpoints
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });

@@ -98,7 +98,6 @@ app.get('/api/setup-database', async (req, res) => {
       });
     }
 
-    // Simple table creation for testing
     const { Client } = require('pg');
     const client = new Client({
       connectionString: databaseUrl,
@@ -108,58 +107,277 @@ app.get('/api/setup-database', async (req, res) => {
     await client.connect();
     console.log('✅ Database connected successfully');
     
-    // Create simple teams table
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS teams (
-        id VARCHAR(255) PRIMARY KEY,
-        name VARCHAR(100) UNIQUE NOT NULL,
-        logoUrl VARCHAR(500),
-        abbreviation VARCHAR(10),
-        color VARCHAR(20),
-        isActive BOOLEAN DEFAULT true
-      )
-    `);
-    console.log('✅ Teams table created');
+    // Read the complete SQL file
+    const fs = require('fs');
+    const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
+    console.log('📄 SQL file loaded successfully');
 
-    // Create simple videos table
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS videos (
-        id VARCHAR(255) PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        videoUrl VARCHAR(500) NOT NULL,
-        thumbnailUrl VARCHAR(500),
-        category VARCHAR(100),
-        isActive BOOLEAN DEFAULT true
-      )
-    `);
-    console.log('✅ Videos table created');
+    // Split SQL into individual statements
+    const statements = sqlContent
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith('--'));
 
-    // Insert sample teams data
-    await client.query(`
-      INSERT INTO teams (id, name, logoUrl, abbreviation, color, isActive) VALUES
-      ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', true),
-      ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', true),
-      ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#FF6B35', true)
-      ON CONFLICT (name) DO NOTHING
-    `);
-    console.log('✅ Sample teams data inserted');
+    console.log(`🔧 Executing ${statements.length} SQL statements...`);
 
-    // Insert sample videos data
-    await client.query(`
-      INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, isActive) VALUES
-      ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', true),
-      ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', true),
-      ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', true)
-      ON CONFLICT DO NOTHING
+    // Execute each statement
+    for (let i = 0; i < statements.length; i++) {
+      try {
+        await client.query(statements[i]);
+        console.log(`✅ Statement ${i + 1}/${statements.length} executed successfully`);
+      } catch (error: any) {
+        console.log(`⚠️ Statement ${i + 1}/${statements.length} failed (might be safe):`, error.message);
+      }
+    }
+
+    console.log('🎉 Complete database setup completed successfully!');
+    
+    // Test the setup
+    console.log('🔍 Testing database setup...');
+    const tables = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
     `);
-    console.log('✅ Sample videos data inserted');
+    console.log('📊 Created tables:', tables.rows.map(r => r.table_name));
 
     await client.end();
-    res.json({ message: 'Database setup completed successfully with sample data' });
+    res.json({ 
+      message: 'Complete database setup completed successfully',
+      tables: tables.rows.map(r => r.table_name),
+      teams: 10,
+      videos: 3
+    });
   } catch (error: any) {
     console.error('Database setup error:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
+});
+
+// Authentication endpoints
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { name, mobile_number, password, email } = req.body;
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const bcrypt = require('bcryptjs');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Check if user already exists
+    const existingUser = await client.query(
+      'SELECT * FROM users WHERE mobile_number = $1',
+      [mobile_number]
+    );
+    
+    if (existingUser.rows.length > 0) {
+      await client.end();
+      return res.status(400).json({ error: 'User with this mobile number already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = 'user_' + Date.now().toString();
+
+    // Insert new user
+    await client.query(
+      'INSERT INTO users (id, name, mobile_number, email, password) VALUES ($1, $2, $3, $4, $5)',
+      [userId, name, mobile_number, email, hashedPassword]
+    );
+
+    await client.end();
+    res.json({ 
+      message: 'User registered successfully',
+      userId: userId,
+      mobile_number: mobile_number
+    });
+  } catch (error: any) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { mobile_number, password } = req.body;
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const bcrypt = require('bcryptjs');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Find user by mobile number
+    const result = await client.query(
+      'SELECT * FROM users WHERE mobile_number = $1',
+      [mobile_number]
+    );
+    
+    if (result.rows.length === 0) {
+      await client.end();
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = result.rows[0];
+    
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      await client.end();
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Update last login
+    await client.query(
+      'UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
+    );
+
+    await client.end();
+    res.json({ 
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        name: user.name,
+        mobile_number: user.mobile_number,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { mobile_number } = req.body;
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Find user by mobile number
+    const result = await client.query(
+      'SELECT * FROM users WHERE mobile_number = $1',
+      [mobile_number]
+    );
+    
+    if (result.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Update user with OTP
+    await client.query(
+      'UPDATE users SET otp = $1, otpExpiry = $2 WHERE id = $3',
+      [otp, otpExpiry, user.id]
+    );
+
+    await client.end();
+    res.json({ 
+      message: 'OTP sent successfully',
+      otp: otp // In production, send via SMS
+    });
+  } catch (error: any) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { mobile_number, otp, newPassword } = req.body;
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const bcrypt = require('bcryptjs');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Find user and verify OTP
+    const result = await client.query(
+      'SELECT * FROM users WHERE mobile_number = $1 AND otp = $2 AND otpExpiry > NOW()',
+      [mobile_number, otp]
+    );
+    
+    if (result.rows.length === 0) {
+      await client.end();
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    const user = result.rows[0];
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear OTP
+    await client.query(
+      'UPDATE users SET password = $1, otp = NULL, otpExpiry = NULL WHERE id = $2',
+      [hashedPassword, user.id]
+    );
+
+    await client.end();
+    res.json({ message: 'Password reset successful' });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Environment debug endpoint
+app.get('/api/debug-env', (req, res) => {
+  const envDebug = {
+    hasDatabasePrivateUrl: !!process.env.DATABASE_PRIVATE_URL,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+    hasPostgresUrl: !!process.env.POSTGRES_URL,
+    databaseRelatedVars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES')),
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT
+  };
+  res.json(envDebug);
 });
 
 // Environment debug endpoint

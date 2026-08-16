@@ -27,6 +27,9 @@ const allowedOrigins = [
   'https://iwkl.in',
   'https://www.iwkl.in',
   'https://iwkl.org',
+  // Railway dynamic domains
+  'https://*.up.railway.app',
+  'https://*.railway.app',
 ].filter(Boolean);
 
 app.use(cors({

@@ -41,9 +41,3 @@ router.get('/', (req, res) => {
 });
 
 export default router;
-  body('title').optional().trim().notEmpty(),
-], validate, videoController.updateVideo);
-
-router.delete('/:id', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), videoController.deleteVideo);
-
-export default router;

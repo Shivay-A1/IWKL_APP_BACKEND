@@ -32,6 +32,11 @@ export const errorHandler = (
     });
   }
 
+  // Handle file upload errors
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ error: 'File upload error' });
+  }
+
   // Generic error handling - simplified for deployment
   console.error('Unhandled error type, returning 500');
   return res.status(500).json({

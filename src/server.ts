@@ -134,8 +134,28 @@ app.get('/api/setup-database', async (req, res) => {
     `);
     console.log('✅ Videos table created');
 
+    // Insert sample teams data
+    await client.query(`
+      INSERT INTO teams (id, name, logoUrl, abbreviation, color, isActive) VALUES
+      ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', true),
+      ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', true),
+      ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#FF6B35', true)
+      ON CONFLICT (name) DO NOTHING
+    `);
+    console.log('✅ Sample teams data inserted');
+
+    // Insert sample videos data
+    await client.query(`
+      INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, isActive) VALUES
+      ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', true),
+      ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', true),
+      ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', true)
+      ON CONFLICT DO NOTHING
+    `);
+    console.log('✅ Sample videos data inserted');
+
     await client.end();
-    res.json({ message: 'Database setup completed successfully' });
+    res.json({ message: 'Database setup completed successfully with sample data' });
   } catch (error: any) {
     console.error('Database setup error:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
@@ -160,62 +180,156 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/teams', (req, res) => {
-  res.json({
-    teams: [
-      {
-        id: '1',
-        name: 'Garvi Gujarat',
-        logoUrl: 'assets/teams/garvi_gujarat.png',
-        abbreviation: 'GG',
-        color: '#FF6B35'
-      },
-      {
-        id: '2',
-        name: 'Mumbai Strikers',
-        logoUrl: 'assets/teams/mumbai_strikers.jpeg',
-        abbreviation: 'MS',
-        color: '#1E3A8A'
-      }
-    ]
-  });
+// Teams endpoint - now reads from database
+app.get('/api/teams', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!databaseUrl) {
+      return res.json({
+        teams: [
+          {
+            id: '1',
+            name: 'Garvi Gujarat',
+            logoUrl: 'assets/teams/garvi_gujarat.png',
+            abbreviation: 'GG',
+            color: '#FF6B35'
+          },
+          {
+            id: '2',
+            name: 'Mumbai Strikers',
+            logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+            abbreviation: 'MS',
+            color: '#1E3A8A'
+          }
+        ]
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    const result = await client.query('SELECT * FROM teams WHERE isActive = true');
+    await client.end();
+    
+    res.json({ teams: result.rows });
+  } catch (error: any) {
+    console.error('Teams API error:', error);
+    // Fallback to sample data if database fails
+    res.json({
+      teams: [
+        {
+          id: '1',
+          name: 'Garvi Gujarat',
+          logoUrl: 'assets/teams/garvi_gujarat.png',
+          abbreviation: 'GG',
+          color: '#FF6B35'
+        },
+        {
+          id: '2',
+          name: 'Mumbai Strikers',
+          logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+          abbreviation: 'MS',
+          color: '#1E3A8A'
+        }
+      ]
+    });
+  }
 });
 
-app.get('/api/videos', (req, res) => {
-  res.json({
-    videos: [
-      {
-        id: '1',
-        title: 'IWKL Kabaddi Highlight 1',
-        videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
-        thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
-        category: 'Highlights',
-        duration: 30,
-        isPremium: false,
-        viewCount: 0
-      },
-      {
-        id: '2',
-        title: 'IWKL Kabaddi Highlight 2',
-        videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
-        thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
-        category: 'Highlights',
-        duration: 30,
-        isPremium: false,
-        viewCount: 0
-      },
-      {
-        id: '3',
-        title: 'IWKL Kabaddi Highlight 3',
-        videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
-        thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
-        category: 'Highlights',
-        duration: 30,
-        isPremium: false,
-        viewCount: 0
-      }
-    ]
-  });
+// Videos endpoint - now reads from database
+app.get('/api/videos', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!databaseUrl) {
+      return res.json({
+        videos: [
+          {
+            id: '1',
+            title: 'IWKL Kabaddi Highlight 1',
+            videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+            thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          },
+          {
+            id: '2',
+            title: 'IWKL Kabaddi Highlight 2',
+            videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+            thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          },
+          {
+            id: '3',
+            title: 'IWKL Kabaddi Highlight 3',
+            videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+            thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          }
+        ]
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    const result = await client.query('SELECT * FROM videos WHERE isActive = true');
+    await client.end();
+    
+    res.json({ videos: result.rows });
+  } catch (error: any) {
+    console.error('Videos API error:', error);
+    // Fallback to sample data if database fails
+    res.json({
+      videos: [
+        {
+          id: '1',
+          title: 'IWKL Kabaddi Highlight 1',
+          videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+          thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+          category: 'Highlights',
+          duration: 30,
+          isPremium: false,
+          viewCount: 0
+        },
+        {
+          id: '2',
+          title: 'IWKL Kabaddi Highlight 2',
+          videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+          thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+          category: 'Highlights',
+          duration: 30,
+          isPremium: false,
+          viewCount: 0
+        },
+        {
+          id: '3',
+          title: 'IWKL Kabaddi Highlight 3',
+          videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+          thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+          category: 'Highlights',
+          duration: 30,
+          isPremium: false,
+          viewCount: 0
+        }
+      ]
+    });
+  }
 });
 
 // 404 handler

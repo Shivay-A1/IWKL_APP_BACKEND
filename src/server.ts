@@ -8,12 +8,22 @@ import { createServer } from 'http';
 import routes from './routes';
 import { errorHandler, notFound, generalLimiter } from './middleware';
 import { prisma } from './config';
-import { initializeSocket } from './config/socket';
+// Temporarily disable Socket.IO for simpler deployment
+// import { initializeSocket } from './config/socket';
 
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 3000;
+
+// Log startup information
+console.log('='.repeat(50));
+console.log('IWKL Backend API Starting...');
+console.log('='.repeat(50));
+console.log(`PORT: ${PORT}`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}`);
+console.log('='.repeat(50));
 
 // CORS - must be before helmet to avoid conflicts
 const allowedOrigins = [
@@ -132,31 +142,30 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
+    console.log('Starting server setup...');
+    
     // Create HTTP server first
     const httpServer = createServer(app);
 
+    // Initialize Socket.IO (temporarily disabled for simpler deployment)
+    // console.log('Initializing Socket.IO...');
+    // initializeSocket(httpServer);
+    // console.log('✅ Socket.IO initialized');
+    console.log('⚠️ Socket.IO temporarily disabled for deployment');
+
     // Start listening immediately on all interfaces (0.0.0.0) for Railway
+    console.log(`Starting server on port ${PORT}...`);
     httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log('='.repeat(50));
+      console.log('🚀 Server successfully started!');
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 API URL: http://0.0.0.0:${PORT}/api`);
-      console.log(`🔌 WebSocket URL: ws://0.0.0.0:${PORT}`);
+      console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+      console.log('='.repeat(50));
     });
 
-    // Initialize Socket.IO
-    initializeSocket(httpServer);
-    console.log('✅ Socket.IO initialized');
-
     // Test database connection (non-blocking - server will start even if DB fails)
-    prisma.$connect()
-      .then(() => {
-        console.log('✅ Database connected successfully');
-      })
-      .catch((error) => {
-        console.error('⚠️ Database connection error (server still running):', error.message);
-      });
-
-    // Test database connection (non-blocking - server will start even if DB fails)
+    console.log('Testing database connection...');
     prisma.$connect()
       .then(() => {
         console.log('✅ Database connected successfully');

@@ -336,17 +336,17 @@ app.get('/api/setup-database', async (req, res) => {
     // Insert 10 Teams with proper logos
     try {
       await client.query(`
-        INSERT INTO teams (id, name, logoUrl, abbreviation, color, homeCity, description, isActive) VALUES
-        ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', 'Ahmedabad', 'Gujarat Women Kabaddi Team', true),
-        ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', 'Mumbai', 'Mumbai Women Kabaddi Team', true),
-        ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#E11D48', 'Bhubaneswar', 'Odisha Women Kabaddi Team', true),
-        ('4', 'Delhi Warriors', 'assets/teams/delhi_warriors.jpeg', 'DW', '#1D4ED8', 'Delhi', 'Delhi Women Kabaddi Team', true),
-        ('5', 'Punjab Wings', 'assets/teams/punjab_wings.jpeg', 'PW', '#6D28D9', 'Ludhiana', 'Punjab Women Kabaddi Team', true),
-        ('6', 'Kashmiri Queens', 'assets/teams/kashmiri_queens.jpeg', 'KQ', '#7C3AED', 'Srinagar', 'Kashmir Women Kabaddi Team', true),
-        ('7', 'Namma Bengaluru', 'assets/teams/namma_bengaluru.jpeg', 'NB', '#84CC16', 'Bengaluru', 'Bengaluru Women Kabaddi Team', true),
-        ('8', 'Haryanvi Fighters', 'assets/teams/haryanvi_fighters.jpeg', 'HF', '#0F766E', 'Karnal', 'Haryana Women Kabaddi Team', true),
-        ('9', 'Kolkata Rangers', 'assets/teams/kolkata_rangers.jpeg', 'KR', '#1E40AF', 'Kolkata', 'Kolkata Women Kabaddi Team', true),
-        ('10', 'Ayodhya Shakti', 'assets/teams/ayodhya_shakti.jpeg', 'AS', '#DC2626', 'Ayodhya', 'Ayodhya Women Kabaddi Team', true)
+        INSERT INTO teams (id, name, logoUrl, abbreviation, color, description, isActive) VALUES
+        ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', 'Gujarat Women Kabaddi Team', true),
+        ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', 'Mumbai Women Kabaddi Team', true),
+        ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#E11D48', 'Odisha Women Kabaddi Team', true),
+        ('4', 'Delhi Warriors', 'assets/teams/delhi_warriors.jpeg', 'DW', '#1D4ED8', 'Delhi Women Kabaddi Team', true),
+        ('5', 'Punjab Wings', 'assets/teams/punjab_wings.jpeg', 'PW', '#6D28D9', 'Punjab Women Kabaddi Team', true),
+        ('6', 'Kashmiri Queens', 'assets/teams/kashmiri_queens.jpeg', 'KQ', '#7C3AED', 'Kashmir Women Kabaddi Team', true),
+        ('7', 'Namma Bengaluru', 'assets/teams/namma_bengaluru.jpeg', 'NB', '#84CC16', 'Bengaluru Women Kabaddi Team', true),
+        ('8', 'Haryanvi Fighters', 'assets/teams/haryanvi_fighters.jpeg', 'HF', '#0F766E', 'Haryana Women Kabaddi Team', true),
+        ('9', 'Kolkata Rangers', 'assets/teams/kolkata_rangers.jpeg', 'KR', '#1E40AF', 'Kolkata Women Kabaddi Team', true),
+        ('10', 'Ayodhya Shakti', 'assets/teams/ayodhya_shakti.jpeg', 'AS', '#DC2626', 'Ayodhya Women Kabaddi Team', true)
         ON CONFLICT (name) DO NOTHING
       `);
       console.log('✅ 10 Teams inserted');
@@ -357,10 +357,10 @@ app.get('/api/setup-database', async (req, res) => {
     // Insert Sample Videos
     try {
       await client.query(`
-        INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, duration, featured, isActive) VALUES
-        ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', 30, true, true)
+        INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, featured, isActive) VALUES
+        ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', true, true),
+        ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', true, true),
+        ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', true, true)
         ON CONFLICT DO NOTHING
       `);
       console.log('✅ Sample videos inserted');

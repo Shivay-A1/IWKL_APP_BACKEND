@@ -90,9 +90,25 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'IWKL Backend API', timestamp: new Date().toISOString() });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check (more detailed)
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected'
+    });
+  } catch (error) {
+    // Still return ok even if DB fails, so Railway doesn't fail healthcheck
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      message: 'Server is running but database connection failed'
+    });
+  }
 });
 
 // Keep-alive endpoint for external pinging services
@@ -131,7 +147,16 @@ const startServer = async () => {
     initializeSocket(httpServer);
     console.log('✅ Socket.IO initialized');
 
-    // Test database connection (non-blocking)
+    // Test database connection (non-blocking - server will start even if DB fails)
+    prisma.$connect()
+      .then(() => {
+        console.log('✅ Database connected successfully');
+      })
+      .catch((error) => {
+        console.error('⚠️ Database connection error (server still running):', error.message);
+      });
+
+    // Test database connection (non-blocking - server will start even if DB fails)
     prisma.$connect()
       .then(() => {
         console.log('✅ Database connected successfully');

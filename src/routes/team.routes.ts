@@ -1,23 +1,30 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
-import * as teamController from '../controllers/team.controller';
-import { authenticate, authorize, validate, upload, apiLimiter } from '../middleware';
 
 const router = Router();
 
-router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, upload.fields([
-  { name: 'logo', maxCount: 1 },
-  { name: 'banner', maxCount: 1 }
-]), [
-  body('name').trim().notEmpty().withMessage('Team name is required'),
-  body('shortName').trim().notEmpty().withMessage('Short name is required'),
-  body('seasonId').notEmpty().withMessage('Season ID is required'),
-], validate, teamController.createTeam);
+// Simple teams endpoint returning sample data
+router.get('/', (req, res) => {
+  res.json({
+    teams: [
+      {
+        id: '1',
+        name: 'Garvi Gujarat',
+        logoUrl: 'assets/teams/garvi_gujarat.png',
+        abbreviation: 'GG',
+        color: '#FF6B35'
+      },
+      {
+        id: '2',
+        name: 'Mumbai Strikers',
+        logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+        abbreviation: 'MS',
+        color: '#1E3A8A'
+      }
+    ]
+  });
+});
 
-// Alternative route for creating teams with logo URL instead of file upload
-router.post('/with-logo-url', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, [
-  body('name').trim().notEmpty().withMessage('Team name is required'),
-  body('shortName').trim().notEmpty().withMessage('Short name is required'),
+export default router;
   body('seasonId').notEmpty().withMessage('Season ID is required'),
   body('logoUrl').trim().notEmpty().withMessage('Logo URL is required'),
 ], validate, teamController.createTeamWithLogoUrl);

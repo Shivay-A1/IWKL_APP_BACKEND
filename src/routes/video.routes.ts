@@ -1,23 +1,46 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
-import * as videoController from '../controllers/video.controller';
-import { authenticate, authorize, validate, uploadMultiple, apiLimiter } from '../middleware';
 
 const router = Router();
 
-// Public GET endpoints - no authentication required
-router.get('/', videoController.getVideos);
-router.get('/featured', videoController.getFeaturedVideos);
-router.get('/homepage', videoController.getHomepageVideos);
-router.get('/:id', videoController.getVideoById);
+// Simple videos endpoint returning sample data
+router.get('/', (req, res) => {
+  res.json({
+    videos: [
+      {
+        id: '1',
+        title: 'IWKL Kabaddi Highlight 1',
+        videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+        thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      },
+      {
+        id: '2',
+        title: 'IWKL Kabaddi Highlight 2',
+        videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+        thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      },
+      {
+        id: '3',
+        title: 'IWKL Kabaddi Highlight 3',
+        videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+        thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      }
+    ]
+  });
+});
 
-// Protected routes - require authentication and authorization
-router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, uploadMultiple('files', 2), [
-  body('title').trim().notEmpty().withMessage('Title is required'),
-  body('category').notEmpty().withMessage('Category is required'),
-], validate, videoController.createVideo);
-
-router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), uploadMultiple('files', 2), [
+export default router;
   body('title').optional().trim().notEmpty(),
 ], validate, videoController.updateVideo);
 

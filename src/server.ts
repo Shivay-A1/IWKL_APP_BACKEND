@@ -8,7 +8,8 @@ import { createServer } from 'http';
 import routes from './routes';
 import { errorHandler, notFound, generalLimiter } from './middleware';
 import { prisma } from './config';
-import { initializeSocket } from './config/socket';
+// Temporarily disable Socket.IO for deployment
+// import { initializeSocket } from './config/socket';
 
 dotenv.config();
 
@@ -127,10 +128,11 @@ const startServer = async () => {
     // Create HTTP server first
     const httpServer = createServer(app);
 
-    // Initialize Socket.IO
-    console.log('Initializing Socket.IO...');
-    initializeSocket(httpServer);
-    console.log('✅ Socket.IO initialized');
+    // Initialize Socket.IO (temporarily disabled for deployment)
+    // console.log('Initializing Socket.IO...');
+    // initializeSocket(httpServer);
+    // console.log('✅ Socket.IO initialized');
+    console.log('⚠️ Socket.IO temporarily disabled for deployment');
 
     // Start listening immediately on all interfaces (0.0.0.0) for Railway
     console.log(`Starting server on port ${PORT}...`);

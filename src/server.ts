@@ -677,17 +677,45 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// Environment debug endpoint
-app.get('/api/debug-env', (req, res) => {
-  const envDebug = {
-    hasDatabasePrivateUrl: !!process.env.DATABASE_PRIVATE_URL,
-    hasDatabaseUrl: !!process.env.DATABASE_URL,
-    hasPostgresUrl: !!process.env.POSTGRES_URL,
-    databaseRelatedVars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES')),
-    nodeEnv: process.env.NODE_ENV,
-    port: process.env.PORT
+// Database variables endpoint
+app.get('/api/variables-info', (req, res) => {
+  const requiredVariables = {
+    // Database
+    DATABASE_PRIVATE_URL: 'Railway PostgreSQL connection URL',
+    DATABASE_URL: 'Fallback database URL',
+    
+    // Authentication
+    JWT_ACCESS_SECRET: 'JWT access token secret',
+    JWT_REFRESH_SECRET: 'JWT refresh token secret',
+    JWT_ACCESS_EXPIRY: 'Access token expiry (e.g., 15m)',
+    JWT_REFRESH_EXPIRY: 'Refresh token expiry (e.g., 7d)',
+    
+    // App
+    NODE_ENV: 'development or production',
+    FRONTEND_URL: 'Flutter app URL for CORS',
+    
+    // AWS S3 (optional - for file uploads)
+    AWS_ACCESS_KEY_ID: 'AWS access key for S3',
+    AWS_SECRET_ACCESS_KEY: 'AWS secret key for S3',
+    AWS_REGION: 'AWS region (e.g., us-east-1)',
+    AWS_S3_BUCKET: 'S3 bucket name'
   };
-  res.json(envDebug);
+  
+  const currentStatus = {
+    DATABASE_PRIVATE_URL: !!process.env.DATABASE_PRIVATE_URL,
+    DATABASE_URL: !!process.env.DATABASE_URL,
+    JWT_ACCESS_SECRET: !!process.env.JWT_ACCESS_SECRET,
+    JWT_REFRESH_SECRET: !!process.env.JWT_REFRESH_SECRET,
+    NODE_ENV: process.env.NODE_ENV || 'not set',
+    FRONTEND_URL: process.env.FRONTEND_URL || 'not set'
+  };
+  
+  res.json({
+    message: 'Backend variables information',
+    required: requiredVariables,
+    current: currentStatus,
+    setup: 'Set these variables in Railway backend service'
+  });
 });
 
 // Environment debug endpoint

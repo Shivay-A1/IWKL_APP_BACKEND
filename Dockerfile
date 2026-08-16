@@ -8,6 +8,7 @@ RUN npm install
 COPY prisma ./prisma
 COPY src ./src
 COPY tsconfig.json ./
+COPY database_setup.sql ./
 
 RUN npx prisma generate
 RUN npm run build

@@ -109,7 +109,9 @@ app.get('/api/setup-database', async (req, res) => {
     
     // Read the complete SQL file
     const fs = require('fs');
-    const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
+    const path = require('path');
+    const sqlPath = path.join(__dirname, '../database_setup.sql');
+    const sqlContent = fs.readFileSync(sqlPath, 'utf8');
     console.log('📄 SQL file loaded successfully');
 
     // Split SQL into individual statements

@@ -33,16 +33,14 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(50));
 });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
+// Graceful shutdown (simplified - no database disconnect)
+process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
-  await prisma.$disconnect();
   process.exit(0);
 });
 
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully');
-  await prisma.$disconnect();
   process.exit(0);
 });
 

@@ -5,10 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY src ./src
-COPY tsconfig.json ./
-
-RUN npm run build
+COPY src/server.ts ./
+RUN npx tsc server.ts --outDir dist
 
 EXPOSE 3000
 

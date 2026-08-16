@@ -5,11 +5,6 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import routes from './routes';
-import { errorHandler, notFound, generalLimiter } from './middleware';
-import { prisma } from './config';
-// Temporarily disable Socket.IO for deployment
-// import { initializeSocket } from './config/socket';
 
 dotenv.config();
 
@@ -45,13 +40,7 @@ app.use(cors({
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
-    directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-ancestors": ["'self'", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
-      "img-src": ["'self'", "data:", "https://*.up.railway.app", "https://*.railway.app"],
-    },
-  } : false,
+  contentSecurityPolicy: false, // Disabled for Railway deployment
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: false,
 }));
@@ -61,48 +50,24 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Compression with better settings
-app.use(compression({
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) {
-      return false
-    }
-    return compression.filter(req, res)
-  },
-  threshold: 1024,
-  level: 6
-}));
-
-// Rate limiting
-app.use('/api/', generalLimiter);
+// Compression
+app.use(compression());
 
 // Root endpoint for healthcheck
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'IWKL Backend API', timestamp: new Date().toISOString() });
 });
 
-// Health check with database status
-app.get('/health', async (req, res) => {
-  try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      database: 'connected'
-    });
-  } catch (error) {
-    // Still return ok even if DB fails, so Railway doesn't fail healthcheck
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      message: 'Server is running but database connection failed'
-    });
-  }
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    database: databaseUrl ? 'configured' : 'not configured'
+  });
 });
 
-// Keep-alive endpoint for external pinging services
+// Keep-alive endpoint
 app.get('/keep-alive', (req, res) => {
   res.json({ 
     status: 'alive', 
@@ -111,55 +76,101 @@ app.get('/keep-alive', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api', routes);
+// Simple API test endpoints
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/teams', (req, res) => {
+  res.json({
+    teams: [
+      {
+        id: '1',
+        name: 'Garvi Gujarat',
+        logoUrl: 'assets/teams/garvi_gujarat.png',
+        abbreviation: 'GG',
+        color: '#FF6B35'
+      },
+      {
+        id: '2',
+        name: 'Mumbai Strikers',
+        logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+        abbreviation: 'MS',
+        color: '#1E3A8A'
+      }
+    ]
+  });
+});
+
+app.get('/api/videos', (req, res) => {
+  res.json({
+    videos: [
+      {
+        id: '1',
+        title: 'IWKL Kabaddi Highlight 1',
+        videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+        thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      },
+      {
+        id: '2',
+        title: 'IWKL Kabaddi Highlight 2',
+        videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+        thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      },
+      {
+        id: '3',
+        title: 'IWKL Kabaddi Highlight 3',
+        videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+        thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+        category: 'Highlights',
+        duration: 30,
+        isPremium: false,
+        viewCount: 0
+      }
+    ]
+  });
+});
 
 // 404 handler
-app.use(notFound);
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.originalUrl} not found` });
+});
 
 // Error handler
-app.use(errorHandler);
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message 
+  });
+});
 
 // Start server
-const startServer = async () => {
-  try {
-    console.log('Starting server setup...');
-    
-    // Create HTTP server first
-    const httpServer = createServer(app);
+const server = createServer(app);
 
-    // Initialize Socket.IO (temporarily disabled for deployment)
-    // console.log('Initializing Socket.IO...');
-    // initializeSocket(httpServer);
-    // console.log('✅ Socket.IO initialized');
-    console.log('⚠️ Socket.IO temporarily disabled for deployment');
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('='.repeat(50));
+  console.log('🚀 IWKL Backend API successfully started!');
+  console.log(`📝 Port: ${PORT}`);
+  console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+  console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+  console.log('='.repeat(50));
+});
 
-    // Start listening immediately on all interfaces (0.0.0.0) for Railway
-    console.log(`Starting server on port ${PORT}...`);
-    httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log('='.repeat(50));
-      console.log('🚀 Server successfully started!');
-      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 API URL: http://0.0.0.0:${PORT}/api`);
-      console.log(`🔌 WebSocket URL: ws://0.0.0.0:${PORT}`);
-      console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
-      console.log(`🗄️ Database: ${databaseUrl ? '✅ Connected' : '❌ Not configured'}`);
-      console.log('='.repeat(50));
-    });
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
 
-    // Test database connection (non-blocking - server will start even if DB fails)
-    console.log('Testing database connection...');
-    prisma.$connect()
-      .then(() => {
-        console.log('✅ Database connected successfully');
-      })
-      .catch((error) => {
-        console.error('⚠️ Database connection error (server still running):', error.message);
-      });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});

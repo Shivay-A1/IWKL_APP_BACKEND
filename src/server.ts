@@ -127,6 +127,7 @@ app.get('/api/setup-database', async (req, res) => {
           otpExpiry TIMESTAMP,
           resetToken VARCHAR(255),
           resetTokenExpiry TIMESTAMP,
+          lastLogin TIMESTAMP,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -143,7 +144,6 @@ app.get('/api/setup-database', async (req, res) => {
         CREATE TABLE IF NOT EXISTS teams (
           id VARCHAR(255) PRIMARY KEY,
           name VARCHAR(100) UNIQUE NOT NULL,
-          shortName VARCHAR(50),
           logoUrl VARCHAR(500),
           bannerUrl VARCHAR(500),
           abbreviation VARCHAR(10),
@@ -172,7 +172,6 @@ app.get('/api/setup-database', async (req, res) => {
         CREATE TABLE IF NOT EXISTS videos (
           id VARCHAR(255) PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
-          description TEXT,
           videoUrl VARCHAR(500) NOT NULL,
           thumbnailUrl VARCHAR(500),
           category VARCHAR(100),
@@ -323,7 +322,6 @@ app.get('/api/setup-database', async (req, res) => {
           email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           role VARCHAR(50) DEFAULT 'ADMIN',
-          permissions TEXT[],
           lastLogin TIMESTAMP,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -338,17 +336,17 @@ app.get('/api/setup-database', async (req, res) => {
     // Insert 10 Teams with proper logos
     try {
       await client.query(`
-        INSERT INTO teams (id, name, shortName, logoUrl, abbreviation, color, homeCity, description, isActive) VALUES
-        ('1', 'Garvi Gujarat', 'GG', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', 'Ahmedabad', 'Gujarat Women Kabaddi Team', true),
-        ('2', 'Mumbai Strikers', 'MS', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', 'Mumbai', 'Mumbai Women Kabaddi Team', true),
-        ('3', 'Odisha Kalingas', 'OK', 'assets/teams/odisha_kalingas.png', 'OK', '#E11D48', 'Bhubaneswar', 'Odisha Women Kabaddi Team', true),
-        ('4', 'Delhi Warriors', 'DW', 'assets/teams/delhi_warriors.jpeg', 'DW', '#1D4ED8', 'Delhi', 'Delhi Women Kabaddi Team', true),
-        ('5', 'Punjab Wings', 'PW', 'assets/teams/punjab_wings.jpeg', 'PW', '#6D28D9', 'Ludhiana', 'Punjab Women Kabaddi Team', true),
-        ('6', 'Kashmiri Queens', 'KQ', 'assets/teams/kashmiri_queens.jpeg', 'KQ', '#7C3AED', 'Srinagar', 'Kashmir Women Kabaddi Team', true),
-        ('7', 'Namma Bengaluru', 'NB', 'assets/teams/namma_bengaluru.jpeg', 'NB', '#84CC16', 'Bengaluru', 'Bengaluru Women Kabaddi Team', true),
-        ('8', 'Haryanvi Fighters', 'HF', 'assets/teams/haryanvi_fighters.jpeg', 'HF', '#0F766E', 'Karnal', 'Haryana Women Kabaddi Team', true),
-        ('9', 'Kolkata Rangers', 'KR', 'assets/teams/kolkata_rangers.jpeg', 'KR', '#1E40AF', 'Kolkata', 'Kolkata Women Kabaddi Team', true),
-        ('10', 'Ayodhya Shakti', 'AS', 'assets/teams/ayodhya_shakti.jpeg', 'AS', '#DC2626', 'Ayodhya', 'Ayodhya Women Kabaddi Team', true)
+        INSERT INTO teams (id, name, logoUrl, abbreviation, color, homeCity, description, isActive) VALUES
+        ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', 'Ahmedabad', 'Gujarat Women Kabaddi Team', true),
+        ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', 'Mumbai', 'Mumbai Women Kabaddi Team', true),
+        ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#E11D48', 'Bhubaneswar', 'Odisha Women Kabaddi Team', true),
+        ('4', 'Delhi Warriors', 'assets/teams/delhi_warriors.jpeg', 'DW', '#1D4ED8', 'Delhi', 'Delhi Women Kabaddi Team', true),
+        ('5', 'Punjab Wings', 'assets/teams/punjab_wings.jpeg', 'PW', '#6D28D9', 'Ludhiana', 'Punjab Women Kabaddi Team', true),
+        ('6', 'Kashmiri Queens', 'assets/teams/kashmiri_queens.jpeg', 'KQ', '#7C3AED', 'Srinagar', 'Kashmir Women Kabaddi Team', true),
+        ('7', 'Namma Bengaluru', 'assets/teams/namma_bengaluru.jpeg', 'NB', '#84CC16', 'Bengaluru', 'Bengaluru Women Kabaddi Team', true),
+        ('8', 'Haryanvi Fighters', 'assets/teams/haryanvi_fighters.jpeg', 'HF', '#0F766E', 'Karnal', 'Haryana Women Kabaddi Team', true),
+        ('9', 'Kolkata Rangers', 'assets/teams/kolkata_rangers.jpeg', 'KR', '#1E40AF', 'Kolkata', 'Kolkata Women Kabaddi Team', true),
+        ('10', 'Ayodhya Shakti', 'assets/teams/ayodhya_shakti.jpeg', 'AS', '#DC2626', 'Ayodhya', 'Ayodhya Women Kabaddi Team', true)
         ON CONFLICT (name) DO NOTHING
       `);
       console.log('✅ 10 Teams inserted');
@@ -359,10 +357,10 @@ app.get('/api/setup-database', async (req, res) => {
     // Insert Sample Videos
     try {
       await client.query(`
-        INSERT INTO videos (id, title, description, videoUrl, thumbnailUrl, category, duration, featured, isActive) VALUES
-        ('1', 'IWKL Kabaddi Highlight 1', 'Exciting kabaddi action from IWKL', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('2', 'IWKL Kabaddi Highlight 2', 'More amazing kabaddi moments', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('3', 'IWKL Kabaddi Highlight 3', 'Best kabaddi skills showcase', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', 30, true, true)
+        INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, duration, featured, isActive) VALUES
+        ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', 30, true, true),
+        ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', 30, true, true),
+        ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', 30, true, true)
         ON CONFLICT DO NOTHING
       `);
       console.log('✅ Sample videos inserted');
@@ -422,8 +420,8 @@ app.get('/api/setup-database', async (req, res) => {
       const bcrypt = require('bcryptjs');
       const hashedPassword = await bcrypt.hash('admin123', 10);
       await client.query(`
-        INSERT INTO admin_users (id, name, email, password, role, permissions) VALUES
-        ('admin001', 'Super Admin', 'admin@iwkl.com', $1, 'SUPER_ADMIN', '["all"]')
+        INSERT INTO admin_users (id, name, email, password, role) VALUES
+        ('admin001', 'Super Admin', 'admin@iwkl.com', $1, 'SUPER_ADMIN')
         ON CONFLICT (email) DO NOTHING
       `, [hashedPassword]);
       console.log('✅ Default admin user created');

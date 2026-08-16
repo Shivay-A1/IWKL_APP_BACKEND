@@ -119,7 +119,7 @@ app.get('/api/setup-database', async (req, res) => {
 
     await client.end();
     res.json({ message: 'Database setup completed successfully' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });

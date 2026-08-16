@@ -5,10 +5,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY src/server.ts ./server.ts
+COPY prisma ./prisma
+COPY src ./src
 COPY tsconfig.json ./
-RUN npx tsc
+
+RUN npx prisma generate
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["node", dist/server.js"]
+CMD ["node", "dist/server.js"]

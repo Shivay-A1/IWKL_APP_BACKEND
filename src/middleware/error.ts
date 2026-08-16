@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
 
 export class AppError extends Error {
   statusCode: number;
@@ -33,17 +32,18 @@ export const errorHandler = (
     });
   }
 
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    console.error('Prisma Known Request Error:', err.code, err.message);
-    if (err.code === 'P2002') {
+  // Simplified error handling without Prisma type checking
+  if (err.name === 'PrismaClientKnownRequestError') {
+    console.error('Prisma Known Request Error:', (err as any).code, err.message);
+    if ((err as any).code === 'P2002') {
       return res.status(409).json({ error: 'A record with this data already exists' });
     }
-    if (err.code === 'P2025') {
+    if ((err as any).code === 'P2025') {
       return res.status(404).json({ error: 'Record not found' });
     }
   }
 
-  if (err instanceof Prisma.PrismaClientValidationError) {
+  if (err.name === 'PrismaClientValidationError') {
     console.error('Prisma Validation Error:', err.message);
     return res.status(400).json({ 
       error: 'Invalid data provided',

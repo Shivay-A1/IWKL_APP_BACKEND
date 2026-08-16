@@ -1,0 +1,1234 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION MODELS
+// ============================================
+
+enum Role {
+  SUPER_ADMIN
+  LEAGUE_ADMIN
+  TEAM_MANAGER
+  USER
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String
+  email             String?   @unique
+  mobile            String?   @unique
+  password          String
+  role              Role      @default(USER)
+  avatar            String?
+  isVerified        Boolean   @default(false)
+  mobileVerified    Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  otp               String?
+  otpExpiry         DateTime?
+  lastLogin         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  favoriteTeams     FavoriteTeam[]
+  notifications     Notification[]
+  activities        Activity[]
+  playerRegistrations PlayerRegistration[]
+  matchHistory      MatchHistory[] @relation("MatchHistoryAdmin")
+  sentMessages      Message[]     @relation("MessageSender")
+  receivedMessages  Message[]     @relation("MessageRecipient")
+
+  @@index([email])
+  @@index([mobile])
+  @@index([role])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String
+  description String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================
+// SEASON MANAGEMENT
+// ============================================
+
+model Season {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "IWKL 2026"
+  year        Int
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(false)
+  isCompleted Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  teams       Team[]
+  matches     Match[]
+  pointsTable PointsTableEntry[]
+  champions   Champion[]
+  playerStats PlayerStats[] @relation("PlayerStatsSeason")
+  teamStats   TeamStats[] @relation("TeamStatsSeason")
+
+  @@unique([name])
+  @@index([year])
+  @@index([isActive])
+}
+
+// ============================================
+// STADIUM MANAGEMENT
+// ============================================
+
+model Stadium {
+  id          String   @id @default(cuid())
+  name        String
+  city        String
+  state       String?
+  capacity    Int?
+  image       String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  matches     Match[]
+  teams       Team[]
+
+  @@unique([name, city])
+  @@index([isActive])
+}
+
+// ============================================
+// TEAM MANAGEMENT
+// ============================================
+
+model Team {
+  id              String   @id @default(cuid())
+  name            String
+  shortName       String   // e.g., "MUM" for Mumbai
+  logo            String
+  banner          String?
+  jerseyColor     String?
+  foundedYear     Int?
+  city            String?
+  stadiumId       String?
+  stadium         Stadium? @relation(fields: [stadiumId], references: [id])
+  coach           String?
+  description     String?
+  socialMedia     Json?    // { twitter, instagram, facebook }
+  isActive        Boolean  @default(true)
+  seasonId        String
+  season          Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  players         Player[]
+  homeMatches     Match[]  @relation("HomeMatches")
+  awayMatches     Match[]  @relation("AwayMatches")
+  pointsTable     PointsTableEntry[]
+  favoriteTeams   FavoriteTeam[]
+  champions       Champion[]
+  wonMatches      MatchResult[] @relation("MatchWinner")
+  fanClubRegistrations FanClubRegistration[]
+  ottLiveMatchesTeamA OttLiveMatch[] @relation("OttTeamA")
+  ottLiveMatchesTeamB OttLiveMatch[] @relation("OttTeamB")
+  ottUpcomingMatchesTeamA OttUpcomingMatch[] @relation("OttUpcomingTeamA")
+  ottUpcomingMatchesTeamB OttUpcomingMatch[] @relation("OttUpcomingTeamB")
+  matchLogs       MatchLog[] @relation("MatchLogTeam")
+  raids           RaidTracker[] @relation("RaidTeam")
+  teamStats       TeamStats[] @relation("TeamStatsTeam")
+
+  @@unique([name, seasonId])
+  @@index([seasonId])
+  @@index([isActive])
+  @@index([stadiumId])
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  name        String
+  image       String?
+  jerseyNumber Int?
+  position    String?
+  height      String?  // e.g., "6'2\""
+  weight      String?  // e.g., "85kg"
+  dateOfBirth DateTime?
+  nationality String?
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  statistics  Json?    // { matchesPlayed, totalPoints, raids, tackles, etc. }
+  biography   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  matchLogs   MatchLog[] @relation("MatchLogPlayer")
+  raids       RaidTracker[] @relation("RaidRaider")
+  playerStats PlayerStats[]
+
+  @@index([teamId])
+  @@index([isActive])
+}
+
+// ============================================
+// MATCH MANAGEMENT
+// ============================================
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  POSTPONED
+  CANCELLED
+  ABANDONED
+}
+
+enum MatchType {
+  LEAGUE_MATCH
+  ELIMINATOR
+  QUALIFIER_1
+  QUALIFIER_2
+  SEMI_FINAL
+  FINAL
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  seasonId        String
+  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  homeTeamId      String
+  homeTeam        Team        @relation("HomeMatches", fields: [homeTeamId], references: [id])
+  awayTeamId      String
+  awayTeam        Team        @relation("AwayMatches", fields: [awayTeamId], references: [id])
+  stadiumId       String?
+  stadium         Stadium?    @relation(fields: [stadiumId], references: [id])
+  matchDate       DateTime
+  venue           String?
+  status          MatchStatus @default(SCHEDULED)
+  matchType       MatchType?  @default(LEAGUE_MATCH)
+  published       Boolean   @default(true)
+  matchNumber     Int?        // e.g., Match 1, Match 2
+  week            Int?        // Week number in season
+  matchTitle      String?     // Custom match title
+  streamUrl       String?
+  highlightsUrl   String?
+  broadcaster     String?     // Broadcaster name
+  matchBanner     String?     // Match banner image
+  toss            String?     // Toss information
+  referee         String?     // Referee name
+
+  // Live Score Fields
+  homeScore       Int         @default(0)
+  awayScore       Int         @default(0)
+  homeRaidPoints  Int         @default(0)
+  awayRaidPoints  Int         @default(0)
+  homeTacklePoints Int        @default(0)
+  awayTacklePoints Int        @default(0)
+  homeBonusPoints Int         @default(0)
+  awayBonusPoints Int         @default(0)
+  homeAllOutCount Int         @default(0)
+  awayAllOutCount Int         @default(0)
+  matchTimer      String?     // Current match time (e.g., "15:30")
+  halfTimeStatus  String?     // "First Half", "Half Time", "Second Half"
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  result          MatchResult?
+  history         MatchHistory[]
+  logs            MatchLog[]
+  raids           RaidTracker[]
+  pointsHistory   PointsHistory[]
+
+  @@unique([seasonId, matchNumber])
+  @@index([seasonId])
+  @@index([matchDate])
+  @@index([status])
+  @@index([matchType])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([stadiumId])
+}
+
+model MatchResult {
+  id              String   @id @default(cuid())
+  matchId         String   @unique
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  homeScore       Int      @default(0)
+  awayScore       Int      @default(0)
+  winnerId        String?
+  winner          Team?    @relation("MatchWinner", fields: [winnerId], references: [id])
+  manOfTheMatch   String?
+  keyStatistics   Json?    // { raids, tackles, superTackles, allOutConceded, etc. }
+  quarterScores   Json?    // { q1: { home: 10, away: 8 }, q2: { home: 15, away: 12 }, ... }
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([matchId])
+  @@index([winnerId])
+}
+
+model MatchHistory {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  adminId         String?
+  admin           User?    @relation("MatchHistoryAdmin", fields: [adminId], references: [id])
+  action          String   // "CREATE", "UPDATE", "DELETE", "START", "PAUSE", "RESUME", "END", "CANCEL", "ABANDON"
+  field           String?  // Which field was changed
+  oldValue        Json?
+  newValue        Json?
+  reason          String?
+  timestamp       DateTime @default(now())
+
+  @@index([matchId])
+  @@index([adminId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+model MatchLog {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  eventType       String   // "RAID_STARTED", "RAID_FINISHED", "BONUS", "TOUCH_POINT", "SUPER_RAID", "SUPER_TACKLE", "ALL_OUT", "REVIEW", "TIMEOUT", "SUBSTITUTION", "INJURY", "YELLOW_CARD", "RED_CARD", "TECHNICAL_POINT"
+  eventTime       DateTime @default(now())
+  matchTime       String?  // Time in match when event occurred
+  teamId          String?
+  team            Team?    @relation("MatchLogTeam", fields: [teamId], references: [id])
+  playerId        String?
+  player          Player?  @relation("MatchLogPlayer", fields: [playerId], references: [id])
+  eventData       Json?    // Additional event-specific data
+  description     String?
+
+  @@index([matchId])
+  @@index([eventType])
+  @@index([eventTime])
+  @@index([teamId])
+  @@index([playerId])
+}
+
+model RaidTracker {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  raidNumber      Int
+  raidTime        String?  // Time in match when raid occurred
+  raiderId        String?
+  raider          Player?  @relation("RaidRaider", fields: [raiderId], references: [id])
+  defenderIds     Json?    // Array of defender IDs
+  teamId          String?
+  team            Team?    @relation("RaidTeam", fields: [teamId], references: [id])
+  bonus           Int      @default(0)
+  touchPoints     Int      @default(0)
+  raidOutcome     String?  // "SUCCESSFUL", "UNSUCCESSFUL", "EMPTY_RAID", "SUPER_RAID", "ALL_OUT"
+  superRaid       Boolean  @default(false)
+  emptyRaid       Boolean  @default(false)
+  successfulTackle Boolean @default(false)
+  timestamp       DateTime @default(now())
+
+  @@index([matchId])
+  @@index([raiderId])
+  @@index([teamId])
+  @@index([raidNumber])
+}
+
+model PlayerStats {
+  id              String   @id @default(cuid())
+  playerId        String
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  seasonId        String
+  season          Season   @relation("PlayerStatsSeason", fields: [seasonId], references: [id], onDelete: Cascade)
+  matchesPlayed   Int      @default(0)
+  raidPoints      Int      @default(0)
+  tacklePoints    Int      @default(0)
+  bonusPoints     Int      @default(0)
+  superRaids      Int      @default(0)
+  superTackles    Int      @default(0)
+  successfulRaids Int      @default(0)
+  unsuccessfulRaids Int    @default(0)
+  totalRaids      Int      @default(0)
+  successfulTackles Int     @default(0)
+  totalTackles    Int      @default(0)
+  allOutsConceded Int      @default(0)
+  allOutsInflicted Int     @default(0)
+  successRate     Float    @default(0)
+  averageRaid     Float    @default(0)
+  averageTackle   Float    @default(0)
+  mvpCount        Int      @default(0)
+  bestDefenderCount Int    @default(0)
+  bestRaiderCount Int      @default(0)
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([playerId, seasonId])
+  @@index([playerId])
+  @@index([seasonId])
+  @@index([raidPoints])
+  @@index([tacklePoints])
+}
+
+model TeamStats {
+  id              String   @id @default(cuid())
+  teamId          String
+  team            Team     @relation("TeamStatsTeam", fields: [teamId], references: [id], onDelete: Cascade)
+  seasonId        String
+  season          Season   @relation("TeamStatsSeason", fields: [seasonId], references: [id], onDelete: Cascade)
+  matchesPlayed   Int      @default(0)
+  wins            Int      @default(0)
+  losses          Int      @default(0)
+  draws           Int      @default(0)
+  points          Int      @default(0)
+  scoreFor        Int      @default(0)
+  scoreAgainst    Int      @default(0)
+  scoreDifference Int      @default(0)
+  winPercentage   Float    @default(0)
+  raidPoints      Int      @default(0)
+  tacklePoints    Int      @default(0)
+  currentForm     String?  @default("") // e.g., "WWLWL"
+  last5Matches    Json?    // Array of last 5 match results
+  highestScore    Int      @default(0)
+  lowestScore     Int      @default(0)
+  longestWinStreak Int    @default(0)
+  longestLossStreak Int   @default(0)
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([teamId, seasonId])
+  @@index([teamId])
+  @@index([seasonId])
+  @@index([points])
+  @@index([wins])
+}
+
+// ============================================
+// POINTS TABLE
+// ============================================
+
+model PointsTableEntry {
+  id          String   @id @default(cuid())
+  seasonId    String
+  season      Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  position    Int      @default(0)
+  matchesPlayed Int    @default(0)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  ties        Int      @default(0)
+  points      Int      @default(0)
+  raidPoints  Int      @default(0)
+  tacklePoints Int     @default(0)
+  scoreFor    Int      @default(0)
+  scoreAgainst Int     @default(0)
+  scoreDifference Int  @default(0)
+  highestScore Int     @default(0)
+  recentForm  String?  @default("") // e.g., "WWLWL"
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pointsHistory PointsHistory[]
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId])
+  @@index([position])
+  @@index([points])
+  @@index([seasonId, points])
+}
+
+model PointsHistory {
+  id              String   @id @default(cuid())
+  pointsTableEntryId String
+  pointsTableEntry PointsTableEntry @relation(fields: [pointsTableEntryId], references: [id], onDelete: Cascade)
+  matchId         String?
+  match           Match?   @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  pointsAdded     Int      @default(0)
+  oldPoints       Int      @default(0)
+  newPoints       Int      @default(0)
+  reason          String   @default("") // e.g., "Match Win", "Match Loss", "Manual Update"
+  timestamp       DateTime @default(now())
+
+  @@index([pointsTableEntryId])
+  @@index([matchId])
+  @@index([timestamp])
+}
+
+// ============================================
+// VIDEO MANAGEMENT
+// ============================================
+
+model VideoCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  displayOrder Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  videos      Video[]
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model Video {
+  id             String         @id @default(cuid())
+  categoryId     String
+  category       VideoCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  thumbnailUrl   String
+  youtubeUrl     String?
+  youtubeVideoId String?
+  duration       Int?           // in seconds
+  isFeatured     Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  displayOrder   Int            @default(0)
+  viewCount      Int            @default(0)
+  publishedAt    DateTime?
+  tags           String[]       // Array of tags for filtering
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([isFeatured])
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([publishedAt])
+}
+
+// ============================================
+// NEWS MANAGEMENT
+// ============================================
+
+model News {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String   @db.Text
+  featuredImage String
+  category    String?
+  tags        String[] // Array of tags
+  author      String?
+  isFeatured  Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  seoTitle    String?
+  seoDescription String?
+  seoKeywords String?
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  images      NewsImage[]
+
+  @@index([slug])
+  @@index([category])
+  @@index([isFeatured])
+  @@index([isPublished])
+  @@index([publishedAt])
+}
+
+model NewsImage {
+  id          String   @id @default(cuid())
+  newsId      String
+  news        News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([newsId])
+  @@index([order])
+}
+
+// ============================================
+// GALLERY MANAGEMENT
+// ============================================
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model GalleryItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  mediaUrl    String
+  thumbnailUrl String?
+  mediaType   MediaType
+  category    String?  // e.g., "Match Photos", "Team Events", "Awards"
+  album       String?  // For grouping into albums
+  isFeatured  Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([mediaType])
+  @@index([category])
+  @@index([album])
+  @@index([isFeatured])
+}
+
+// ============================================
+// SPONSOR MANAGEMENT
+// ============================================
+
+enum SponsorCategory {
+  TITLE_SPONSOR
+  GOLD
+  SILVER
+  BRONZE
+  PARTNER
+  BROADCAST_PARTNER
+  TECHNICAL_PARTNER
+}
+
+model Sponsor {
+  id          String         @id @default(cuid())
+  name        String
+  logo        String
+  website     String?
+  category    SponsorCategory
+  description String?
+  isActive    Boolean       @default(true)
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@index([order])
+}
+
+// ============================================
+// BANNER MANAGEMENT
+// ============================================
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  image       String
+  ctaText     String?
+  ctaLink     String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
+// ============================================
+// HOMEPAGE BANNER MANAGEMENT
+// ============================================
+
+model HomepageBanner {
+  id          String   @id @default(cuid())
+  imageUrl    String
+  title       String?
+  subtitle    String?
+  ctaText     String?
+  ctaLink     String?
+  displayOrder Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+
+enum NotificationType {
+  MATCH_REMINDER
+  MATCH_RESULT
+  TEAM_NEWS
+  ADMIN_BROADCAST
+  SYSTEM_UPDATE
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?            // Additional data like matchId, teamId, etc.
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// USER PREFERENCES
+// ============================================
+
+model FavoriteTeam {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+// ============================================
+// CHAMPIONS HISTORY
+// ============================================
+
+model Champion {
+  id          String   @id @default(cuid())
+  seasonId    String
+  season      Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  trophyImage String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@unique([seasonId])
+  @@index([seasonId])
+  @@index([teamId])
+}
+
+// ============================================
+// LEADERSHIP MANAGEMENT
+// ============================================
+
+model Leadership {
+  id          String   @id @default(cuid())
+  name        String
+  designation String
+  description String   @db.Text
+  photo       String
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
+// ============================================
+// FAN CLUB REGISTRATION
+// ============================================
+
+model FanClubRegistration {
+  id          String   @id @default(cuid())
+  fullName    String
+  mobileNumber String
+  email       String
+  city        String
+  state       String
+  gender      String
+  age         Int
+  favoriteTeamId String
+  favoriteTeam Team     @relation(fields: [favoriteTeamId], references: [id], onDelete: Cascade)
+  documentSignature String?
+  createdAt   DateTime @default(now())
+
+  @@index([favoriteTeamId])
+  @@index([email])
+  @@index([createdAt])
+}
+
+// ============================================
+// FOOTER MANAGEMENT
+// ============================================
+
+model Footer {
+  id          String   @id @default(cuid())
+  logo        String
+  quickLinks  Json     // [{ label, link }]
+  resources   Json     // [{ label, link }]
+  contactInfo Json     // { address, email, phone, whatsapp }
+  socialLinks Json     // { facebook, twitter, instagram, youtube, linkedin }
+  copyright   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// SITE SETTINGS
+// ============================================
+
+model SiteSettings {
+  id          String   @id @default(cuid())
+  siteName    String
+  siteTagline String?
+  siteLogo    String
+  favicon     String?
+  seoTitle    String?
+  seoDescription String?
+  seoKeywords String?
+  contactEmail String?
+  contactPhone String?
+  socialMedia Json?    // { facebook, twitter, instagram, youtube, linkedin }
+  maintenanceMode Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// PLAYER REGISTRATION
+// ============================================
+
+enum RegistrationStatus {
+  PENDING
+  UNDER_VERIFICATION
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WAITING_LIST
+  SELECTED
+  SUSPENDED
+  INFO_REQUESTED
+}
+
+model PlayerRegistration {
+  id                        String             @id @default(cuid())
+  registrationNumber        String             @unique
+  userId                    String?            // Optional: linked to logged-in user
+  user                      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName                  String
+  fatherName                String
+  motherName                String
+  dob                       DateTime
+  age                       Int
+  gender                    String
+  bloodGroup                String?
+  aadhaar                   String
+  mobile                    String
+  whatsapp                  String
+  email                     String
+  address                   String
+  city                      String
+  district                  String?
+  state                     String
+  country                   String?
+  pinCode                   String
+  playingPosition           String
+  strongHand                String
+  strongLeg                 String
+  height                    String?
+  weight                    String?
+  stateTeam                 Boolean            @default(false)
+  nationalTeam              Boolean            @default(false)
+  university                String?
+  club                      String?
+  experience                Int                @default(0)
+  coach                     String?
+  currentAcademy            String?
+  playingSince              DateTime?
+  achievements              String?            @db.Text
+  emergencyName             String
+  emergencyRelation         String
+  emergencyMobile           String
+  emergencyAddress          String?
+  photoPath                 String?
+  aadhaarPath               String?
+  ageProofPath              String?
+  sportsCertificatePath     String?
+  medicalCertificatePath    String?
+  stateAssociationCertificatePath String?
+  additionalCertificatePath String?
+  videoHighlightsPath       String?
+  signaturePath             String?
+  status                    RegistrationStatus @default(PENDING)
+  adminRemarks              String?            @db.Text
+  trialDate                 DateTime?
+  trialVenue                String?
+  trialReportingTime        String?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+
+  @@index([registrationNumber])
+  @@index([userId])
+  @@index([mobile])
+  @@index([email])
+  @@index([status])
+  @@index([state])
+  @@index([playingPosition])
+  @@index([createdAt])
+
+  statusHistory RegistrationStatusHistory[]
+}
+
+model RegistrationStatusHistory {
+  id                  String             @id @default(cuid())
+  registrationId      String
+  registration        PlayerRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  status              RegistrationStatus
+  changedBy           String?            // Admin user ID who changed the status
+  changedByName       String?            // Admin name
+  remarks             String?            @db.Text
+  changedAt           DateTime           @default(now())
+
+  @@index([registrationId])
+  @@index([status])
+  @@index([changedAt])
+}
+
+model UploadedFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileType    String   // e.g., 'photo', 'aadhaar', 'signature'
+  mimeType    String   // e.g., 'image/jpeg', 'application/pdf'
+  fileData    String   @db.Text // Base64 encoded file data
+  fileSize    Int
+  uploadedAt  DateTime @default(now())
+
+  @@index([fileType])
+  @@index([uploadedAt])
+}
+
+// ============================================
+// MESSAGING SYSTEM
+// ============================================
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model Message {
+  id              String        @id @default(cuid())
+  senderId        String
+  sender          User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId     String?
+  recipient       User?         @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  subject         String
+  content         String        @db.Text
+  attachmentUrl   String?
+  attachmentName  String?
+  isBroadcast     Boolean       @default(false)
+  status          MessageStatus @default(SENT)
+  isRead          Boolean       @default(false)
+  readAt          DateTime?
+  replyToId       String?
+  replyTo         Message?      @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies         Message[]     @relation("MessageReplies")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([status])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([replyToId])
+}
+
+// ============================================
+// OTT MANAGEMENT
+// ============================================
+
+model OttBroadcaster {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String
+  redirectUrl String
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model OttLiveMatch {
+  id              String   @id @default(cuid())
+  teamAId         String
+  teamA           Team     @relation("OttTeamA", fields: [teamAId], references: [id])
+  teamBId         String
+  teamB           Team     @relation("OttTeamB", fields: [teamBId], references: [id])
+  leagueStage     String   // e.g., "League Stage", "Semi Final", "Final"
+  venue           String?
+  matchDate       DateTime
+  matchTime       String
+  status          String   @default("upcoming") // upcoming, live, completed
+  teamAScore      Int      @default(0)
+  teamBScore      Int      @default(0)
+  timer           String?  // Current match time
+  half            String?  // "1st Half", "2nd Half"
+  isPaused        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  events          OttMatchEvent[]
+  pointHistory    OttPointHistory[]
+  playerStats     OttPlayerStats[]
+
+  @@index([status])
+  @@index([matchDate])
+}
+
+model OttMatchEvent {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       OttLiveMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  eventType   String   // "raid", "tackle", "bonus", "super_raid", "super_tackle", "all_out", "review"
+  team        String   // "A" or "B"
+  points      Int
+  description String?
+  timestamp   DateTime @default(now())
+}
+
+model OttUpcomingMatch {
+  id          String   @id @default(cuid())
+  teamAId     String
+  teamA       Team     @relation("OttUpcomingTeamA", fields: [teamAId], references: [id])
+  teamBId     String
+  teamB       Team     @relation("OttUpcomingTeamB", fields: [teamBId], references: [id])
+  matchDate   DateTime
+  matchTime   String
+  venue       String?
+  leagueStage String?
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([matchDate])
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model OttHighlight {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String
+  thumbnailUrl String
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([displayOrder])
+}
+
+model OttHero {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  backgroundImage String
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OttSettings {
+  id                  String   @id @default(cuid())
+  starSportsUrl       String?
+  hotstarUrl          String?
+  defaultStreamUrl    String?
+  autoRedirect        Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model OttPointHistory {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           OttLiveMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  teamAScore      Int
+  teamBScore      Int
+  newTeamAScore   Int
+  newTeamBScore   Int
+  pointsType      String   // "raid", "tackle", "bonus", "super_raid", "super_tackle", "all_out", "manual_update", "rollback"
+  description     String?
+  timestamp       DateTime @default(now())
+
+  @@index([matchId])
+  @@index([timestamp])
+}
+
+model OttPlayerStats {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           OttLiveMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerName      String
+  team            String   // "A" or "B"
+  raids           Int      @default(0)
+  tackles         Int      @default(0)
+  points          Int      @default(0)
+  superRaids      Int      @default(0)
+  superTackles    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([matchId])
+  @@index([playerName])
+}
+
+// ============================================
+// APP STORIES MANAGEMENT
+// ============================================
+
+model Story {
+  id          String   @id @default(cuid())
+  title       String?
+  imageUrl    String?
+  videoUrl    String?
+  isVideo     Boolean  @default(false)
+  caption     String?
+  link        String?
+  username    String?
+  userImage   String?
+  expiryTime  DateTime?
+  order       Int      @default(0)
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([expiryTime])
+}
+
+// ============================================
+// APP STORIES MANAGEMENT
+// ============================================
+
+model AppStory {
+  id          String   @id @default(cuid())
+  title       String
+  mediaUrl    String
+  mediaType   String   // "image" or "video"
+  thumbnailUrl String?
+  linkUrl     String?
+  description String?
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  expiryDate  DateTime?
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([expiryDate])
+  @@index([scheduledAt])
+}
+
+// ============================================
+// PUSH NOTIFICATION MANAGEMENT
+// ============================================
+
+model PushNotification {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  data        Json?    // Additional data
+  targetAudience String // "all", "users", "specific"
+  targetUserIds String[] // Array of user IDs if targetAudience is "specific"
+  imageUrl    String?
+  linkUrl     String?
+  isSent      Boolean  @default(false)
+  sentAt      DateTime?
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isSent])
+  @@index([scheduledAt])
+  @@index([createdAt])
+}
+
+// ============================================
+// APP SETTINGS MANAGEMENT
+// ============================================
+
+model AppSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  category    String?  // "general", "notification", "features", "ui"
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([key])
+  @@index([category])
+}
+
+// ============================================
+// MOBILE BANNER MANAGEMENT
+// ============================================
+
+model MobileBanner {
+  id          String   @id @default(cuid())
+  title       String
+  imageUrl    String
+  linkUrl     String?
+  description String?
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  targetScreen String? // "home", "matches", "ott", "standings", "all"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([targetScreen])
+}

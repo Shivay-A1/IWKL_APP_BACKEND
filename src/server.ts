@@ -79,9 +79,23 @@ app.get('/keep-alive', (req, res) => {
 // Database setup endpoint (for Railway deployment)
 app.get('/api/setup-database', async (req, res) => {
   try {
-    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
+    // Check all possible database environment variables
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    // Debug environment variables
+    const envCheck = {
+      DATABASE_PRIVATE_URL: !!process.env.DATABASE_PRIVATE_URL,
+      DATABASE_URL: !!process.env.DATABASE_URL,
+      POSTGRES_URL: !!process.env.POSTGRES_URL,
+      availableVars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES'))
+    };
+
     if (!databaseUrl) {
-      return res.status(400).json({ error: 'Database URL not configured' });
+      return res.status(400).json({ 
+        error: 'Database URL not configured',
+        debug: envCheck,
+        message: 'Please set DATABASE_PRIVATE_URL environment variable in Railway'
+      });
     }
 
     // Simple table creation for testing
@@ -92,6 +106,7 @@ app.get('/api/setup-database', async (req, res) => {
     });
 
     await client.connect();
+    console.log('✅ Database connected successfully');
     
     // Create simple teams table
     await client.query(`
@@ -104,6 +119,7 @@ app.get('/api/setup-database', async (req, res) => {
         isActive BOOLEAN DEFAULT true
       )
     `);
+    console.log('✅ Teams table created');
 
     // Create simple videos table
     await client.query(`
@@ -116,12 +132,27 @@ app.get('/api/setup-database', async (req, res) => {
         isActive BOOLEAN DEFAULT true
       )
     `);
+    console.log('✅ Videos table created');
 
     await client.end();
     res.json({ message: 'Database setup completed successfully' });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Database setup error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
+});
+
+// Environment debug endpoint
+app.get('/api/debug-env', (req, res) => {
+  const envDebug = {
+    hasDatabasePrivateUrl: !!process.env.DATABASE_PRIVATE_URL,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+    hasPostgresUrl: !!process.env.POSTGRES_URL,
+    databaseRelatedVars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES')),
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT
+  };
+  res.json(envDebug);
 });
 
 // Simple API test endpoints

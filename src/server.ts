@@ -106,6 +106,84 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'IWKL Backend API', timestamp: new Date().toISOString() });
 });
 
+// Integration test endpoint
+app.get('/api/test-integration', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    const results = {
+      timestamp: new Date().toISOString(),
+      status: 'ok',
+      database: {
+        configured: !!databaseUrl,
+        url: databaseUrl ? 'configured' : 'not configured'
+      },
+      backend: {
+        status: 'running',
+        version: '1.0.0',
+        routes: {
+          auth: '/api/auth/*',
+          admin: '/api/admin/*',
+          teams: '/api/teams',
+          matches: '/api/matches'
+        }
+      },
+      admin_panel: {
+        url: 'https://ravishing-serenity-production.up.railway.app',
+        login: '/login',
+        dashboard: '/dashboard'
+      },
+      flutter_app: {
+        api_url: 'https://iwklappbackend-production.up.railway.app/api',
+        status: 'connected'
+      },
+      endpoints: {
+        health: '/health',
+        teams: '/api/teams',
+        admin_login: '/api/auth/admin/login',
+        admin_dashboard: '/api/admin/dashboard'
+      }
+    };
+
+    // Test database connection
+    if (databaseUrl) {
+      try {
+        const { Client } = require('pg');
+        const client = new Client({
+          connectionString: databaseUrl,
+          ssl: { rejectUnauthorized: false }
+        });
+        await client.connect();
+        
+        // Test queries
+        const teamsCount = await client.query('SELECT COUNT(*) FROM teams');
+        const usersCount = await client.query('SELECT COUNT(*) FROM users');
+        const adminUsersCount = await client.query('SELECT COUNT(*) FROM admin_users');
+        
+        results.database.status = 'connected';
+        results.database.data = {
+          teams: parseInt(teamsCount.rows[0].count),
+          users: parseInt(usersCount.rows[0].count),
+          admin_users: parseInt(adminUsersCount.rows[0].count)
+        };
+        
+        await client.end();
+      } catch (dbError: any) {
+        results.database.status = 'error';
+        results.database.error = dbError.message;
+      }
+    }
+
+    res.json(results);
+  } catch (error: any) {
+    res.status(500).json({ 
+      status: 'error', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 

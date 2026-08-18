@@ -17,7 +17,7 @@ export default function LoginPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://iwklappbackend-production.up.railway.app/api'
-      const response = await fetch(`${apiUrl}/auth/admin-login`, {
+      const response = await fetch(`${apiUrl}/auth/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

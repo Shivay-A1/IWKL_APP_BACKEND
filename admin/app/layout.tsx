@@ -7,9 +7,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "IWKL Admin Panel",
   description: "Premium Kabaddi League Administration",
-  icons: {
-    icon: '/favicon.ico',
-  },
 };
 
 export default function RootLayout({

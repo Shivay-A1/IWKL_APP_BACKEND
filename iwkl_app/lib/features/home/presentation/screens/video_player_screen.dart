@@ -1,5 +1,4 @@
-import 'dart:html' as html;
-import 'dart:ui_web' as ui_web;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_design_system.dart';
@@ -19,80 +18,15 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  String? _embedUrl;
   bool _isLoading = true;
   bool _hasError = false;
-  bool _triedEmbedding = false;
-  final String _uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
 
   @override
   void initState() {
     super.initState();
-    _loadVideo();
-  }
-
-  void _loadVideo() {
-    final videoId = _extractVideoId(widget.videoUrl);
-    if (videoId.isEmpty) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-      });
-      return;
-    }
-
-    // Use regular YouTube embed with specific parameters for Shorts
-    _embedUrl = 'https://www.youtube.com/embed/$videoId?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&controls=1&fs=1&iv_load_policy=3&widget_referrer&origin=https://www.youtube.com&start=0';
-
-    _createIframe(_embedUrl!);
-  }
-
-  void _createIframe(String embedUrl) {
-    // Create iframe with maximum compatibility
-    final iframe = html.IFrameElement()
-      ..src = embedUrl
-      ..style.width = '100%'
-      ..style.height = '100%'
-      ..style.border = 'none'
-      ..allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
-      ..allowFullscreen = true
-      ..style.backgroundColor = 'black'
-      ..style.position = 'absolute'
-      ..style.top = '0'
-      ..style.left = '0'
-      ..setAttribute('frameborder', '0')
-      ..setAttribute('scrolling', 'no')
-      ..setAttribute('allowtransparency', 'true');
-
-    // Listen for load events
-    iframe.onLoad.listen((event) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _triedEmbedding = true;
-        });
-      }
-    });
-
-    iframe.onError.listen((event) {
-      if (mounted && !_triedEmbedding) {
-        _triedEmbedding = true;
-        _launchInBrowser();
-      }
-    });
-
-    // Register the iframe with platform view registry
-    ui_web.platformViewRegistry.registerViewFactory(
-      'video-iframe-$_uniqueId',
-      (int viewId) => iframe,
-    );
-
-    // Fallback timeout - try browser if iframe doesn't load
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted && !_triedEmbedding) {
-        _triedEmbedding = true;
-        _launchInBrowser();
-      }
+    // Auto-launch video in browser on mobile
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _launchInBrowser();
     });
   }
 
@@ -116,7 +50,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> _launchInBrowser() async {
     setState(() {
-      _triedEmbedding = true;
       _isLoading = false;
     });
     
@@ -199,32 +132,42 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Loading video in app...',
+                        'Opening video...',
                         style: TextStyle(
                           color: AppDesignSystem.getSecondaryText(context),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Will open in browser if unavailable',
-                        style: TextStyle(
-                          color: AppDesignSystem.getSecondaryText(context),
-                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: HtmlElementView(
-                        viewType: 'video-iframe-$_uniqueId',
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.play_circle_outline,
+                        size: 80,
+                        color: AppDesignSystem.primaryPurple,
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Video will open in YouTube app',
+                        style: TextStyle(
+                          color: AppDesignSystem.getPrimaryText(context),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _launchInBrowser,
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('Open Now'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppDesignSystem.primaryPurple,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
     );

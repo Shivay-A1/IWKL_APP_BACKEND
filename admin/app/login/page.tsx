@@ -16,7 +16,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/admin-login', { email, password });
 
       if (response.data) {
         localStorage.setItem('token', response.data.accessToken);

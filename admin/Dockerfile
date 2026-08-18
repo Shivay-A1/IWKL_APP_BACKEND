@@ -2,10 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY admin/package*.json ./
 RUN npm install
 
-COPY . .
+COPY admin/ .
 RUN npm run build
 
 EXPOSE 3000

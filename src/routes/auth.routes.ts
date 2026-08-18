@@ -26,6 +26,11 @@ router.post('/admin/login', authLimiter, [
   body('password').notEmpty().withMessage('Password is required'),
 ], validate, authController.adminLogin);
 
+router.post('/admin-login', authLimiter, [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+], validate, authController.adminLogin);
+
 router.post('/refresh', authController.refreshToken);
 
 router.post('/forgot-password', [

@@ -11,11 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-<<<<<<< Updated upstream
-    "migrate:deploy": "npx prisma migrate deploy && npx prisma generate"
-=======
+    "migrate:deploy": "npx prisma migrate deploy && npx prisma generate",
     "railway:build": "npm run build && npx prisma generate"
->>>>>>> Stashed changes
   },
   "keywords": [
     "iwkl",
@@ -49,11 +46,8 @@
     "multer-s3": "^3.0.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^8.0.10",
-<<<<<<< Updated upstream
     "pdfkit": "^0.13.0",
-=======
     "pg": "^8.23.0",
->>>>>>> Stashed changes
     "slugify": "^1.6.9",
     "socket.io": "^4.8.3"
   },

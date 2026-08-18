@@ -111,7 +111,7 @@ app.get('/api/test-integration', async (req, res) => {
   try {
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     
-    const results = {
+    const results: any = {
       timestamp: new Date().toISOString(),
       status: 'ok',
       database: {

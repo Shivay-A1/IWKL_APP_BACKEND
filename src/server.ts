@@ -9,16 +9,12 @@ import { createServer } from 'http';
 dotenv.config();
 
 const app = express();
-<<<<<<< Updated upstream
 // Set trust proxy to specific trusted proxies instead of true to avoid rate limiter warning
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
 const PORT = Number(process.env.PORT) || 5000;
-=======
-const PORT = Number(process.env.PORT) || 3000;
 
 // Check if DATABASE_PRIVATE_URL is available (Railway)
 const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
->>>>>>> Stashed changes
 
 // CORS - must be before helmet to avoid conflicts
 const allowedOrigins = [
@@ -32,13 +28,10 @@ const allowedOrigins = [
   'https://iwkl.in',
   'https://www.iwkl.in',
   'https://iwkl.org',
-<<<<<<< Updated upstream
   'https://iwkl-platform.onrender.com',
-=======
   // Railway dynamic domains
   'https://*.up.railway.app',
   'https://*.railway.app',
->>>>>>> Stashed changes
 ].filter(Boolean);
 
 app.use(cors({
@@ -66,7 +59,6 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
-<<<<<<< Updated upstream
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads', {
   maxAge: '1d',
@@ -87,11 +79,6 @@ app.use(helmet({
       "img-src": ["'self'", "data:", "https://*.up.railway.app", "https://*.railway.app", "https://iwkl-backend-lg6t-production.up.railway.app", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
     },
   } : false,
-=======
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for Railway deployment
->>>>>>> Stashed changes
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: false,
 }));
@@ -101,7 +88,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-<<<<<<< Updated upstream
 // Compression with better settings
 app.use(compression({
   filter: (req, res) => {
@@ -113,12 +99,6 @@ app.use(compression({
   threshold: 1024,
   level: 6
 }));
-
-// Rate limiting
-app.use('/api/', generalLimiter);
-=======
-// Compression
-app.use(compression());
 >>>>>>> Stashed changes
 
 // Root endpoint for healthcheck

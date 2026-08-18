@@ -32,7 +32,6 @@ export const errorHandler = (
     });
   }
 
-<<<<<<< Updated upstream
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     console.error('Prisma Known Request Error:', err.code, err.message);
     if (err.code === 'P2002') {
@@ -53,11 +52,11 @@ export const errorHandler = (
       details: err.message,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
-=======
+  }
+
   // Handle file upload errors
   if (err.name === 'MulterError') {
     return res.status(400).json({ error: 'File upload error' });
->>>>>>> Stashed changes
   }
 
   // Generic error handling - simplified for deployment

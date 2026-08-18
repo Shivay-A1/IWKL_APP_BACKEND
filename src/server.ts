@@ -99,7 +99,6 @@ app.use(compression({
   threshold: 1024,
   level: 6
 }));
->>>>>>> Stashed changes
 
 // Root endpoint for healthcheck
 app.get('/', (req, res) => {

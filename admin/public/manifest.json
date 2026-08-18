@@ -1,0 +1,24 @@
+{
+  "name": "IWKL - Indian Women's Kabaddi League",
+  "short_name": "IWKL",
+  "description": "Official platform for the Indian Women's Kabaddi League",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2B123A",
+  "theme_color": "#BFA253",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

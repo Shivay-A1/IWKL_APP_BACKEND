@@ -567,6 +567,51 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
+// Admin dashboard endpoint
+app.get('/api/admin/dashboard', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    // Get counts from all tables
+    const usersCount = await client.query('SELECT COUNT(*) as count FROM users');
+    const teamsCount = await client.query('SELECT COUNT(*) as count FROM teams');
+    const videosCount = await client.query('SELECT COUNT(*) as count FROM videos');
+    const matchesCount = await client.query('SELECT COUNT(*) as count FROM matches');
+    const newsCount = await client.query('SELECT COUNT(*) as count FROM news');
+    const galleryCount = await client.query('SELECT COUNT(*) as count FROM gallery');
+    
+    // Get live matches
+    const liveMatches = await client.query("SELECT COUNT(*) as count FROM matches WHERE status = 'LIVE'");
+    
+    await client.end();
+
+    res.json({
+      totalUsers: parseInt(usersCount.rows[0].count),
+      totalMatches: parseInt(matchesCount.rows[0].count),
+      totalVideos: parseInt(videosCount.rows[0].count),
+      totalNews: parseInt(newsCount.rows[0].count),
+      liveMatches: parseInt(liveMatches.rows[0].count),
+      unreadNotifications: 0,
+      totalGallery: parseInt(galleryCount.rows[0].count)
+    });
+  } catch (error: any) {
+    console.error('Admin dashboard error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin login endpoint (for admin panel)
 app.post('/api/auth/admin-login', async (req, res) => {
   try {

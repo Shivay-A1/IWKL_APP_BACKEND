@@ -1,8 +1,0 @@
-[phases.build]
-cmds = ["npm run build"]
-
-[phases.start]
-cmd = "npm start"
-
-[build.env]
-NODE_VERSION = "20.18.0"

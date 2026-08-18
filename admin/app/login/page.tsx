@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import api from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,24 +16,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post('/auth/login', { email, password });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      if (response.data) {
+        localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         toast.success('Login successful');
         router.push('/dashboard');
       } else {
-        toast.error(data.error || 'Login failed');
+        toast.error('Login failed');
       }
-    } catch (error) {
-      toast.error('Login failed');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Login failed');
     } finally {
       setLoading(false);
     }

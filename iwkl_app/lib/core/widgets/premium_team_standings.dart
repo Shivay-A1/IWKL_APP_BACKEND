@@ -136,6 +136,9 @@ class _PremiumTeamStandingsState extends State<PremiumTeamStandings> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
                       ),
                       const SizedBox(height: 4),
                       Text(

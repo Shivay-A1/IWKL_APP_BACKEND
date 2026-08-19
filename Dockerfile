@@ -13,8 +13,7 @@ COPY src ./src
 COPY tsconfig.json ./
 COPY database_setup.sql ./
 
-# Force Prisma regeneration with correct binary target
-RUN npx prisma generate
+# Build without Prisma generation
 RUN npm run build
 
 EXPOSE 3000

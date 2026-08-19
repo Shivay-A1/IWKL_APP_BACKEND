@@ -1,7 +1,7 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'https://iwklappbackend-production.up.railway.app/api';
-  static const String socketUrl = 'https://iwklappbackend-production.up.railway.app';
+  static const String baseUrl = 'http://localhost:5000/api';
+  static const String socketUrl = 'http://localhost:5000';
   
   // App Info
   static const String appName = 'IWKL OFFICIAL APP';

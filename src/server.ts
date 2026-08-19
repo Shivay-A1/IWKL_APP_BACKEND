@@ -14,8 +14,8 @@ const app = express();
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
 const PORT = Number(process.env.PORT) || 5000;
 
-// Check if DATABASE_PRIVATE_URL is available (Railway)
-const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
+// Use DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL;
 
 // CORS - must be before helmet to avoid conflicts
 const allowedOrigins = [

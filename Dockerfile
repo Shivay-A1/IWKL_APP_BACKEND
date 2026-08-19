@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install OpenSSL dependencies for Alpine
+RUN apk add --no-cache openssl1.1-compat
+
 COPY package*.json ./
 RUN npm install
 
@@ -10,6 +13,7 @@ COPY src ./src
 COPY tsconfig.json ./
 COPY database_setup.sql ./
 
+# Force Prisma regeneration with correct binary target
 RUN npx prisma generate
 RUN npm run build
 

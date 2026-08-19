@@ -3,7 +3,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install OpenSSL dependencies for Alpine
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl openssl1.1-compat
 
 COPY package*.json ./
 RUN npm install

@@ -26,23 +26,10 @@ async function setupDatabase() {
     const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
     console.log('📄 SQL file loaded successfully');
 
-    // Split SQL into individual statements
-    const statements = sqlContent
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
-
-    console.log(`🔧 Executing ${statements.length} SQL statements...`);
-
-    // Execute each statement
-    for (let i = 0; i < statements.length; i++) {
-      try {
-        await client.query(statements[i]);
-        console.log(`✅ Statement ${i + 1}/${statements.length} executed successfully`);
-      } catch (error) {
-        console.log(`⚠️ Statement ${i + 1}/${statements.length} failed (might be safe):`, error.message);
-      }
-    }
+    // Execute the complete SQL file as one transaction
+    console.log('🔧 Executing SQL setup script...');
+    await client.query(sqlContent);
+    console.log('✅ SQL setup script executed successfully');
 
     console.log('🎉 Database setup completed successfully!');
     
@@ -54,6 +41,14 @@ async function setupDatabase() {
       WHERE table_schema = 'public'
     `);
     console.log('📊 Created tables:', tables.rows.map(r => r.table_name));
+
+    // Check admin user
+    const adminUsers = await client.query('SELECT * FROM admin_users');
+    console.log('👤 Admin users:', adminUsers.rows.map(r => ({ email: r.email, role: r.role })));
+
+    // Check teams
+    const teams = await client.query('SELECT * FROM teams');
+    console.log('🏆 Teams:', teams.rows.map(r => ({ name: r.name, shortName: r.shortName })));
 
     await client.end();
     console.log('✅ Database connection closed');

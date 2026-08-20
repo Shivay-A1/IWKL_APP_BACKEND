@@ -21,13 +21,35 @@ async function runPrismaMigrations() {
     if (databaseUrl) {
       console.log('🗄️ Running Prisma database migrations...');
       const { execSync } = require('child_process');
-      execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
-      console.log('✅ Prisma migrations completed successfully');
+      try {
+        execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+        console.log('✅ Prisma migrations completed successfully');
+      } catch (prismaError) {
+        console.error('⚠️ Prisma migrations failed:', prismaError.message);
+      }
+      
+      // Also run SQL setup script to create admin user and sample data
+      console.log('🗄️ Running SQL setup script...');
+      try {
+        const fs = require('fs');
+        const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
+        const { Client } = require('pg');
+        const client = new Client({
+          connectionString: databaseUrl,
+          ssl: { rejectUnauthorized: false }
+        });
+        await client.connect();
+        await client.query(sqlContent);
+        await client.end();
+        console.log('✅ SQL setup script completed successfully');
+      } catch (sqlError) {
+        console.error('⚠️ SQL setup script failed:', sqlError.message);
+      }
     } else {
       console.log('⚠️ DATABASE_URL not set, skipping migrations');
     }
   } catch (error) {
-    console.error('❌ Prisma migrations failed:', error);
+    console.error('❌ Database setup failed:', error);
     // Don't fail startup if migrations fail
   }
 }

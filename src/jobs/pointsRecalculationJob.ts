@@ -3,6 +3,11 @@ import { prisma } from '../config/database'
 // Recalculate points table for active season
 export async function recalculatePointsTable() {
   try {
+    if (!prisma) {
+      console.warn('⚠️ Database not available, skipping points recalculation');
+      return;
+    }
+
     const activeSeason = await prisma.season.findFirst({
       where: { isActive: true },
     })

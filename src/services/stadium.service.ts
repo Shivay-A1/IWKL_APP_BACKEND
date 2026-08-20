@@ -1,4 +1,7 @@
 import prisma from '../config/database';
+
+// Helper function to check if prisma is available
+const isPrismaAvailable = () => prisma !== null;
 import { AppError } from '../middleware/error';
 
 export const createStadium = async (data: any, file?: any) => {

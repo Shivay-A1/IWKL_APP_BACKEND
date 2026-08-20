@@ -2,6 +2,19 @@ import prisma from '../config/database';
 
 export async function getHomepageData() {
   try {
+    if (!prisma) {
+      console.warn('⚠️ Database not available, returning empty data');
+      return {
+        banners: [],
+        pointsTable: [],
+        videos: [],
+        news: [],
+        gallery: [],
+        teams: [],
+        matches: []
+      };
+    }
+
     // Fetch all data in parallel for better performance
     const [
       banners,

@@ -1,5 +1,8 @@
 import { prisma } from '../config/database'
 
+// Helper function to check if prisma is available
+const isPrismaAvailable = () => prisma !== null;
+
 // Clean up old notifications (older than 30 days)
 export async function cleanupOldNotifications() {
   try {

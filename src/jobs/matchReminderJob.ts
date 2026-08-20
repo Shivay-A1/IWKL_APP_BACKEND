@@ -1,4 +1,7 @@
 import { prisma } from '../config/database'
+
+// Helper function to check if prisma is available
+const isPrismaAvailable = () => prisma !== null;
 import { apiService } from '../services'
 
 // Send match reminders to users who follow the teams

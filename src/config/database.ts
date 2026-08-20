@@ -12,20 +12,25 @@ const getPrismaClient = () => {
       console.warn('⚠️ DATABASE_URL not set - returning null Prisma client');
       return null;
     }
-    prisma = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-      datasources: {
-        db: {
-          url: databaseUrl,
+    try {
+      prisma = new PrismaClient({
+        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+        datasources: {
+          db: {
+            url: databaseUrl,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error('Failed to create Prisma client:', error);
+      return null;
+    }
   }
   return prisma;
 };
 
-// Export a function that returns the Prisma client
-export default getPrismaClient();
+// Export the function, not the result
+export default getPrismaClient;
 
 // Graceful shutdown
 process.on('beforeExit', async () => {

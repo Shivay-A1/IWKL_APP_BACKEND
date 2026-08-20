@@ -1,7 +1,8 @@
-import prisma from '../config/database';
+import getPrisma from '../config/database';
 
 export async function getHomepageData() {
   try {
+    
     if (!prisma) {
       console.warn('⚠️ Database not available, returning empty data');
       return {

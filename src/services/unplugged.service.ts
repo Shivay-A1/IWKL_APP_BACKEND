@@ -1,11 +1,16 @@
-import prisma from '../config/database';
+import getPrisma from '../config/database';
+import slugify from 'slugify';
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => prisma !== null;
-import slugify from 'slugify';
+const isPrismaAvailable = () => getPrisma() !== null;
 
 // Category Services
 export const createCategory = async (data: any) => {
+  const prisma = getPrisma();
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { name, description, displayOrder } = data;
   const slug = data.slug || slugify(name, { lower: true });
   

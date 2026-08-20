@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import getPrisma from '../config/database';
 
 // Helper function to check if prisma is available
 const isPrismaAvailable = () => prisma !== null;

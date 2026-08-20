@@ -1,12 +1,11 @@
-import getPrisma from '../config/database';
+import prisma from '../config/database';
 import slugify from 'slugify';
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => getPrisma() !== null;
+const isPrismaAvailable = () => prisma !== null;
 
 // Category Services
 export const createCategory = async (data: any) => {
-  const prisma = getPrisma();
   if (!prisma) {
     throw new Error('Database not available');
   }
@@ -28,6 +27,10 @@ export const createCategory = async (data: any) => {
 };
 
 export const getCategories = async (params: any = {}) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { isActive } = params;
   
   return await prisma.videoCategory.findMany({
@@ -43,6 +46,10 @@ export const getCategories = async (params: any = {}) => {
 };
 
 export const getCategoryById = async (id: string) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   return await prisma.videoCategory.findUnique({
     where: { id },
     include: {
@@ -55,6 +62,10 @@ export const getCategoryById = async (id: string) => {
 };
 
 export const updateCategory = async (id: string, data: any) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { name, description, displayOrder, isActive } = data;
   const slug = data.slug || (name ? slugify(name, { lower: true }) : undefined);
   
@@ -74,6 +85,10 @@ export const updateCategory = async (id: string, data: any) => {
 };
 
 export const deleteCategory = async (id: string) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   return await prisma.videoCategory.delete({
     where: { id },
   });
@@ -81,6 +96,10 @@ export const deleteCategory = async (id: string) => {
 
 // Video Services
 export const createVideo = async (data: any) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { categoryId, title, description, thumbnailUrl, youtubeUrl, duration, displayOrder } = data;
   
   // Extract YouTube video ID from URL
@@ -111,6 +130,10 @@ export const createVideo = async (data: any) => {
 };
 
 export const getVideos = async (params: any = {}) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { categoryId, isActive, isFeatured } = params;
   
   return await prisma.video.findMany({
@@ -127,6 +150,10 @@ export const getVideos = async (params: any = {}) => {
 };
 
 export const getVideoById = async (id: string) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   return await prisma.video.findUnique({
     where: { id },
     include: {
@@ -136,6 +163,10 @@ export const getVideoById = async (id: string) => {
 };
 
 export const getVideosByCategory = async (categoryId: string) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   return await prisma.video.findMany({
     where: {
       categoryId,
@@ -149,6 +180,10 @@ export const getVideosByCategory = async (categoryId: string) => {
 };
 
 export const updateVideo = async (id: string, data: any) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   const { categoryId, title, description, thumbnailUrl, youtubeUrl, duration, displayOrder, isActive, isFeatured } = data;
   
   // Extract YouTube video ID from URL if provided
@@ -181,6 +216,10 @@ export const updateVideo = async (id: string, data: any) => {
 };
 
 export const deleteVideo = async (id: string) => {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
+  
   return await prisma.video.delete({
     where: { id },
   });

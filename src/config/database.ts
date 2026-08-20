@@ -29,8 +29,9 @@ const getPrismaClient = () => {
   return prisma;
 };
 
-// Export the function, not the result
-export default getPrismaClient;
+// Export the prisma instance directly for backward compatibility
+// This will be null if database is not configured
+export default getPrismaClient();
 
 // Graceful shutdown
 process.on('beforeExit', async () => {

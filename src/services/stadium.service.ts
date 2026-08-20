@@ -1,11 +1,10 @@
-import getPrisma from '../config/database';
+import prisma from '../config/database';
 import { AppError } from '../middleware/error';
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => getPrisma() !== null;
+const isPrismaAvailable = () => prisma !== null;
 
 export const createStadium = async (data: any, file?: any) => {
-  const prisma = getPrisma();
   if (!prisma) {
     throw new AppError('Database not available', 503);
   }
@@ -28,6 +27,10 @@ export const createStadium = async (data: any, file?: any) => {
 };
 
 export const getStadiums = async (query: any) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
   const { city, isActive } = query;
   const where: any = {};
 
@@ -51,6 +54,10 @@ export const getStadiums = async (query: any) => {
 };
 
 export const getStadiumById = async (id: string) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
   const stadium = await prisma.stadium.findUnique({
     where: { id },
     include: {
@@ -66,6 +73,10 @@ export const getStadiumById = async (id: string) => {
 };
 
 export const updateStadium = async (id: string, data: any, file?: any) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
   const { name, city, state, capacity, description, isActive } = data;
   const image = file ? file.path : undefined;
 
@@ -89,6 +100,10 @@ export const updateStadium = async (id: string, data: any, file?: any) => {
 };
 
 export const deleteStadium = async (id: string) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
   const stadium = await prisma.stadium.findUnique({
     where: { id },
     include: {

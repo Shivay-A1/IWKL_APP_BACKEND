@@ -1,12 +1,11 @@
-import getPrisma from '../config/database'
+import prisma from '../config/database'
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => getPrisma() !== null;
+const isPrismaAvailable = () => prisma !== null;
 
 // Clean up old notifications (older than 30 days)
 export async function cleanupOldNotifications() {
   try {
-    const prisma = getPrisma();
     if (!prisma) {
       console.warn('Database not available for notification cleanup');
       return;

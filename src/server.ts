@@ -709,8 +709,23 @@ app.post('/api/auth/admin-login', async (req, res) => {
     const { email, password } = req.body;
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     
+    // Temporary fallback for testing without database
     if (!databaseUrl) {
-      return res.status(400).json({ error: 'Database not configured' });
+      console.warn('Database not configured, using fallback admin login');
+      if (email === 'admin@iwkl.com' && password === 'admin123') {
+        return res.json({ 
+          message: 'Admin login successful (fallback mode)',
+          accessToken: 'admin_token_fallback_' + Date.now(),
+          refreshToken: 'refresh_token_fallback_' + Date.now(),
+          user: {
+            id: 'admin_1',
+            name: 'Admin User',
+            email: 'admin@iwkl.com',
+            role: 'ADMIN'
+          }
+        });
+      }
+      return res.status(401).json({ error: 'Invalid credentials (fallback mode: use admin@iwkl.com / admin123)' });
     }
 
     const { Client } = require('pg');

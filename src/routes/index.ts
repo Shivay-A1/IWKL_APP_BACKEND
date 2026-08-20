@@ -17,7 +17,6 @@ import notificationRoutes from './notification.routes';
 import userRoutes from './user.routes';
 import championRoutes from './champion.routes';
 import leadershipRoutes from './leadership.routes';
-import fanClubRoutes from './fan-club.routes';
 import footerRoutes from './footer.routes';
 import siteSettingsRoutes from './site-settings.routes';
 import unpluggedRoutes from './unplugged.routes';
@@ -61,8 +60,7 @@ router.get('/', (req, res) => {
       users: '/api/users',
       champions: '/api/champions',
       leadership: '/api/leadership',
-      fanClub: '/api/fan-club',
-      footer: '/api/footer',
+      // fanClub: '/api/fan-club', // Disabled - using SQL fallback in server.ts      footer: '/api/footer',
       siteSettings: '/api/site-settings',
       unplugged: '/api/unplugged',
       homepage: '/api/homepage',
@@ -100,7 +98,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/users', userRoutes);
 router.use('/champions', championRoutes);
 router.use('/leadership', leadershipRoutes);
-router.use('/fan-club', fanClubRoutes);
+// router.use('/fan-club', fanClubRoutes); // Disabled - using SQL fallback in server.ts
 router.use('/footer', footerRoutes);
 router.use('/site-settings', siteSettingsRoutes);
 router.use('/unplugged', unpluggedRoutes);

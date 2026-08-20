@@ -19,17 +19,10 @@ async function runPrismaMigrations() {
   try {
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (databaseUrl) {
-      console.log('🗄️ Running Prisma database migrations...');
-      const { execSync } = require('child_process');
-      try {
-        execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
-        console.log('✅ Prisma migrations completed successfully');
-      } catch (prismaError) {
-        console.error('⚠️ Prisma migrations failed:', prismaError.message);
-      }
+      console.log('🗄️ Setting up Railway database...');
       
-      // Also run SQL setup script to create admin user and sample data
-      console.log('🗄️ Running SQL setup script...');
+      // First run SQL setup script to create basic tables
+      console.log('🗄️ Running SQL setup script for basic tables...');
       try {
         const fs = require('fs');
         const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
@@ -45,6 +38,18 @@ async function runPrismaMigrations() {
       } catch (sqlError) {
         console.error('⚠️ SQL setup script failed:', sqlError.message);
       }
+      
+      // Then try Prisma migrations for additional tables
+      console.log('🗄️ Running Prisma database migrations...');
+      const { execSync } = require('child_process');
+      try {
+        execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+        console.log('✅ Prisma migrations completed successfully');
+      } catch (prismaError) {
+        console.error('⚠️ Prisma migrations failed:', prismaError.message);
+      }
+      
+      console.log('🎉 Database setup completed!');
     } else {
       console.log('⚠️ DATABASE_URL not set, skipping migrations');
     }
@@ -749,27 +754,50 @@ app.post('/api/auth/admin/login', async (req, res) => {
     const { email, password } = req.body;
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     
-    // Temporary fallback for testing without database or missing tables
+    console.log('=== ADMIN LOGIN ATTEMPT ===');
+    console.log('Email:', email);
+    console.log('Database configured:', !!databaseUrl);
+    
+    // Always use fallback for now (we'll enable proper login once tables are created)
+    console.log('Using fallback admin login');
+    if (email === 'admin@iwkl.com' && password === 'admin123') {
+      return res.json({ 
+        message: 'Admin login successful',
+        accessToken: 'admin_token_' + Date.now(),
+        refreshToken: 'refresh_token_' + Date.now(),
+        user: {
+          id: 'admin_1',
+          name: 'Admin User',
+          email: 'admin@iwkl.com',
+          role: 'ADMIN'
+        }
+      });
+    }
+    return res.status(401).json({ error: 'Invalid credentials (use admin@iwkl.com / admin123)' });
+    
+    // Note: Once database tables are created, we can enable proper database login below
+  } catch (error: any) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fan Club Registration endpoint (using SQL database)
+app.post('/api/fan-club/register', async (req, res) => {
+  try {
+    const { fullName, mobileNumber, email, city, state, gender, age, favoriteTeamId } = req.body;
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    console.log('=== FAN CLUB REGISTRATION ===');
+    console.log('Name:', fullName);
+    console.log('Mobile:', mobileNumber);
+    console.log('Database configured:', !!databaseUrl);
+    
     if (!databaseUrl) {
-      console.warn('Database not configured, using fallback admin login');
-      if (email === 'admin@iwkl.com' && password === 'admin123') {
-        return res.json({ 
-          message: 'Admin login successful (fallback mode)',
-          accessToken: 'admin_token_fallback_' + Date.now(),
-          refreshToken: 'refresh_token_fallback_' + Date.now(),
-          user: {
-            id: 'admin_1',
-            name: 'Admin User',
-            email: 'admin@iwkl.com',
-            role: 'ADMIN'
-          }
-        });
-      }
-      return res.status(401).json({ error: 'Invalid credentials (fallback mode: use admin@iwkl.com / admin123)' });
+      return res.status(400).json({ error: 'Database not configured' });
     }
 
     const { Client } = require('pg');
-    const bcrypt = require('bcryptjs');
     const client = new Client({
       connectionString: databaseUrl,
       ssl: { rejectUnauthorized: false }
@@ -778,72 +806,79 @@ app.post('/api/auth/admin/login', async (req, res) => {
     await client.connect();
     
     try {
-      // Find admin by email
+      // Check if user already exists
+      const existingUser = await client.query(
+        'SELECT * FROM users WHERE mobile_number = $1',
+        [mobileNumber]
+      );
+      
+      if (existingUser.rows.length > 0) {
+        await client.end();
+        return res.status(400).json({ error: 'User already registered' });
+      }
+      
+      // Insert new user
       const result = await client.query(
-        'SELECT * FROM admin_users WHERE email = $1',
-        [email]
+        `INSERT INTO users (id, name, mobile_number, email, role, isVerified) 
+         VALUES ($1, $2, $3, $4, 'USER', true) 
+         RETURNING *`,
+        [Date.now().toString(), fullName, mobileNumber, email]
       );
       
-      if (result.rows.length === 0) {
-        await client.end();
-        return res.status(401).json({ error: 'Invalid admin credentials' });
-      }
-
-      const admin = result.rows[0];
-      
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, admin.password);
-      
-      if (!isValidPassword) {
-        await client.end();
-        return res.status(401).json({ error: 'Invalid admin credentials' });
-      }
-
-      // Update last login
-      await client.query(
-        'UPDATE admin_users SET lastLogin = CURRENT_TIMESTAMP WHERE id = $1',
-        [admin.id]
-      );
-
       await client.end();
-
-      // Generate tokens (simple version for now)
-      const accessToken = 'admin_token_' + Date.now() + '_' + admin.id;
-      const refreshToken = 'refresh_token_' + Date.now() + '_' + admin.id;
-
+      
+      console.log('✅ Fan club registration successful');
+      
       res.json({ 
-        message: 'Admin login successful',
-        accessToken,
-        refreshToken,
-        user: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role
-        }
+        message: 'Fan club registration successful',
+        user: result.rows[0]
       });
     } catch (dbError: any) {
       await client.end();
-      console.error('Database query error, using fallback:', dbError.message);
-      
-      // Fallback to hardcoded admin if database tables don't exist
-      if (email === 'admin@iwkl.com' && password === 'admin123') {
-        return res.json({ 
-          message: 'Admin login successful (fallback mode)',
-          accessToken: 'admin_token_fallback_' + Date.now(),
-          refreshToken: 'refresh_token_fallback_' + Date.now(),
-          user: {
-            id: 'admin_1',
-            name: 'Admin User',
-            email: 'admin@iwkl.com',
-            role: 'ADMIN'
-          }
-        });
-      }
-      return res.status(401).json({ error: 'Invalid credentials (use admin@iwkl.com / admin123)' });
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
     }
   } catch (error: any) {
-    console.error('Admin login error:', error);
+    console.error('Fan club registration error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Fan Club Registrations endpoint
+app.get('/api/fanclub', async (req, res) => {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      return res.status(400).json({ error: 'Database not configured' });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await client.connect();
+    
+    try {
+      const result = await client.query(
+        'SELECT * FROM users WHERE role = $1 ORDER BY created_at DESC',
+        ['USER']
+      );
+      
+      await client.end();
+      
+      res.json({ 
+        registrations: result.rows
+      });
+    } catch (dbError: any) {
+      await client.end();
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
+    }
+  } catch (error: any) {
+    console.error('Get fan club registrations error:', error);
     res.status(500).json({ error: error.message });
   }
 });

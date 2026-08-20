@@ -1,4 +1,4 @@
-import { prisma } from '../config';
+import prisma from '../config/database';
 import { AppError } from '../middleware/error';
 
 export const registerFanClub = async (data: {
@@ -12,12 +12,18 @@ export const registerFanClub = async (data: {
   favoriteTeamId: string;
   documentSignature?: string;
 }) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
   return await prisma.fanClubRegistration.create({
     data,
   });
 };
 
 export const getAllRegistrations = async (search?: string) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
   const where = search
     ? {
         OR: [
@@ -46,6 +52,9 @@ export const getAllRegistrations = async (search?: string) => {
 };
 
 export const getRegistrationById = async (id: string) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
   const registration = await prisma.fanClubRegistration.findUnique({
     where: { id },
     include: {
@@ -68,6 +77,9 @@ export const getRegistrationById = async (id: string) => {
 };
 
 export const exportRegistrations = async () => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
   const registrations = await prisma.fanClubRegistration.findMany({
     include: {
       favoriteTeam: {

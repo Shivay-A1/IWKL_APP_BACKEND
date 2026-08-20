@@ -704,7 +704,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
 });
 
 // Admin login endpoint (for admin panel)
-app.post('/api/auth/admin-login', async (req, res) => {
+app.post('/api/auth/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;

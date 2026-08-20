@@ -23,5 +23,13 @@ EXPOSE 3000
 ENV PORT=3000
 ENV NODE_ENV=production
 
-# Start the server
-CMD ["node", "dist/server.js"]
+# Create a simple startup script to ensure server starts
+RUN echo '#!/bin/sh\n\
+echo "Starting IWKL Backend..."\n\
+echo "PORT: $PORT"\n\
+echo "NODE_ENV: $NODE_ENV"\n\
+exec node dist/server.js\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+# Start the server using the startup script
+CMD ["/app/start.sh"]

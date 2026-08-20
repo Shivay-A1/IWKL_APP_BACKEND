@@ -4,10 +4,11 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node dist/server.js",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 600,
+    "startCommand": "/app/start.sh",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
-    "healthcheckInterval": 30
+    "healthcheckInterval": 15,
+    "healthcheckMaxRetries": 5
   }
 }

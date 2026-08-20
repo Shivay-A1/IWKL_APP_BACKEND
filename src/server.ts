@@ -21,10 +21,9 @@ console.log('🔌 Port:', PORT);
 console.log('🗄️ Database URL configured:', !!process.env.DATABASE_URL);
 console.log('🗄️ DATABASE_PRIVATE_URL configured:', !!process.env.DATABASE_PRIVATE_URL);
 
-// Ensure database URL is set
+// Ensure database URL is set (non-blocking warning only)
 if (!process.env.DATABASE_URL && !process.env.DATABASE_PRIVATE_URL) {
-  console.error('❌ DATABASE_URL or DATABASE_PRIVATE_URL must be set!');
-  process.exit(1);
+  console.warn('⚠️ DATABASE_URL or DATABASE_PRIVATE_URL not set - some features may not work');
 }
 
 // Use DATABASE_URL
@@ -1201,16 +1200,42 @@ app.use((err: any, req: any, res: any, next: any) => {
 // Start server
 const server = createServer(app);
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('='.repeat(50));
-  console.log('🚀 IWKL Backend API successfully started!');
-  console.log(`📝 Port: ${PORT}`);
-  console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
-  console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
-  console.log('='.repeat(50));
-}).on('error', (err: any) => {
-  console.error('❌ Server failed to start:', err);
-  process.exit(1);
+// Test port availability
+const testPort = (port: number) => {
+  return new Promise((resolve) => {
+    const testServer = require('net').createServer();
+    testServer.once('error', () => {
+      resolve(false);
+    });
+    testServer.once('listening', () => {
+      testServer.close();
+      resolve(true);
+    });
+    testServer.listen(port);
+  });
+};
+
+console.log('🔍 Testing port availability...');
+testPort(PORT).then((available) => {
+  if (!available) {
+    console.error(`❌ Port ${PORT} is already in use!`);
+    process.exit(1);
+  }
+  console.log(`✅ Port ${PORT} is available`);
+  
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('='.repeat(50));
+    console.log('🚀 IWKL Backend API successfully started!');
+    console.log(`📝 Port: ${PORT}`);
+    console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/health`);
+    console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+    console.log('='.repeat(50));
+  }).on('error', (err: any) => {
+    console.error('❌ Server failed to start:', err);
+    console.error('Error details:', err.message);
+    console.error('Error stack:', err.stack);
+    process.exit(1);
+  });
 });
 
 // Graceful shutdown

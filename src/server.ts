@@ -765,7 +765,7 @@ app.post('/api/auth/admin/login', async (req, res) => {
   }
 });
 
-// Fan Club Registration endpoint (using SQL database)
+// Fan Club Registration endpoint (using Prisma)
 app.post('/api/fan-club/register', async (req, res) => {
   try {
     const { fullName, mobileNumber, email, city, state, gender, age, favoriteTeamId } = req.body;
@@ -780,44 +780,46 @@ app.post('/api/fan-club/register', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    
     try {
-      // Check if user already exists
-      const existingUser = await client.query(
-        'SELECT * FROM users WHERE mobile_number = $1',
-        [mobileNumber]
-      );
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
       
-      if (existingUser.rows.length > 0) {
-        await client.end();
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { mobile: mobileNumber }
+      });
+      
+      if (existingUser) {
         return res.status(400).json({ error: 'User already registered' });
       }
       
-      // Insert new user
-      const result = await client.query(
-        `INSERT INTO users (id, name, mobile_number, email, role, isVerified) 
-         VALUES ($1, $2, $3, $4, 'USER', true) 
-         RETURNING *`,
-        [Date.now().toString(), fullName, mobileNumber, email]
-      );
-      
-      await client.end();
+      // Insert new user using Prisma
+      const user = await prisma.user.create({
+        data: {
+          id: Date.now().toString(),
+          name: fullName,
+          mobile: mobileNumber,
+          email: email || null,
+          role: 'USER',
+          isVerified: true
+        }
+      });
       
       console.log('✅ Fan club registration successful');
       
       res.json({ 
         message: 'Fan club registration successful',
-        user: result.rows[0]
+        user: {
+          id: user.id,
+          name: user.name,
+          mobile: user.mobile,
+          email: user.email,
+          role: user.role
+        }
       });
     } catch (dbError: any) {
-      await client.end();
       console.error('Database error:', dbError.message);
       res.status(500).json({ error: dbError.message });
     }
@@ -836,27 +838,27 @@ app.get('/api/fanclub', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    
     try {
-      const result = await client.query(
-        'SELECT * FROM users WHERE role = $1 ORDER BY created_at DESC',
-        ['USER']
-      );
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
       
-      await client.end();
+      const users = await prisma.user.findMany({
+        where: { role: 'USER' },
+        orderBy: { createdAt: 'desc' }
+      });
       
       res.json({ 
-        registrations: result.rows
+        registrations: users.map(u => ({
+          id: u.id,
+          name: u.name,
+          mobile: u.mobile,
+          email: u.email,
+          createdAt: u.createdAt
+        }))
       });
     } catch (dbError: any) {
-      await client.end();
       console.error('Database error:', dbError.message);
       res.status(500).json({ error: dbError.message });
     }

@@ -13,7 +13,10 @@ COPY src ./src
 COPY tsconfig.json ./
 COPY database_setup.sql ./
 
-# Build without Prisma generation
+# Generate Prisma client for production
+RUN npx prisma generate
+
+# Build
 RUN npm run build
 
 # Expose the port Railway expects

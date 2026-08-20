@@ -49,6 +49,7 @@ const allowedOrigins = [
   'https://www.iwkl.in',
   'https://iwkl.org',
   'https://iwkl-platform.onrender.com',
+  'https://ravishing-serenity-production.up.railway.app',
   // Railway dynamic domains
   'https://*.up.railway.app',
   'https://*.railway.app',

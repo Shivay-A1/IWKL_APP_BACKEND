@@ -5,8 +5,7 @@
   },
   "deploy": {
     "startCommand": "node dist/server.js",
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 180,
-    "restartPolicyType": "ON_FAILURE"
+    "healthcheckPath": null,
+    "restartPolicyType": "ALWAYS"
   }
 }

@@ -23,5 +23,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV NODE_ENV=production
 
-# Direct start command without script
-CMD ["node", "dist/server.js"]
+# Simple start with explicit binding
+CMD ["sh", "-c", "node dist/server.js"]

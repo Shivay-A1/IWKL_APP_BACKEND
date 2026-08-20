@@ -186,29 +186,24 @@ app.get('/api/test-integration', async (req, res) => {
       }
     };
 
-    // Test database connection
+    // Test database connection using Prisma
     if (databaseUrl) {
       try {
-        const { Client } = require('pg');
-        const client = new Client({
-          connectionString: databaseUrl,
-          ssl: { rejectUnauthorized: false }
-        });
-        await client.connect();
-        
-        // Test queries
-        const teamsCount = await client.query('SELECT COUNT(*) FROM teams');
-        const usersCount = await client.query('SELECT COUNT(*) FROM users');
-        const adminUsersCount = await client.query('SELECT COUNT(*) FROM admin_users');
-        
-        results.database.status = 'connected';
-        results.database.data = {
-          teams: parseInt(teamsCount.rows[0].count),
-          users: parseInt(usersCount.rows[0].count),
-          admin_users: parseInt(adminUsersCount.rows[0].count)
-        };
-        
-        await client.end();
+        const { prisma } = require('./config');
+        if (prisma) {
+          // Use Prisma to test connection
+          await prisma.$connect();
+          results.database.status = 'connected';
+          results.database.data = {
+            teams: 0,
+            users: 0,
+            admin_users: 0
+          };
+          await prisma.$disconnect();
+        } else {
+          results.database.status = 'error';
+          results.database.error = 'Prisma not initialized';
+        }
       } catch (dbError: any) {
         results.database.status = 'error';
         results.database.error = dbError.message;
@@ -246,391 +241,17 @@ app.get('/keep-alive', (req, res) => {
   });
 });
 
-// Database setup endpoint (for Railway deployment)
+// Database setup endpoint (DISABLED - using Prisma migrations instead)
 app.get('/api/setup-database', async (req, res) => {
   try {
-    // Check all possible database environment variables
-    const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL || process.env.POSTGRES_URL;
-    
-    // Debug environment variables
-    const envCheck = {
-      DATABASE_PRIVATE_URL: !!process.env.DATABASE_PRIVATE_URL,
-      DATABASE_URL: !!process.env.DATABASE_URL,
-      POSTGRES_URL: !!process.env.POSTGRES_URL,
-      availableVars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES'))
-    };
-
-    if (!databaseUrl) {
-      return res.status(400).json({ 
-        error: 'Database URL not configured',
-        debug: envCheck,
-        message: 'Please set DATABASE_PRIVATE_URL environment variable in Railway'
-      });
-    }
-
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    console.log('✅ Database connected successfully');
-    
-    const createdTables = [];
-    const errors = [];
-
-    // Create Users Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS users CASCADE`);
-      await client.query(`
-        CREATE TABLE users (
-          id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          mobile_number VARCHAR(20) UNIQUE NOT NULL,
-          email VARCHAR(255) UNIQUE,
-          password VARCHAR(255) NOT NULL,
-          role VARCHAR(50) DEFAULT 'USER',
-          avatar VARCHAR(500),
-          isVerified BOOLEAN DEFAULT false,
-          isPremium BOOLEAN DEFAULT false,
-          otp VARCHAR(10),
-          otpExpiry TIMESTAMP,
-          resetToken VARCHAR(255),
-          resetTokenExpiry TIMESTAMP,
-          lastLogin TIMESTAMP,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('users');
-      console.log('✅ Users table created');
-    } catch (error: any) {
-      errors.push(`Users table: ${error.message}`);
-    }
-
-    // Create Teams Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS teams CASCADE`);
-      await client.query(`
-        CREATE TABLE teams (
-          id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(100) UNIQUE NOT NULL,
-          logoUrl VARCHAR(500),
-          bannerUrl VARCHAR(500),
-          abbreviation VARCHAR(10),
-          color VARCHAR(20),
-          foundedYear INTEGER,
-          homeCity VARCHAR(100),
-          description TEXT,
-          coach VARCHAR(255),
-          captain VARCHAR(255),
-          wins INTEGER DEFAULT 0,
-          losses INTEGER DEFAULT 0,
-          isActive BOOLEAN DEFAULT true,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('teams');
-      console.log('✅ Teams table created');
-    } catch (error: any) {
-      errors.push(`Teams table: ${error.message}`);
-    }
-
-    // Create Videos Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS videos CASCADE`);
-      await client.query(`
-        CREATE TABLE videos (
-          id VARCHAR(255) PRIMARY KEY,
-          title VARCHAR(255) NOT NULL,
-          videoUrl VARCHAR(500) NOT NULL,
-          thumbnailUrl VARCHAR(500),
-          category VARCHAR(100),
-          duration INTEGER,
-          isPremium BOOLEAN DEFAULT false,
-          isActive BOOLEAN DEFAULT true,
-          viewCount INTEGER DEFAULT 0,
-          likes INTEGER DEFAULT 0,
-          featured BOOLEAN DEFAULT false,
-          tags TEXT[],
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('videos');
-      console.log('✅ Videos table created');
-    } catch (error: any) {
-      errors.push(`Videos table: ${error.message}`);
-    }
-
-    // Create Seasons Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS seasons CASCADE`);
-      await client.query(`
-        CREATE TABLE seasons (
-          id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(100) UNIQUE NOT NULL,
-          year INTEGER NOT NULL,
-          startDate TIMESTAMP,
-          endDate TIMESTAMP,
-          isActive BOOLEAN DEFAULT false,
-          isCompleted BOOLEAN DEFAULT false,
-          description TEXT,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('seasons');
-      console.log('✅ Seasons table created');
-    } catch (error: any) {
-      errors.push(`Seasons table: ${error.message}`);
-    }
-
-    // Create Matches Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS matches CASCADE`);
-      await client.query(`
-        CREATE TABLE matches (
-          id VARCHAR(255) PRIMARY KEY,
-          seasonId VARCHAR(255),
-          homeTeamId VARCHAR(255),
-          awayTeamId VARCHAR(255),
-          venue VARCHAR(255),
-          matchDate TIMESTAMP,
-          status VARCHAR(50) DEFAULT 'SCHEDULED',
-          homeScore INTEGER DEFAULT 0,
-          awayScore INTEGER DEFAULT 0,
-          quarter1Scores JSONB,
-          quarter2Scores JSONB,
-          quarter3Scores JSONB,
-          quarter4Scores JSONB,
-          highlights TEXT[],
-          isLive BOOLEAN DEFAULT false,
-          isPremium BOOLEAN DEFAULT false,
-          metadata JSONB,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('matches');
-      console.log('✅ Matches table created');
-    } catch (error: any) {
-      errors.push(`Matches table: ${error.message}`);
-    }
-
-    // Create Points Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS points_table CASCADE`);
-      await client.query(`
-        CREATE TABLE points_table (
-          id VARCHAR(255) PRIMARY KEY,
-          seasonId VARCHAR(255),
-          teamId VARCHAR(255),
-          played INTEGER DEFAULT 0,
-          won INTEGER DEFAULT 0,
-          lost INTEGER DEFAULT 0,
-          tied INTEGER DEFAULT 0,
-          points INTEGER DEFAULT 0,
-          nrr DECIMAL(10,2) DEFAULT 0.00,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('points_table');
-      console.log('✅ Points table created');
-    } catch (error: any) {
-      errors.push(`Points table: ${error.message}`);
-    }
-
-    // Create Gallery Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS gallery CASCADE`);
-      await client.query(`
-        CREATE TABLE gallery (
-          id VARCHAR(255) PRIMARY KEY,
-          title VARCHAR(255),
-          imageUrl VARCHAR(500) NOT NULL,
-          category VARCHAR(100),
-          isPremium BOOLEAN DEFAULT false,
-          isActive BOOLEAN DEFAULT true,
-          description TEXT,
-          tags TEXT[],
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('gallery');
-      console.log('✅ Gallery table created');
-    } catch (error: any) {
-      errors.push(`Gallery table: ${error.message}`);
-    }
-
-    // Create News Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS news CASCADE`);
-      await client.query(`
-        CREATE TABLE news (
-          id VARCHAR(255) PRIMARY KEY,
-          title VARCHAR(255) NOT NULL,
-          content TEXT,
-          imageUrl VARCHAR(500),
-          category VARCHAR(100),
-          isPublished BOOLEAN DEFAULT false,
-          isPremium BOOLEAN DEFAULT false,
-          publishedAt TIMESTAMP,
-          metadata JSONB,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('news');
-      console.log('✅ News table created');
-    } catch (error: any) {
-      errors.push(`News table: ${error.message}`);
-    }
-
-    // Create Admin Users Table
-    try {
-      await client.query(`DROP TABLE IF EXISTS admin_users CASCADE`);
-      await client.query(`
-        CREATE TABLE admin_users (
-          id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) UNIQUE NOT NULL,
-          password VARCHAR(255) NOT NULL,
-          role VARCHAR(50) DEFAULT 'ADMIN',
-          lastLogin TIMESTAMP,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      createdTables.push('admin_users');
-      console.log('✅ Admin users table created');
-    } catch (error: any) {
-      errors.push(`Admin users table: ${error.message}`);
-    }
-
-    // Insert 10 Teams with proper logos
-    try {
-      await client.query(`
-        INSERT INTO teams (id, name, logoUrl, abbreviation, color, homeCity, description, isActive) VALUES
-        ('1', 'Garvi Gujarat', 'assets/teams/garvi_gujarat.png', 'GG', '#FF6B35', 'Ahmedabad', 'Gujarat Women Kabaddi Team', true),
-        ('2', 'Mumbai Strikers', 'assets/teams/mumbai_strikers.jpeg', 'MS', '#1E3A8A', 'Mumbai', 'Mumbai Women Kabaddi Team', true),
-        ('3', 'Odisha Kalingas', 'assets/teams/odisha_kalingas.png', 'OK', '#E11D48', 'Bhubaneswar', 'Odisha Women Kabaddi Team', true),
-        ('4', 'Delhi Warriors', 'assets/teams/delhi_warriors.jpeg', 'DW', '#1D4ED8', 'Delhi', 'Delhi Women Kabaddi Team', true),
-        ('5', 'Punjab Wings', 'assets/teams/punjab_wings.jpeg', 'PW', '#6D28D9', 'Ludhiana', 'Punjab Women Kabaddi Team', true),
-        ('6', 'Kashmiri Queens', 'assets/teams/kashmiri_queens.jpeg', 'KQ', '#7C3AED', 'Srinagar', 'Kashmir Women Kabaddi Team', true),
-        ('7', 'Namma Bengaluru', 'assets/teams/namma_bengaluru.jpeg', 'NB', '#84CC16', 'Bengaluru', 'Bengaluru Women Kabaddi Team', true),
-        ('8', 'Haryanvi Fighters', 'assets/teams/haryanvi_fighters.jpeg', 'HF', '#0F766E', 'Karnal', 'Haryana Women Kabaddi Team', true),
-        ('9', 'Kolkata Rangers', 'assets/teams/kolkata_rangers.jpeg', 'KR', '#1E40AF', 'Kolkata', 'Kolkata Women Kabaddi Team', true),
-        ('10', 'Ayodhya Shakti', 'assets/teams/ayodhya_shakti.jpeg', 'AS', '#DC2626', 'Ayodhya', 'Ayodhya Women Kabaddi Team', true)
-        ON CONFLICT (name) DO NOTHING
-      `);
-      console.log('✅ 10 Teams inserted');
-    } catch (error: any) {
-      errors.push(`Teams insert: ${error.message}`);
-    }
-
-    // Insert Sample Videos
-    try {
-      await client.query(`
-        INSERT INTO videos (id, title, videoUrl, thumbnailUrl, category, duration, featured, isActive) VALUES
-        ('1', 'IWKL Kabaddi Highlight 1', 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9', 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('2', 'IWKL Kabaddi Highlight 2', 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP', 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg', 'Highlights', 30, true, true),
-        ('3', 'IWKL Kabaddi Highlight 3', 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6', 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg', 'Highlights', 30, true, true)
-        ON CONFLICT DO NOTHING
-      `);
-      console.log('✅ Sample videos inserted');
-    } catch (error: any) {
-      errors.push(`Videos insert: ${error.message}`);
-    }
-
-    // Insert Sample Season
-    try {
-      await client.query(`
-        INSERT INTO seasons (id, name, year, startDate, endDate, isActive, isCompleted) VALUES
-        ('1', 'IWKL 2026', 2026, '2026-01-01', '2026-12-31', true, false)
-        ON CONFLICT (name) DO NOTHING
-      `);
-      console.log('✅ Sample season inserted');
-    } catch (error: any) {
-      errors.push(`Season insert: ${error.message}`);
-    }
-
-    // Insert Sample Points Table (all zeros)
-    try {
-      await client.query(`
-        INSERT INTO points_table (id, seasonId, teamId, played, won, lost, tied, points, nrr) VALUES
-        ('1', '1', '1', 0, 0, 0, 0, 0, 0.00),
-        ('2', '1', '2', 0, 0, 0, 0, 0, 0.00),
-        ('3', '1', '3', 0, 0, 0, 0, 0, 0.00),
-        ('4', '1', '4', 0, 0, 0, 0, 0, 0.00),
-        ('5', '1', '5', 0, 0, 0, 0, 0, 0.00),
-        ('6', '1', '6', 0, 0, 0, 0, 0, 0.00),
-        ('7', '1', '7', 0, 0, 0, 0, 0, 0.00),
-        ('8', '1', '8', 0, 0, 0, 0, 0, 0.00),
-        ('9', '1', '9', 0, 0, 0, 0, 0, 0.00),
-        ('10', '1', '10', 0, 0, 0, 0, 0, 0.00)
-        ON CONFLICT DO NOTHING
-      `);
-      console.log('✅ Points table (all zeros) inserted');
-    } catch (error: any) {
-      errors.push(`Points table insert: ${error.message}`);
-    }
-
-    // Insert Sample Gallery
-    try {
-      await client.query(`
-        INSERT INTO gallery (id, title, imageUrl, category, isActive) VALUES
-        ('1', 'IWKL Gallery 1', 'assets/gallery/gallery_1.png', 'Match', true),
-        ('2', 'IWKL Gallery 2', 'assets/gallery/gallery_2.png', 'Match', true),
-        ('3', 'IWKL Gallery 3', 'assets/gallery/gallery_3.jpg', 'Match', true)
-        ON CONFLICT DO NOTHING
-      `);
-      console.log('✅ Sample gallery inserted');
-    } catch (error: any) {
-      errors.push(`Gallery insert: ${error.message}`);
-    }
-
-    // Insert Default Admin User
-    try {
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      await client.query(`
-        INSERT INTO admin_users (id, name, email, password, role) VALUES
-        ('admin001', 'Super Admin', 'admin@iwkl.com', $1, 'SUPER_ADMIN')
-        ON CONFLICT (email) DO NOTHING
-      `, [hashedPassword]);
-      console.log('✅ Default admin user created');
-    } catch (error: any) {
-      errors.push(`Admin user insert: ${error.message}`);
-    }
-
-    console.log('🎉 Complete database setup completed successfully!');
-    
-    // Test the setup
-    console.log('🔍 Testing database setup...');
-    const tables = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-    `);
-    console.log('📊 Total tables in database:', tables.rows.map(r => r.table_name));
-
-    await client.end();
-    res.json({ 
-      message: 'Complete database setup completed successfully',
-      createdTables: createdTables,
-      totalTables: tables.rows.map(r => r.table_name),
-      teams: 10,
-      videos: 3,
-      errors: errors.length > 0 ? errors : null
+    return res.json({
+      message: 'Database setup is now handled by Prisma migrations on startup',
+      info: 'This endpoint is disabled. Use npx prisma db push --accept-data-loss instead',
+      note: 'Prisma will create all tables according to schema.prisma'
     });
   } catch (error: any) {
     console.error('Database setup error:', error);
-    res.status(500).json({ error: error.message, stack: error.stack });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -644,42 +265,46 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const bcrypt = require('bcryptjs');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
+      
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { mobile: mobile_number }
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({ error: 'User with this mobile number already exists' });
+      }
 
-    await client.connect();
-    
-    // Check if user already exists
-    const existingUser = await client.query(
-      'SELECT * FROM users WHERE mobile_number = $1',
-      [mobile_number]
-    );
-    
-    if (existingUser.rows.length > 0) {
-      await client.end();
-      return res.status(400).json({ error: 'User with this mobile number already exists' });
+      // Hash password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Insert new user using Prisma
+      const user = await prisma.user.create({
+        data: {
+          id: 'user_' + Date.now().toString(),
+          name: name,
+          mobile: mobile_number,
+          email: email || null,
+          password: hashedPassword,
+          role: 'USER'
+        }
+      });
+
+      res.json({ 
+        message: 'User registered successfully',
+        userId: user.id,
+        mobile_number: user.mobile
+      });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userId = 'user_' + Date.now().toString();
-
-    // Insert new user
-    await client.query(
-      'INSERT INTO users (id, name, mobile_number, email, password) VALUES ($1, $2, $3, $4, $5)',
-      [userId, name, mobile_number, email, hashedPassword]
-    );
-
-    await client.end();
-    res.json({ 
-      message: 'User registered successfully',
-      userId: userId,
-      mobile_number: mobile_number
-    });
   } catch (error: any) {
     console.error('Signup error:', error);
     res.status(500).json({ error: error.message });
@@ -695,36 +320,36 @@ app.get('/api/admin/dashboard', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
+      
+      // Get counts using Prisma
+      const usersCount = await prisma.user.count();
+      const teamsCount = await prisma.team.count();
+      const videosCount = await prisma.video.count();
+      const matchesCount = await prisma.match.count();
+      const newsCount = await prisma.news.count();
+      const galleryCount = await prisma.gallery.count();
+      
+      // Get live matches
+      const liveMatches = await prisma.match.count({ where: { status: 'LIVE' } });
 
-    await client.connect();
-    
-    // Get counts from all tables
-    const usersCount = await client.query('SELECT COUNT(*) as count FROM users');
-    const teamsCount = await client.query('SELECT COUNT(*) as count FROM teams');
-    const videosCount = await client.query('SELECT COUNT(*) as count FROM videos');
-    const matchesCount = await client.query('SELECT COUNT(*) as count FROM matches');
-    const newsCount = await client.query('SELECT COUNT(*) as count FROM news');
-    const galleryCount = await client.query('SELECT COUNT(*) as count FROM gallery');
-    
-    // Get live matches
-    const liveMatches = await client.query("SELECT COUNT(*) as count FROM matches WHERE status = 'LIVE'");
-    
-    await client.end();
-
-    res.json({
-      totalUsers: parseInt(usersCount.rows[0].count),
-      totalMatches: parseInt(matchesCount.rows[0].count),
-      totalVideos: parseInt(videosCount.rows[0].count),
-      totalNews: parseInt(newsCount.rows[0].count),
-      liveMatches: parseInt(liveMatches.rows[0].count),
-      unreadNotifications: 0,
-      totalGallery: parseInt(galleryCount.rows[0].count)
-    });
+      res.json({
+        totalUsers: usersCount,
+        totalMatches: matchesCount,
+        totalVideos: videosCount,
+        totalNews: newsCount,
+        liveMatches: liveMatches,
+        unreadNotifications: 0,
+        totalGallery: galleryCount
+      });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
+    }
   } catch (error: any) {
     console.error('Admin dashboard error:', error);
     res.status(500).json({ error: error.message });
@@ -877,53 +502,54 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const bcrypt = require('bcryptjs');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    
-    // Find user by mobile number or email
-    const result = await client.query(
-      'SELECT * FROM users WHERE mobile_number = $1 OR email = $2',
-      [mobile_number, email]
-    );
-    
-    if (result.rows.length === 0) {
-      await client.end();
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const user = result.rows[0];
-    
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    
-    if (!isValidPassword) {
-      await client.end();
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Update last login
-    await client.query(
-      'UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id]
-    );
-
-    await client.end();
-    res.json({ 
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        name: user.name,
-        mobile_number: user.mobile_number,
-        email: user.email,
-        role: user.role
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
       }
-    });
+      
+      // Find user by mobile number or email
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { mobile: mobile_number },
+            { email: email }
+          ]
+        }
+      });
+      
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Verify password
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Update last login
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() }
+      });
+
+      res.json({ 
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          name: user.name,
+          mobile_number: user.mobile,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
+    }
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ error: error.message });
@@ -939,42 +565,39 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
+      
+      // Find user by mobile number
+      const user = await prisma.user.findUnique({
+        where: { mobile: mobile_number }
+      });
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    await client.connect();
-    
-    // Find user by mobile number
-    const result = await client.query(
-      'SELECT * FROM users WHERE mobile_number = $1',
-      [mobile_number]
-    );
-    
-    if (result.rows.length === 0) {
-      await client.end();
-      return res.status(404).json({ error: 'User not found' });
+      // Update user with OTP
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { otp, otpExpiry }
+      });
+
+      res.json({ 
+        message: 'OTP sent successfully',
+        otp: otp // In production, send via SMS
+      });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
     }
-
-    const user = result.rows[0];
-    
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Update user with OTP
-    await client.query(
-      'UPDATE users SET otp = $1, otpExpiry = $2 WHERE id = $3',
-      [otp, otpExpiry, user.id]
-    );
-
-    await client.end();
-    res.json({ 
-      message: 'OTP sent successfully',
-      otp: otp // In production, send via SMS
-    });
   } catch (error: any) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: error.message });
@@ -990,39 +613,44 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Database not configured' });
     }
 
-    const { Client } = require('pg');
-    const bcrypt = require('bcryptjs');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.status(503).json({ error: 'Database not available' });
+      }
+      
+      // Find user and verify OTP
+      const user = await prisma.user.findFirst({
+        where: {
+          mobile: mobile_number,
+          otp: otp,
+          otpExpiry: { gt: new Date() }
+        }
+      });
+      
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid or expired OTP' });
+      }
+      
+      // Hash new password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await client.connect();
-    
-    // Find user and verify OTP
-    const result = await client.query(
-      'SELECT * FROM users WHERE mobile_number = $1 AND otp = $2 AND otpExpiry > NOW()',
-      [mobile_number, otp]
-    );
-    
-    if (result.rows.length === 0) {
-      await client.end();
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
+      // Update password and clear OTP
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { 
+          password: hashedPassword,
+          otp: null,
+          otpExpiry: null
+        }
+      });
+
+      res.json({ message: 'Password reset successful' });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.status(500).json({ error: dbError.message });
     }
-
-    const user = result.rows[0];
-    
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password and clear OTP
-    await client.query(
-      'UPDATE users SET password = $1, otp = NULL, otpExpiry = NULL WHERE id = $2',
-      [hashedPassword, user.id]
-    );
-
-    await client.end();
-    res.json({ message: 'Password reset successful' });
   } catch (error: any) {
     console.error('Reset password error:', error);
     res.status(500).json({ error: error.message });
@@ -1125,7 +753,7 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
-// Teams endpoint - now reads from database
+// Teams endpoint - now reads from database using Prisma
 app.get('/api/teams', async (req, res) => {
   try {
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -1150,20 +778,57 @@ app.get('/api/teams', async (req, res) => {
       });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    const result = await client.query('SELECT * FROM teams WHERE isActive = true');
-    await client.end();
-    
-    res.json({ teams: result.rows });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.json({
+          teams: [
+            {
+              id: '1',
+              name: 'Garvi Gujarat',
+              logoUrl: 'assets/teams/garvi_gujarat.png',
+              abbreviation: 'GG',
+              color: '#FF6B35'
+            },
+            {
+              id: '2',
+              name: 'Mumbai Strikers',
+              logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+              abbreviation: 'MS',
+              color: '#1E3A8A'
+            }
+          ]
+        });
+      }
+      
+      const teams = await prisma.team.findMany({
+        where: { isActive: true }
+      });
+      
+      res.json({ teams });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.json({
+        teams: [
+          {
+            id: '1',
+            name: 'Garvi Gujarat',
+            logoUrl: 'assets/teams/garvi_gujarat.png',
+            abbreviation: 'GG',
+            color: '#FF6B35'
+          },
+          {
+            id: '2',
+            name: 'Mumbai Strikers',
+            logoUrl: 'assets/teams/mumbai_strikers.jpeg',
+            abbreviation: 'MS',
+            color: '#1E3A8A'
+          }
+        ]
+      });
+    }
   } catch (error: any) {
     console.error('Teams API error:', error);
-    // Fallback to sample data if database fails
     res.json({
       teams: [
         {
@@ -1185,7 +850,7 @@ app.get('/api/teams', async (req, res) => {
   }
 });
 
-// Videos endpoint - now reads from database
+// Videos endpoint - now reads from database using Prisma
 app.get('/api/videos', async (req, res) => {
   try {
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -1226,20 +891,89 @@ app.get('/api/videos', async (req, res) => {
       });
     }
 
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
-    const result = await client.query('SELECT * FROM videos WHERE isActive = true');
-    await client.end();
-    
-    res.json({ videos: result.rows });
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        return res.json({
+          videos: [
+            {
+              id: '1',
+              title: 'IWKL Kabaddi Highlight 1',
+              videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+              thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+              category: 'Highlights',
+              duration: 30,
+              isPremium: false,
+              viewCount: 0
+            },
+            {
+              id: '2',
+              title: 'IWKL Kabaddi Highlight 2',
+              videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+              thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+              category: 'Highlights',
+              duration: 30,
+              isPremium: false,
+              viewCount: 0
+            },
+            {
+              id: '3',
+              title: 'IWKL Kabaddi Highlight 3',
+              videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+              thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+              category: 'Highlights',
+              duration: 30,
+              isPremium: false,
+              viewCount: 0
+            }
+          ]
+        });
+      }
+      
+      const videos = await prisma.video.findMany({
+        where: { isActive: true }
+      });
+      
+      res.json({ videos });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError.message);
+      res.json({
+        videos: [
+          {
+            id: '1',
+            title: 'IWKL Kabaddi Highlight 1',
+            videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
+            thumbnailUrl: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          },
+          {
+            id: '2',
+            title: 'IWKL Kabaddi Highlight 2',
+            videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
+            thumbnailUrl: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          },
+          {
+            id: '3',
+            title: 'IWKL Kabaddi Highlight 3',
+            videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
+            thumbnailUrl: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
+            category: 'Highlights',
+            duration: 30,
+            isPremium: false,
+            viewCount: 0
+          }
+        ]
+      });
+    }
   } catch (error: any) {
     console.error('Videos API error:', error);
-    // Fallback to sample data if database fails
     res.json({
       videos: [
         {

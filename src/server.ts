@@ -12,7 +12,20 @@ dotenv.config();
 const app = express();
 // Set trust proxy to specific trusted proxies instead of true to avoid rate limiter warning
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 3000;
+
+// Startup logging
+console.log('🚀 Starting IWKL Backend Server...');
+console.log('📡 Environment:', process.env.NODE_ENV || 'development');
+console.log('🔌 Port:', PORT);
+console.log('🗄️ Database URL configured:', !!process.env.DATABASE_URL);
+console.log('🗄️ DATABASE_PRIVATE_URL configured:', !!process.env.DATABASE_PRIVATE_URL);
+
+// Ensure database URL is set
+if (!process.env.DATABASE_URL && !process.env.DATABASE_PRIVATE_URL) {
+  console.error('❌ DATABASE_URL or DATABASE_PRIVATE_URL must be set!');
+  process.exit(1);
+}
 
 // Use DATABASE_URL
 const databaseUrl = process.env.DATABASE_URL;
@@ -1195,6 +1208,9 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
   console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
   console.log('='.repeat(50));
+}).on('error', (err: any) => {
+  console.error('❌ Server failed to start:', err);
+  process.exit(1);
 });
 
 // Graceful shutdown

@@ -16,6 +16,12 @@ COPY database_setup.sql ./
 # Build without Prisma generation
 RUN npm run build
 
+# Expose the port Railway expects
 EXPOSE 3000
 
+# Set environment variable for Railway
+ENV PORT=3000
+ENV NODE_ENV=production
+
+# Start the server
 CMD ["node", "dist/server.js"]

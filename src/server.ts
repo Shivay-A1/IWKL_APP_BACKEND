@@ -14,6 +14,24 @@ const app = express();
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
 const PORT = Number(process.env.PORT) || 3000;
 
+// Run Prisma migrations on startup if DATABASE_URL is available
+async function runPrismaMigrations() {
+  try {
+    const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (databaseUrl) {
+      console.log('🗄️ Running Prisma database migrations...');
+      const { execSync } = require('child_process');
+      execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+      console.log('✅ Prisma migrations completed successfully');
+    } else {
+      console.log('⚠️ DATABASE_URL not set, skipping migrations');
+    }
+  } catch (error) {
+    console.error('❌ Prisma migrations failed:', error);
+    // Don't fail startup if migrations fail
+  }
+}
+
 // Startup logging
 console.log('🚀 Starting IWKL Backend Server...');
 console.log('📡 Environment:', process.env.NODE_ENV || 'development');
@@ -1214,14 +1232,29 @@ const server = createServer(app);
 
 console.log('🚀 Starting IWKL Backend API Server...');
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('='.repeat(50));
-  console.log('✅ IWKL Backend API successfully started!');
-  console.log(`📝 Port: ${PORT}`);
-  console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
-  console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
-  console.log('='.repeat(50));
-}).on('error', (err: any) => {
+// Run Prisma migrations before starting server
+runPrismaMigrations().then(() => {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('='.repeat(50));
+    console.log('✅ IWKL Backend API successfully started!');
+    console.log(`📝 Port: ${PORT}`);
+    console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+    console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+    console.log('='.repeat(50));
+  });
+}).catch((err) => {
+  console.error('❌ Failed to run migrations:', err);
+  // Start server anyway even if migrations fail
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('='.repeat(50));
+    console.log('✅ IWKL Backend API started (without migrations)');
+    console.log(`📝 Port: ${PORT}`);
+    console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+    console.log('='.repeat(50));
+  });
+});
+
+server.on('error', (err: any) => {
   console.error('❌ Server failed to start:', err);
   console.error('Error details:', err.message);
   console.error('Error stack:', err.stack);

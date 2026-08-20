@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Users, Calendar, Video, Newspaper, Radio, Bell } from 'lucide-react';
+import { Users, Calendar, Video, Newspaper, Radio, Bell, Trophy } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -114,6 +114,61 @@ export default function DashboardPage() {
           <QuickActions />
           <RecentActivity />
         </div>
+
+        <div className="mt-12">
+          <h3 className="text-2xl font-bold text-white mb-6">Management Modules</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ManagementModule
+              title="Matches"
+              description="Manage live and upcoming matches"
+              icon={<Calendar className="w-6 h-6" />}
+              path="/dashboard/matches"
+              color="bg-green-600"
+            />
+            <ManagementModule
+              title="Stories"
+              description="Manage app stories"
+              icon={<Radio className="w-6 h-6" />}
+              path="/dashboard/stories"
+              color="bg-purple-600"
+            />
+            <ManagementModule
+              title="Banners"
+              description="Manage home banners"
+              icon={<Newspaper className="w-6 h-6" />}
+              path="/dashboard/banners"
+              color="bg-blue-600"
+            />
+            <ManagementModule
+              title="Videos"
+              description="Manage OTT and top videos"
+              icon={<Video className="w-6 h-6" />}
+              path="/dashboard/videos"
+              color="bg-red-600"
+            />
+            <ManagementModule
+              title="Points Table"
+              description="Manage league standings"
+              icon={<Trophy className="w-6 h-6" />}
+              path="/dashboard/points-table"
+              color="bg-yellow-600"
+            />
+            <ManagementModule
+              title="News"
+              description="Manage latest news"
+              icon={<Newspaper className="w-6 h-6" />}
+              path="/dashboard/news"
+              color="bg-orange-600"
+            />
+            <ManagementModule
+              title="Gallery"
+              description="Manage gallery images"
+              icon={<Users className="w-6 h-6" />}
+              path="/dashboard/gallery"
+              color="bg-pink-600"
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
@@ -179,5 +234,25 @@ function RecentActivity() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ManagementModule({ title, description, icon, path, color }: { title: string; description: string; icon: React.ReactNode; path: string; color: string }) {
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => router.push(path)}
+      className="bg-card rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow text-left"
+    >
+      <div className="flex items-start gap-4">
+        <div className={`${color} p-3 rounded-lg`}>
+          <div className="text-white">{icon}</div>
+        </div>
+        <div className="flex-1">
+          <h4 className="text-white font-semibold mb-1">{title}</h4>
+          <p className="text-gray-400 text-sm">{description}</p>
+        </div>
+      </div>
+    </button>
   );
 }

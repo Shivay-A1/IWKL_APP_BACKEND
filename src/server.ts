@@ -19,31 +19,14 @@ async function runPrismaMigrations() {
   try {
     const databaseUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (databaseUrl) {
-      console.log('🗄️ Setting up Railway database...');
+      console.log('🗄️ Setting up Railway database with Prisma...');
       
-      // First run SQL setup script to create basic tables
-      console.log('🗄️ Running SQL setup script for basic tables...');
-      try {
-        const fs = require('fs');
-        const sqlContent = fs.readFileSync('./database_setup.sql', 'utf8');
-        const { Client } = require('pg');
-        const client = new Client({
-          connectionString: databaseUrl,
-          ssl: { rejectUnauthorized: false }
-        });
-        await client.connect();
-        await client.query(sqlContent);
-        await client.end();
-        console.log('✅ SQL setup script completed successfully');
-      } catch (sqlError) {
-        console.error('⚠️ SQL setup script failed:', sqlError.message);
-      }
-      
-      // Then try Prisma migrations for additional tables
-      console.log('🗄️ Running Prisma database migrations...');
+      // Use Prisma db push with accept-data-loss to recreate tables
+      // This will drop incompatible tables and create proper Prisma schema
+      console.log('🗄️ Running Prisma database migrations with data-loss acceptance...');
       const { execSync } = require('child_process');
       try {
-        execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+        execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' });
         console.log('✅ Prisma migrations completed successfully');
       } catch (prismaError) {
         console.error('⚠️ Prisma migrations failed:', prismaError.message);

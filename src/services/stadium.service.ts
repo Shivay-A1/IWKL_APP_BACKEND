@@ -1,10 +1,15 @@
 import getPrisma from '../config/database';
-
-// Helper function to check if prisma is available
-const isPrismaAvailable = () => prisma !== null;
 import { AppError } from '../middleware/error';
 
+// Helper function to check if prisma is available
+const isPrismaAvailable = () => getPrisma() !== null;
+
 export const createStadium = async (data: any, file?: any) => {
+  const prisma = getPrisma();
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
   const { name, city, state, capacity, description } = data;
   const image = file ? file.path : null;
 

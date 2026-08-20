@@ -1,12 +1,18 @@
-import { prisma } from '../config/database'
+import getPrisma from '../config/database'
+import { apiService } from '../services'
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => prisma !== null;
-import { apiService } from '../services'
+const isPrismaAvailable = () => getPrisma() !== null;
 
 // Send match reminders to users who follow the teams
 export async function sendMatchReminders() {
   try {
+    const prisma = getPrisma();
+    if (!prisma) {
+      console.warn('Database not available for match reminders');
+      return;
+    }
+    
     const upcomingMatches = await prisma.match.findMany({
       where: {
         status: 'SCHEDULED',

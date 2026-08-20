@@ -1,8 +1,9 @@
-import { prisma } from '../config/database'
+import getPrisma from '../config/database'
 
 // Recalculate points table for active season
 export async function recalculatePointsTable() {
   try {
+    const prisma = getPrisma();
     if (!prisma) {
       console.warn('⚠️ Database not available, skipping points recalculation');
       return;

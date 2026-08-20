@@ -1,11 +1,17 @@
-import { prisma } from '../config/database'
+import getPrisma from '../config/database'
 
 // Helper function to check if prisma is available
-const isPrismaAvailable = () => prisma !== null;
+const isPrismaAvailable = () => getPrisma() !== null;
 
 // Clean up old notifications (older than 30 days)
 export async function cleanupOldNotifications() {
   try {
+    const prisma = getPrisma();
+    if (!prisma) {
+      console.warn('Database not available for notification cleanup');
+      return;
+    }
+    
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
     const deleted = await prisma.notification.deleteMany({

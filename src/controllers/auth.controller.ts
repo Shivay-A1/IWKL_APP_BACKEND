@@ -135,8 +135,8 @@ export const checkMobile = async (req: AuthRequest, res: Response, next: any) =>
 export const adminLogin = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const { email, password } = req.body;
-    const result = await authService.adminLogin(email, password, res);
-    res.json(result);
+    // Disable Prisma admin login - let server.ts handle fallback
+    throw new Error('Use fallback admin login in server.ts');
   } catch (error) {
     next(error);
   }

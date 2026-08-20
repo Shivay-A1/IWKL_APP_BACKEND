@@ -21,15 +21,16 @@ router.post('/login', authLimiter, [
   body('password').notEmpty().withMessage('Password is required'),
 ], validate, authController.login);
 
-router.post('/admin/login', authLimiter, [
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
-], validate, authController.adminLogin);
+// Disable Prisma admin login - use fallback in server.ts instead
+// router.post('/admin/login', authLimiter, [
+//   body('email').isEmail().withMessage('Valid email is required'),
+//   body('password').notEmpty().withMessage('Password is required'),
+// ], validate, authController.adminLogin);
 
-router.post('/admin-login', authLimiter, [
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
-], validate, authController.adminLogin);
+// router.post('/admin-login', authLimiter, [
+//   body('email').isEmail().withMessage('Valid email is required'),
+//   body('password').notEmpty().withMessage('Password is required'),
+// ], validate, authController.adminLogin);
 
 router.post('/refresh', authController.refreshToken);
 

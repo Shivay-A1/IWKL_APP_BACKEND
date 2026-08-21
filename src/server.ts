@@ -189,7 +189,7 @@ app.get('/api/test-integration', async (req, res) => {
     // Test database connection using Prisma
     if (databaseUrl) {
       try {
-        const { prisma } = require('./config');
+        const prisma = require('./config').prisma;
         if (prisma) {
           // Use Prisma to test connection
           await prisma.$connect();
@@ -266,7 +266,7 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -321,7 +321,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -406,7 +406,7 @@ app.post('/api/fan-club/register', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -464,7 +464,7 @@ app.get('/api/fanclub', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -503,7 +503,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -566,7 +566,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -614,7 +614,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -779,7 +779,7 @@ app.get('/api/teams', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.json({
           teams: [
@@ -892,7 +892,7 @@ app.get('/api/videos', async (req, res) => {
     }
 
     try {
-      const { prisma } = require('./config');
+      const prisma = require('./config').prisma;
       if (!prisma) {
         return res.json({
           videos: [

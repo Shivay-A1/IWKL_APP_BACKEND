@@ -1,37 +1,31 @@
 import { PrismaClient } from '@prisma/client';
 
-// Use DATABASE_URL
+// Check DATABASE_URL
 const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
 
-// Lazy initialization - only create Prisma client when needed
+// Initialize Prisma client if DATABASE_URL is available
 let prisma: PrismaClient | null = null;
 
-const getPrismaClient = () => {
-  if (!prisma) {
-    if (!databaseUrl) {
-      console.warn('⚠️ DATABASE_URL not set - returning null Prisma client');
-      return null;
-    }
-    try {
-      prisma = new PrismaClient({
-        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-        datasources: {
-          db: {
-            url: databaseUrl,
-          },
+if (databaseUrl) {
+  try {
+    prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      datasources: {
+        db: {
+          url: databaseUrl,
         },
-      });
-    } catch (error) {
-      console.error('Failed to create Prisma client:', error);
-      return null;
-    }
+      },
+    });
+    console.log('✅ Prisma client initialized');
+  } catch (error) {
+    console.error('Failed to create Prisma client:', error);
   }
-  return prisma;
-};
+} else {
+  console.warn('⚠️ DATABASE_URL not set - Prisma client will be null');
+}
 
-// Export the prisma instance directly for backward compatibility
-// This will be null if database is not configured
-export default getPrismaClient();
+// Export the prisma instance
+export default prisma;
 
 // Graceful shutdown
 process.on('beforeExit', async () => {

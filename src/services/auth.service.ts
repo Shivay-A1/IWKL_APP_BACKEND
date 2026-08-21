@@ -6,7 +6,7 @@ import { authConfig } from '../config/auth';
 import { sendVerificationOTPEmail, sendPasswordResetOTPEmail, sendWelcomeEmail } from './email.service';
 
 export const register = async (name: string, mobile: string, password: string, mobileVerified: boolean = false) => {
-  const existingUser = await safePrisma().user.findUnique({ where: { mobile } });
+  const existingUser = await prisma.user.findUnique({ where: { mobile } });
   if (existingUser) {
     throw new AppError('This mobile number is already registered', 409);
   }
@@ -14,7 +14,7 @@ export const register = async (name: string, mobile: string, password: string, m
   const hashedPassword = await hashPassword(password);
 
   // Create user with mobile verification status
-  const user = await safePrisma().user.create({
+  const user = await prisma.user.create({
     data: {
       name,
       mobile,
@@ -48,7 +48,7 @@ export const login = async (mobile: string, password: string, res: Response) => 
   console.log('Mobile:', mobile);
   console.log('Password length:', password.length);
   
-  const user = await safePrisma().user.findUnique({ where: { mobile } });
+  const user = await prisma.user.findUnique({ where: { mobile } });
   console.log('User found:', !!user);
   
   if (!user) {
@@ -68,7 +68,7 @@ export const login = async (mobile: string, password: string, res: Response) => 
   }
 
   // Update last login
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: { lastLogin: new Date() },
   });
@@ -117,7 +117,7 @@ export const refreshToken = async (refreshToken: string, res: Response) => {
     const { verifyRefreshToken, generateAccessToken } = await import('../utils');
     const decoded = verifyRefreshToken(refreshToken);
 
-    const user = await safePrisma().user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
         id: true,
@@ -159,7 +159,7 @@ export const logout = async (res: Response) => {
 };
 
 export const getProfile = async (userId: string) => {
-  const user = await safePrisma().user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -196,7 +196,7 @@ export const updateProfile = async (userId: string, data: any) => {
     updateData.password = await hashPassword(password);
   }
 
-  const user = await safePrisma().user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: updateData,
     select: {
@@ -218,7 +218,7 @@ export const forgotPassword = async (email: string) => {
   console.log('=== FORGOT PASSWORD START ===');
   console.log('Email:', email);
   
-  const user = await safePrisma().user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email } });
   
   if (!user) {
     console.log('User not found');
@@ -233,7 +233,7 @@ export const forgotPassword = async (email: string) => {
   console.log('Generated OTP:', otp);
 
   // Update user with OTP
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: {
       otp,
@@ -249,7 +249,7 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const verifyOTP = async (email: string, otp: string, type: 'email' | 'password' = 'email') => {
-  const user = await safePrisma().user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -268,7 +268,7 @@ export const verifyOTP = async (email: string, otp: string, type: 'email' | 'pas
   }
 
   // OTP is valid, clear it
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: {
       otp: null,
@@ -286,7 +286,7 @@ export const verifyOTP = async (email: string, otp: string, type: 'email' | 'pas
 };
 
 export const resendOTP = async (email: string, type: 'email' | 'password' = 'email') => {
-  const user = await safePrisma().user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -301,7 +301,7 @@ export const resendOTP = async (email: string, type: 'email' | 'password' = 'ema
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: {
       otp,
@@ -320,7 +320,7 @@ export const resendOTP = async (email: string, type: 'email' | 'password' = 'ema
 };
 
 export const resetPassword = async (mobile: string, newPassword: string) => {
-  const user = await safePrisma().user.findUnique({ where: { mobile } });
+  const user = await prisma.user.findUnique({ where: { mobile } });
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -328,7 +328,7 @@ export const resetPassword = async (mobile: string, newPassword: string) => {
 
   const hashedPassword = await hashPassword(newPassword);
 
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: {
       password: hashedPassword,
@@ -339,7 +339,7 @@ export const resetPassword = async (mobile: string, newPassword: string) => {
 };
 
 export const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
-  const user = await safePrisma().user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -352,7 +352,7 @@ export const changePassword = async (userId: string, currentPassword: string, ne
 
   const hashedPassword = await hashPassword(newPassword);
 
-  await safePrisma().user.update({
+  await prisma.user.update({
     where: { id: userId },
     data: {
       password: hashedPassword,
@@ -374,7 +374,7 @@ export const checkMobile = async (mobile: string) => {
   if (!prisma) {
     return { exists: false };
   }
-  const existingUser = await safePrisma().user.findUnique({ where: { mobile } });
+  const existingUser = await prisma.user.findUnique({ where: { mobile } });
   return { exists: !!existingUser };
 };
 

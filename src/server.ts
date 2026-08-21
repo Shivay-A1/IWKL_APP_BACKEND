@@ -42,6 +42,42 @@ async function runPrismaMigrations() {
   }
 }
 
+// Seed admin user after migrations
+async function seedAdminUser() {
+  try {
+    const { prisma } = require('./config');
+    if (!prisma) {
+      console.log('⚠️ Prisma not available for seeding');
+      return;
+    }
+    
+    console.log('🗄️ Seeding admin user...');
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    
+    try {
+      await prisma.user.upsert({
+        where: { email: 'admin@iwkl.com' },
+        update: {},
+        create: {
+          id: 'admin_001',
+          name: 'Super Admin',
+          email: 'admin@iwkl.com',
+          password: hashedPassword,
+          role: 'SUPER_ADMIN',
+          isVerified: true,
+          mobileVerified: true
+        }
+      });
+      console.log('✅ Admin user seeded successfully');
+    } catch (seedError: any) {
+      console.log('⚠️ Admin user seeding failed (may already exist):', seedError.message);
+    }
+  } catch (error) {
+    console.error('❌ Admin seeding failed:', error);
+  }
+}
+
 // Startup logging
 console.log('🚀 Starting IWKL Backend Server...');
 console.log('📡 Environment:', process.env.NODE_ENV || 'development');
@@ -189,7 +225,7 @@ app.get('/api/test-integration', async (req, res) => {
     // Test database connection using Prisma
     if (databaseUrl) {
       try {
-        const prisma = require('./config').prisma;
+        const { prisma } = require('./config');
         if (prisma) {
           // Use Prisma to test connection
           await prisma.$connect();
@@ -266,7 +302,8 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -321,7 +358,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -366,24 +404,87 @@ app.post('/api/auth/admin/login', async (req, res) => {
     console.log('Email:', email);
     console.log('Database configured:', !!databaseUrl);
     
-    // Always use fallback for now (we'll enable proper login once tables are created)
-    console.log('Using fallback admin login');
-    if (email === 'admin@iwkl.com' && password === 'admin123') {
-      return res.json({ 
-        message: 'Admin login successful',
-        accessToken: 'admin_token_' + Date.now(),
-        refreshToken: 'refresh_token_' + Date.now(),
-        user: {
-          id: 'admin_1',
-          name: 'Admin User',
-          email: 'admin@iwkl.com',
-          role: 'ADMIN'
+    if (!databaseUrl) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    try {
+      const { prisma } = require('./config');
+      if (!prisma) {
+        console.error('Prisma client not initialized');
+        return res.status(503).json({ error: 'Database not available' });
+      }
+      
+      // Find admin user by email
+      const admin = await prisma.user.findFirst({
+        where: {
+          email: email,
+          role: {
+            in: ['SUPER_ADMIN', 'LEAGUE_ADMIN']
+          }
         }
       });
+      
+      if (!admin) {
+        console.log('Admin user not found in database');
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Verify password
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(password, admin.password);
+      
+      if (!isValidPassword) {
+        console.log('Invalid password');
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Update last login
+      await prisma.user.update({
+        where: { id: admin.id },
+        data: { lastLogin: new Date() }
+      });
+      
+      // Generate tokens
+      const accessToken = 'admin_token_' + Date.now() + '_' + admin.id;
+      const refreshToken = 'refresh_token_' + Date.now() + '_' + admin.id;
+      
+      console.log('✅ Admin login successful (database authenticated)');
+      
+      res.json({ 
+        message: 'Admin login successful',
+        accessToken,
+        refreshToken,
+        user: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role
+        }
+      });
+    } catch (dbError: any) {
+      console.error('Database error during admin login:', dbError.message);
+      
+      // Fallback only if database tables don't exist yet
+      if (dbError.code === 'P2021' || dbError.message.includes('does not exist')) {
+        console.log('Database tables not created yet, using fallback');
+        if (email === 'admin@iwkl.com' && password === 'admin123') {
+          return res.json({ 
+            message: 'Admin login successful (temporary fallback - database tables not yet created)',
+            accessToken: 'admin_token_' + Date.now(),
+            refreshToken: 'refresh_token_' + Date.now(),
+            user: {
+              id: 'admin_1',
+              name: 'Admin User',
+              email: 'admin@iwkl.com',
+              role: 'ADMIN'
+            }
+          });
+        }
+      }
+      
+      return res.status(500).json({ error: 'Database error: ' + dbError.message });
     }
-    return res.status(401).json({ error: 'Invalid credentials (use admin@iwkl.com / admin123)' });
-    
-    // Note: Once database tables are created, we can enable proper database login below
   } catch (error: any) {
     console.error('Admin login error:', error);
     res.status(500).json({ error: error.message });
@@ -406,7 +507,8 @@ app.post('/api/fan-club/register', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -464,7 +566,8 @@ app.get('/api/fanclub', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -503,7 +606,8 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -566,7 +670,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -614,7 +719,8 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -779,7 +885,8 @@ app.get('/api/teams', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.json({
           teams: [
@@ -892,7 +999,8 @@ app.get('/api/videos', async (req, res) => {
     }
 
     try {
-      const prisma = require('./config').prisma;
+      const getPrisma = require('./config').default;
+      const prisma = getPrisma();
       if (!prisma) {
         return res.json({
           videos: [
@@ -1031,13 +1139,15 @@ console.log('🚀 Starting IWKL Backend API Server...');
 
 // Run Prisma migrations before starting server
 runPrismaMigrations().then(() => {
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log('='.repeat(50));
-    console.log('✅ IWKL Backend API successfully started!');
-    console.log(`📝 Port: ${PORT}`);
-    console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
-    console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
-    console.log('='.repeat(50));
+  seedAdminUser().then(() => {
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log('='.repeat(50));
+      console.log('✅ IWKL Backend API successfully started!');
+      console.log(`📝 Port: ${PORT}`);
+      console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+      console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+      console.log('='.repeat(50));
+    });
   });
 }).catch((err) => {
   console.error('❌ Failed to run migrations:', err);

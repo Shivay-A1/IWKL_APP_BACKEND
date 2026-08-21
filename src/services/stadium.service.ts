@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 
 // Helper function to check if prisma is available

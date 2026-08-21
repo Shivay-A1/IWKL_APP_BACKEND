@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import { prisma } from '../config';
 import slugify from 'slugify';
 
 // Helper function to check if prisma is available

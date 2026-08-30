@@ -55,7 +55,9 @@ export default function PointsTablePage() {
     try {
       const response = await api.get('/teams');
       console.log('Teams response:', response.data);
-      setTeams(response.data || []);
+      // Handle nested response structure
+      const teamsData = response.data?.data || response.data || [];
+      setTeams(Array.isArray(teamsData) ? teamsData : []);
     } catch (error) {
       console.error('Failed to fetch teams:', error);
       setTeams([]);

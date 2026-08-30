@@ -40,10 +40,12 @@ export default function PointsTablePage() {
   const fetchPointsTable = async () => {
     try {
       const response = await api.get('/points-table');
-      setPointsTable(response.data);
+      console.log('Points table response:', response.data);
+      setPointsTable(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch points table');
+      console.error('Failed to fetch points table:', error);
       toast.error('Failed to load points table');
+      setPointsTable([]);
     } finally {
       setLoading(false);
     }
@@ -52,9 +54,11 @@ export default function PointsTablePage() {
   const fetchTeams = async () => {
     try {
       const response = await api.get('/teams');
-      setTeams(response.data);
+      console.log('Teams response:', response.data);
+      setTeams(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch teams');
+      console.error('Failed to fetch teams:', error);
+      setTeams([]);
     }
   };
 

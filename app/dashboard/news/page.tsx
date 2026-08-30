@@ -37,10 +37,12 @@ export default function NewsPage() {
   const fetchNews = async () => {
     try {
       const response = await api.get('/news');
-      setNews(response.data);
+      console.log('News response:', response.data);
+      setNews(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch news');
+      console.error('Failed to fetch news:', error);
       toast.error('Failed to load news');
+      setNews([]);
     } finally {
       setLoading(false);
     }

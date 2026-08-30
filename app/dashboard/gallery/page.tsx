@@ -37,10 +37,12 @@ export default function GalleryPage() {
   const fetchGallery = async () => {
     try {
       const response = await api.get('/gallery');
-      setGallery(response.data);
+      console.log('Gallery response:', response.data);
+      setGallery(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch gallery');
+      console.error('Failed to fetch gallery:', error);
       toast.error('Failed to load gallery');
+      setGallery([]);
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,9 @@ build/
 backend_stderr.txt
 backend_stdout.txt
 
+# Firebase service account (contains private key)
+firebase-adminsdk*.json
+
 # OS files
 .DS_Store
 Thumbs.db

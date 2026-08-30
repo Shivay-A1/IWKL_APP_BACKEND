@@ -36,6 +36,42 @@ import otpRoutes from './otp.routes';
 
 const router = Router();
 
+// Admin dashboard route
+router.get('/admin/dashboard', async (req, res) => {
+  try {
+    const { prisma } = await import('../config');
+    
+    const [totalUsers, totalMatches, totalVideos, totalNews, liveMatches] = await Promise.all([
+      prisma.user.count(),
+      prisma.match.count(),
+      prisma.video.count(),
+      prisma.news.count(),
+      prisma.match.count({ where: { status: 'LIVE' } }),
+    ]);
+
+    res.json({
+      totalUsers,
+      totalMatches,
+      totalVideos,
+      totalNews,
+      liveMatches,
+      unreadNotifications: 0,
+      totalGallery: 0,
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.json({
+      totalUsers: 0,
+      totalMatches: 0,
+      totalVideos: 0,
+      totalNews: 0,
+      liveMatches: 0,
+      unreadNotifications: 0,
+      totalGallery: 0,
+    });
+  }
+});
+
 // Root route
 router.get('/', (req, res) => {
   res.json({

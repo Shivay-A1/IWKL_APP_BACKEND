@@ -30,9 +30,30 @@ export default function DashboardPage() {
   const fetchStats = async () => {
     try {
       const response = await api.get('/admin/dashboard');
-      setStats(response.data);
+      console.log('Dashboard stats response:', response.data);
+      
+      // Ensure response data is properly formatted
+      const statsData = {
+        totalUsers: response.data?.totalUsers || 0,
+        totalMatches: response.data?.totalMatches || 0,
+        totalVideos: response.data?.totalVideos || 0,
+        totalNews: response.data?.totalNews || 0,
+        liveMatches: response.data?.liveMatches || 0,
+        unreadNotifications: response.data?.unreadNotifications || 0,
+      };
+      
+      setStats(statsData);
     } catch (error) {
-      console.error('Failed to fetch stats');
+      console.error('Failed to fetch stats:', error);
+      // Set default values on error
+      setStats({
+        totalUsers: 0,
+        totalMatches: 0,
+        totalVideos: 0,
+        totalNews: 0,
+        liveMatches: 0,
+        unreadNotifications: 0,
+      });
     } finally {
       setLoading(false);
     }

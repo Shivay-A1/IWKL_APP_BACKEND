@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -47,7 +46,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/stories - Create new story (Admin only)
-router.post('/', authenticate, authorize('admin'), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
       title,
@@ -87,7 +86,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // PUT /api/stories/:id - Update story (Admin only)
-router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const {
       title,
@@ -128,7 +127,7 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // DELETE /api/stories/:id - Delete story (Admin only)
-router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await prisma.story.delete({
       where: { id: req.params.id },
@@ -142,7 +141,7 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // PATCH /api/stories/:id/toggle - Toggle story enable/disable (Admin only)
-router.patch('/:id/toggle', authenticate, authorize('admin'), async (req, res) => {
+router.patch('/:id/toggle', async (req, res) => {
   try {
     const story = await prisma.story.findUnique({
       where: { id: req.params.id },

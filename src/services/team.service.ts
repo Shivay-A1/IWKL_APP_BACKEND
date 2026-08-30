@@ -67,6 +67,37 @@ export const createTeamWithLogoUrl = async (data: any) => {
   return team;
 };
 
+export const createTeamSimple = async (data: any) => {
+  const team = await prisma.team.create({
+    data: {
+      name: data.name,
+      shortName: data.shortName,
+      logo: data.logoUrl || null,
+      banner: data.bannerUrl || null,
+      seasonId: data.seasonId || 'default-season',
+      isActive: data.isActive !== undefined ? data.isActive : true,
+    },
+    include: {
+      season: true,
+    },
+  });
+
+  // Initialize points table entry
+  try {
+    await prisma.pointsTableEntry.create({
+      data: {
+        seasonId: team.seasonId,
+        teamId: team.id,
+        position: 0,
+      },
+    });
+  } catch (pointsError) {
+    console.warn('Failed to create points table entry:', pointsError);
+  }
+
+  return team;
+};
+
 export const getTeams = async (query: any) => {
   const { page, limit, sortBy, sortOrder } = getPaginationParams(query);
   const { seasonId, search, isActive } = query;

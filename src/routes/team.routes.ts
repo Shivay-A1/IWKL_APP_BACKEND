@@ -19,8 +19,11 @@ router.post('/with-logo-url', apiLimiter, [
   body('name').trim().notEmpty().withMessage('Team name is required'),
   body('shortName').trim().notEmpty().withMessage('Short name is required'),
   body('seasonId').notEmpty().withMessage('Season ID is required'),
-  body('logoUrl').trim().notEmpty().withMessage('Logo URL is required'),
+  body('logoUrl').optional().trim(),
 ], validate, teamController.createTeamWithLogoUrl);
+
+// Simple POST route for admin panel (minimal validation)
+router.post('/simple', apiLimiter, teamController.createTeamSimple);
 
 router.get('/', teamController.getTeams);
 

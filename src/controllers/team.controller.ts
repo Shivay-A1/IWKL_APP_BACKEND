@@ -23,6 +23,15 @@ export const createTeamWithLogoUrl = async (req: AuthRequest, res: Response, nex
   }
 };
 
+export const createTeamSimple = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const team = await teamService.createTeamSimple(req.body);
+    res.status(201).json(team);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getTeams = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const teams = await teamService.getTeams(req.query);

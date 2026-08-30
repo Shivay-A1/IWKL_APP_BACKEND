@@ -33,21 +33,18 @@ export default function VideosPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchVideos();
-  }, [router]);
+  }, []);
 
   const fetchVideos = async () => {
     try {
       const response = await api.get('/videos');
-      setVideos(response.data);
+      console.log('Videos response:', response.data);
+      setVideos(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch videos');
+      console.error('Failed to fetch videos:', error);
       toast.error('Failed to load videos');
+      setVideos([]);
     } finally {
       setLoading(false);
     }

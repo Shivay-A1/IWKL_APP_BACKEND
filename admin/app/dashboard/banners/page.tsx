@@ -33,21 +33,18 @@ export default function BannersPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchBanners();
-  }, [router]);
+  }, []);
 
   const fetchBanners = async () => {
     try {
       const response = await api.get('/homepage-banners');
-      setBanners(response.data);
+      console.log('Banners response:', response.data);
+      setBanners(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch banners');
+      console.error('Failed to fetch banners:', error);
       toast.error('Failed to load banners');
+      setBanners([]);
     } finally {
       setLoading(false);
     }

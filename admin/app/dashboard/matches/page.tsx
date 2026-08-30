@@ -56,11 +56,6 @@ export default function MatchesPage() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchMatches();
     fetchTeams();
     
@@ -83,10 +78,12 @@ export default function MatchesPage() {
   const fetchMatches = async () => {
     try {
       const response = await api.get('/matches');
-      setMatches(response.data);
+      console.log('Matches response:', response.data);
+      setMatches(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch matches');
+      console.error('Failed to fetch matches:', error);
       toast.error('Failed to load matches');
+      setMatches([]);
     } finally {
       setLoading(false);
     }
@@ -95,9 +92,11 @@ export default function MatchesPage() {
   const fetchTeams = async () => {
     try {
       const response = await api.get('/teams');
-      setTeams(response.data);
+      console.log('Teams response:', response.data);
+      setTeams(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch teams');
+      console.error('Failed to fetch teams:', error);
+      setTeams([]);
     }
   };
 
@@ -227,9 +226,9 @@ export default function MatchesPage() {
     toast.success(`${action.replace('_', ' ')} recorded for Team ${team}`);
   };
 
-  const liveMatches = matches.filter(m => m.status === 'LIVE');
-  const upcomingMatches = matches.filter(m => m.status === 'SCHEDULED');
-  const completedMatches = matches.filter(m => m.status === 'COMPLETED');
+  const liveMatches = Array.isArray(matches) ? matches.filter(m => m.status === 'LIVE') : [];
+  const upcomingMatches = Array.isArray(matches) ? matches.filter(m => m.status === 'SCHEDULED') : [];
+  const completedMatches = Array.isArray(matches) ? matches.filter(m => m.status === 'COMPLETED') : [];
 
   const getTeamById = (id: string) => teams.find(t => t.id === id);
 

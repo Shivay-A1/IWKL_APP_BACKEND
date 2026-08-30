@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 
 interface Match {
   id: string;
+  seasonId?: string;
   homeTeamId: string;
   awayTeamId: string;
   homeTeam?: { id: string; name: string; logoUrl: string };

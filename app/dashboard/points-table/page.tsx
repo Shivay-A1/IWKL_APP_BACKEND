@@ -33,14 +33,9 @@ export default function PointsTablePage() {
   const [editingEntry, setEditingEntry] = useState<PointsTableEntry | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchPointsTable();
     fetchTeams();
-  }, [router]);
+  }, []);
 
   const fetchPointsTable = async () => {
     try {

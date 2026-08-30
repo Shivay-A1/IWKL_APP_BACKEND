@@ -56,11 +56,6 @@ export default function MatchesPage() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchMatches();
     fetchTeams();
     

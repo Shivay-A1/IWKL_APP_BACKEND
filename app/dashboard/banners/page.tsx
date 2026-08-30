@@ -33,13 +33,8 @@ export default function BannersPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchBanners();
-  }, [router]);
+  }, []);
 
   const fetchBanners = async () => {
     try {

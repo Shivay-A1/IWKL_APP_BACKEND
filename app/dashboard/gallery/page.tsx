@@ -31,13 +31,8 @@ export default function GalleryPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchGallery();
-  }, [router]);
+  }, []);
 
   const fetchGallery = async () => {
     try {

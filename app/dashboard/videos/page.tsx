@@ -33,13 +33,8 @@ export default function VideosPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchVideos();
-  }, [router]);
+  }, []);
 
   const fetchVideos = async () => {
     try {

@@ -31,13 +31,8 @@ export default function NewsPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchNews();
-  }, [router]);
+  }, []);
 
   const fetchNews = async () => {
     try {

@@ -119,6 +119,7 @@ export default function MatchesPage() {
     setSelectedMatch(match);
     setIsEditing(true);
     setFormData({
+      seasonId: match.seasonId || '1',
       homeTeamId: match.homeTeamId,
       awayTeamId: match.awayTeamId,
       matchDate: match.matchDate.split('T')[0],

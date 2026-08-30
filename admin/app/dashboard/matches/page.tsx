@@ -11,8 +11,8 @@ interface Match {
   seasonId?: string;
   homeTeamId: string;
   awayTeamId: string;
-  homeTeam?: { id: string; name: string; logoUrl: string };
-  awayTeam?: { id: string; name: string; logoUrl: string };
+  homeTeam?: { id: string; name: string; logo?: string; logoUrl?: string };
+  awayTeam?: { id: string; name: string; logo?: string; logoUrl?: string };
   homeScore: number;
   awayScore: number;
   status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED';
@@ -304,13 +304,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
@@ -341,13 +341,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-sm text-gray-500">{new Date(match.matchDate).toLocaleDateString()}</span>
@@ -378,13 +378,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>

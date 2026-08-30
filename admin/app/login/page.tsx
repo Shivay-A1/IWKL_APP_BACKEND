@@ -15,8 +15,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Simplified login - skip auth for now, go directly to dashboard
-      // Auth to be re-enabled after proper setup
+      // Skip login validation - go directly to dashboard
+      // Authentication to be re-enabled after proper setup
       toast.success('Login successful');
       router.push('/dashboard');
     } catch (error) {
@@ -45,7 +45,6 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-white"
               placeholder="admin@iwkl.com"
-              required
             />
           </div>
 
@@ -59,7 +58,6 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-white"
               placeholder="••••••••"
-              required
             />
           </div>
 
@@ -71,6 +69,10 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+        
+        <p className="text-center text-gray-500 text-sm mt-4">
+          Authentication temporarily disabled
+        </p>
       </div>
     </div>
   );

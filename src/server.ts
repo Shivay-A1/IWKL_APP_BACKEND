@@ -5,11 +5,25 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import apiRoutes from './routes';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+
+// Setup Socket.IO
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: ['http://localhost:3000', 'https://iwkl.in', 'https://*.up.railway.app'],
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Make io globally available
+global.io = io;
 // Set trust proxy to specific trusted proxies instead of true to avoid rate limiter warning
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
 const PORT = Number(process.env.PORT) || 3000;
@@ -1183,35 +1197,63 @@ app.use((err: any, req: any, res: any, next: any) => {
 });
 
 // Start server
-const server = createServer(app);
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  // Join match room for real-time updates
+  socket.on('join-match', (matchId: string) => {
+    socket.join(`match-${matchId}`);
+    console.log(`Client ${socket.id} joined match ${matchId}`);
+  });
+
+  // Leave match room
+  socket.on('leave-match', (matchId: string) => {
+    socket.leave(`match-${matchId}`);
+    console.log(`Client ${socket.id} left match ${matchId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Make io available globally for other modules
+declare global {
+  var io: any;
+}
+
+const server = httpServer;
 
 console.log('🚀 Starting IWKL Backend API Server...');
 
 // Run Prisma migrations before starting server
 runPrismaMigrations().then(() => {
   seedAdminUser().then(() => {
-    server.listen(PORT, '0.0.0.0', () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log('='.repeat(50));
       console.log('✅ IWKL Backend API successfully started!');
       console.log(`📝 Port: ${PORT}`);
       console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
       console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+      console.log(`🔌 Socket.IO: ✅ Enabled`);
       console.log('='.repeat(50));
     });
   });
 }).catch((err) => {
   console.error('❌ Failed to run migrations:', err);
   // Start server anyway even if migrations fail
-  server.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(50));
     console.log('✅ IWKL Backend API started (without migrations)');
     console.log(`📝 Port: ${PORT}`);
     console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+    console.log(`🔌 Socket.IO: ✅ Enabled`);
     console.log('='.repeat(50));
   });
 });
 
-server.on('error', (err: any) => {
+httpServer.on('error', (err: any) => {
   console.error('❌ Server failed to start:', err);
   console.error('Error details:', err.message);
   console.error('Error stack:', err.stack);

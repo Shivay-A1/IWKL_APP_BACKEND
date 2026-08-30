@@ -5,6 +5,13 @@ import * as matchService from '../services/match.service';
 export const createMatch = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const match = await matchService.createMatch(req.body, req.user?.id);
+    
+    // Emit socket event for real-time update
+    if (global.io) {
+      global.io.emit('match-created', match);
+      global.io.emit('matches-updated', match);
+    }
+    
     res.status(201).json(match);
   } catch (error) {
     next(error);
@@ -32,6 +39,14 @@ export const getMatchById = async (req: AuthRequest, res: Response, next: any) =
 export const updateMatch = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const match = await matchService.updateMatch(req.params.id, req.body, req.user?.id);
+    
+    // Emit socket event for real-time update
+    if (global.io) {
+      global.io.emit('match-updated', match);
+      global.io.emit('matches-updated', match);
+      global.io.to(`match-${match.id}`).emit('match-updated', match);
+    }
+    
     res.json(match);
   } catch (error) {
     next(error);
@@ -41,6 +56,13 @@ export const updateMatch = async (req: AuthRequest, res: Response, next: any) =>
 export const deleteMatch = async (req: AuthRequest, res: Response, next: any) => {
   try {
     await matchService.deleteMatch(req.params.id, req.user?.id);
+    
+    // Emit socket event for real-time update
+    if (global.io) {
+      global.io.emit('match-deleted', { id: req.params.id });
+      global.io.emit('matches-updated', { id: req.params.id });
+    }
+    
     res.json({ message: 'Match deleted successfully' });
   } catch (error) {
     next(error);
@@ -104,6 +126,13 @@ export const getCompletedMatches = async (req: AuthRequest, res: Response, next:
 export const updateLiveScore = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const result = await matchService.updateLiveScore(req.params.id, req.body);
+    
+    // Emit socket event for real-time score update
+    if (global.io) {
+      global.io.emit('live-score-updated', result);
+      global.io.to(`match-${req.params.id}`).emit('live-score-updated', result);
+    }
+    
     res.json(result);
   } catch (error) {
     next(error);
@@ -113,6 +142,13 @@ export const updateLiveScore = async (req: AuthRequest, res: Response, next: any
 export const updateMatchStatus = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const match = await matchService.updateMatchStatus(req.params.id, req.body);
+    
+    // Emit socket event for real-time status update
+    if (global.io) {
+      global.io.emit('match-status-updated', match);
+      global.io.to(`match-${match.id}`).emit('match-status-updated', match);
+    }
+    
     res.json(match);
   } catch (error) {
     next(error);

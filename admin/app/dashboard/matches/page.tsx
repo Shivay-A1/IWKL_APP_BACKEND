@@ -134,7 +134,7 @@ export default function MatchesPage() {
 
     try {
       const matchDateTime = `${formData.matchDate}T${formData.matchTime || '00:00'}:00`;
-      await api.post('/matches', {
+      const response = await api.post('/matches', {
         ...formData,
         matchDate: matchDateTime,
         homeScore: 0,
@@ -145,7 +145,13 @@ export default function MatchesPage() {
       toast.success('Match created successfully');
       fetchMatches();
       resetForm();
+      
+      // Emit socket event for real-time update
+      if (response.data?.id) {
+        console.log('Match created with ID:', response.data.id);
+      }
     } catch (error) {
+      console.error('Failed to create match:', error);
       toast.error('Failed to create match');
     }
   };

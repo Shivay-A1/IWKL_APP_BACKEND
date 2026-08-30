@@ -19,7 +19,7 @@ interface Match {
   matchDate: string;
   venue?: string;
   matchType?: string;
-  half?: string;
+  halfTimeStatus?: string;
   matchTimer?: string;
   streamUrl?: string;
 }
@@ -130,7 +130,7 @@ export default function MatchesPage() {
       status: match.status,
     });
     setTimer(match.matchTimer || '00:00');
-    setHalf(match.half || '2nd Half');
+    setHalf(match.halfTimeStatus || '2nd Half');
     setTeamAScore(match.homeScore);
     setTeamBScore(match.awayScore);
   };
@@ -147,7 +147,7 @@ export default function MatchesPage() {
     }
 
     try {
-      const matchDateTime = `${formData.matchDate}T${formData.matchTime || '00:00'}:00`;
+      const matchDateTime = `${formData.matchDate}T${formData.matchTime || '00:00'}:00Z`;
       const response = await api.post('/matches/simple', {
         ...formData,
         matchDate: matchDateTime,

@@ -2,6 +2,32 @@ import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 import { getPaginationParams, calculatePagination } from '../utils';
 
+export const createSampleSeason = async () => {
+  // Check if sample season already exists
+  const existingSeason = await prisma.season.findFirst({
+    where: { name: 'IWKL 2026' },
+  });
+
+  if (existingSeason) {
+    return existingSeason;
+  }
+
+  // Create sample season as per database_setup.sql
+  const season = await prisma.season.create({
+    data: {
+      id: '1',
+      name: 'IWKL 2026',
+      year: 2026,
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
+      isActive: true,
+      isCompleted: false,
+    },
+  });
+
+  return season;
+};
+
 export const createSeason = async (data: any) => {
   const existingSeason = await prisma.season.findUnique({
     where: { name: data.name },

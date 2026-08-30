@@ -5,6 +5,9 @@ import { authenticate, authorize, validate, apiLimiter } from '../middleware';
 
 const router = Router();
 
+// Simple route to create sample season (no auth for testing)
+router.post('/sample', apiLimiter, seasonController.createSampleSeason);
+
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, [
   body('name').trim().notEmpty().withMessage('Season name is required'),
   body('year').isInt().withMessage('Year must be a number'),

@@ -2,6 +2,15 @@ import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import * as seasonService from '../services/season.service';
 
+export const createSampleSeason = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const season = await seasonService.createSampleSeason();
+    res.status(201).json(season);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createSeason = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const season = await seasonService.createSeason(req.body);

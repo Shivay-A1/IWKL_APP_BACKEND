@@ -450,7 +450,9 @@ export default function MatchesPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="LEAGUE_MATCH">League Stage</option>
-                <option value="QUARTER_FINAL">Quarter Final</option>
+                <option value="ELIMINATOR">Eliminator</option>
+                <option value="QUALIFIER_1">Qualifier 1</option>
+                <option value="QUALIFIER_2">Qualifier 2</option>
                 <option value="SEMI_FINAL">Semi Final</option>
                 <option value="FINAL">Final</option>
               </select>

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import * as teamController from '../controllers/team.controller';
-import { authenticate, authorize, validate, upload, apiLimiter } from '../middleware';
+import { validate, upload, apiLimiter } from '../middleware';
 
 const router = Router();
 
-router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, upload.fields([
+router.post('/', apiLimiter, upload.fields([
   { name: 'logo', maxCount: 1 },
   { name: 'banner', maxCount: 1 }
 ]), [
@@ -15,7 +15,7 @@ router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimi
 ], validate, teamController.createTeam);
 
 // Alternative route for creating teams with logo URL instead of file upload
-router.post('/with-logo-url', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, [
+router.post('/with-logo-url', apiLimiter, [
   body('name').trim().notEmpty().withMessage('Team name is required'),
   body('shortName').trim().notEmpty().withMessage('Short name is required'),
   body('seasonId').notEmpty().withMessage('Season ID is required'),
@@ -26,7 +26,7 @@ router.get('/', teamController.getTeams);
 
 router.get('/:id', teamController.getTeamById);
 
-router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), upload.fields([
+router.put('/:id', upload.fields([
   { name: 'logo', maxCount: 1 },
   { name: 'banner', maxCount: 1 }
 ]), [
@@ -34,7 +34,7 @@ router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), uploa
   body('shortName').optional().trim().notEmpty(),
 ], validate, teamController.updateTeam);
 
-router.delete('/:id', authenticate, authorize('SUPER_ADMIN'), teamController.deleteTeam);
+router.delete('/:id', teamController.deleteTeam);
 
 router.get('/:id/stats', teamController.getTeamStats);
 

@@ -41,13 +41,8 @@ export default function StoriesPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchStories();
-  }, [router]);
+  }, []);
 
   const fetchStories = async () => {
     try {

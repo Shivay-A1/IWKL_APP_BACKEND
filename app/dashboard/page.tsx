@@ -18,14 +18,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     fetchStats();
-  }, [router]);
+  }, []);
 
   const fetchStats = async () => {
     try {
@@ -60,8 +54,9 @@ export default function DashboardPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Commented out for now - auth to be re-enabled later
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('user');
     router.push('/login');
   };
 

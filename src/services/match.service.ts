@@ -1,7 +1,6 @@
 import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 import { getPaginationParams, calculatePagination } from '../utils';
-import { emitScoreUpdate, emitMatchStatusUpdate, emitPointsTableUpdate } from '../config/socket';
 
 // Helper function to create match history entry
 const createMatchHistory = async (matchId: string, adminId: string | null, action: string, field: string | null, oldValue: any, newValue: any, reason: string | null) => {
@@ -46,6 +45,36 @@ export const createMatch = async (data: any, adminId?: string) => {
 
   // Create history entry
   await createMatchHistory(match.id, adminId || null, 'CREATE', null, null, data, 'Match created');
+
+  return match;
+};
+
+export const createMatchSimple = async (data: any) => {
+  // Simplified match creation with default values
+  const matchData = {
+    seasonId: data.seasonId || 'default-season',
+    homeTeamId: data.homeTeamId,
+    awayTeamId: data.awayTeamId,
+    matchDate: data.matchDate || new Date().toISOString(),
+    homeScore: data.homeScore || 0,
+    awayScore: data.awayScore || 0,
+    matchTimer: data.matchTimer || '00:00',
+    half: data.half || '1st Half',
+    status: data.status || 'SCHEDULED',
+    matchType: data.matchType || 'LEAGUE_MATCH',
+    venue: data.venue || null,
+    stadiumId: data.stadiumId || null,
+  };
+
+  const match = await prisma.match.create({
+    data: matchData,
+    include: {
+      season: true,
+      homeTeam: true,
+      awayTeam: true,
+      stadium: true,
+    },
+  });
 
   return match;
 };
@@ -273,6 +302,9 @@ export const updateMatchScore = async (id: string, data: any) => {
     data: { status: 'COMPLETED' },
   });
 
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   // Emit score update via Socket.IO
   emitScoreUpdate(id, {
     matchId: id,
@@ -287,6 +319,7 @@ export const updateMatchScore = async (id: string, data: any) => {
     matchId: id,
     status: 'COMPLETED',
   });
+  */
 
   // Update points table
   await updatePointsTable(match.seasonId, match.homeTeamId, match.awayTeamId, homeScore, awayScore, winnerId);
@@ -532,6 +565,9 @@ export const updateLiveScore = async (id: string, data: any) => {
     },
   });
 
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   // Emit score update via Socket.IO (with error handling)
   try {
     emitScoreUpdate(id, {
@@ -555,6 +591,7 @@ export const updateLiveScore = async (id: string, data: any) => {
     console.error('Socket.IO emit error (non-critical):', socketError);
     // Continue even if Socket.IO fails - the data is saved
   }
+  */
 
   return { match: updatedMatch, result };
 };
@@ -578,6 +615,9 @@ export const startMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'START', 'status', 'SCHEDULED', 'LIVE', 'Match started');
 
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   // Emit status update via Socket.IO
   emitMatchStatusUpdate(id, {
     matchId: id,
@@ -585,6 +625,7 @@ export const startMatch = async (id: string, adminId?: string) => {
     matchTimer: '00:00',
     halfTimeStatus: 'First Half',
   });
+  */
 
   return match;
 };
@@ -606,12 +647,16 @@ export const pauseMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'PAUSE', 'halfTimeStatus', match.halfTimeStatus, 'Paused', 'Match paused');
 
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   // Emit status update via Socket.IO
   emitMatchStatusUpdate(id, {
     matchId: id,
     status: match.status,
     halfTimeStatus: 'Paused',
   });
+  */
 
   return match;
 };
@@ -649,12 +694,16 @@ export const resumeMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'RESUME', 'halfTimeStatus', match.halfTimeStatus, newHalfTimeStatus, 'Match resumed');
 
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   // Emit status update via Socket.IO
   emitMatchStatusUpdate(id, {
     matchId: id,
     status: updatedMatch.status,
     halfTimeStatus: updatedMatch.halfTimeStatus,
   });
+  */
 
   return updatedMatch;
 };
@@ -738,6 +787,9 @@ export const endMatch = async (id: string, data: any, adminId?: string) => {
   await updateTeamStats(match.seasonId, match.awayTeamId, match.awayScore, match.homeScore, winnerId === match.awayTeamId, winnerId === match.homeTeamId);
 
   // Emit status update via Socket.IO
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   emitMatchStatusUpdate(id, {
     matchId: id,
     status: 'COMPLETED',
@@ -746,6 +798,7 @@ export const endMatch = async (id: string, data: any, adminId?: string) => {
     awayScore: match.awayScore,
     winnerId,
   });
+  */
 
   // Emit points table update
   // @ts-ignore - emitPointsTableUpdate signature will be correct after migration
@@ -852,10 +905,14 @@ export const updateMatchStatus = async (id: string, data: any) => {
   });
 
   // Emit status update via Socket.IO
+  // Socket.IO emission disabled for now
+  // TODO: Implement proper socket configuration
+  /*
   emitMatchStatusUpdate(id, {
     matchId: id,
     status,
   });
+  */
 
   return match;
 };
@@ -967,6 +1024,9 @@ export const logMatchEvent = async (matchId: string, data: any, adminId?: string
       },
     });
 
+    // Socket.IO emission disabled for now
+    // TODO: Implement proper socket configuration
+    /*
     // Emit score update via Socket.IO
     try {
       emitScoreUpdate(matchId, {
@@ -989,6 +1049,7 @@ export const logMatchEvent = async (matchId: string, data: any, adminId?: string
     } catch (socketError) {
       console.error('Socket.IO emit error (non-critical):', socketError);
     }
+    */
 
     return { match: updatedMatch, logged: true };
   }

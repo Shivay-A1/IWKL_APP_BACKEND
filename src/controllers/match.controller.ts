@@ -5,13 +5,15 @@ import * as matchService from '../services/match.service';
 export const createMatch = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const match = await matchService.createMatch(req.body, req.user?.id);
-    
-    // Emit socket event for real-time update
-    if (global.io) {
-      global.io.emit('match-created', match);
-      global.io.emit('matches-updated', match);
-    }
-    
+    res.status(201).json(match);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createMatchSimple = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const match = await matchService.createMatchSimple(req.body);
     res.status(201).json(match);
   } catch (error) {
     next(error);

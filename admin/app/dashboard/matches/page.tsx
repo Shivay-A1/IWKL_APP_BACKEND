@@ -48,6 +48,12 @@ export default function MatchesPage() {
     status: 'SCHEDULED' as 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED',
   });
 
+  // Set default match date to today
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, matchDate: today }));
+  }, []);
+
   // Live Controls State
   const [timer, setTimer] = useState('00:00');
   const [half, setHalf] = useState('2nd Half');
@@ -132,9 +138,14 @@ export default function MatchesPage() {
       return;
     }
 
+    if (!formData.homeTeamId || !formData.awayTeamId) {
+      toast.error('Please select both teams');
+      return;
+    }
+
     try {
       const matchDateTime = `${formData.matchDate}T${formData.matchTime || '00:00'}:00`;
-      const response = await api.post('/matches', {
+      const response = await api.post('/matches/simple', {
         ...formData,
         matchDate: matchDateTime,
         homeScore: 0,
@@ -145,11 +156,6 @@ export default function MatchesPage() {
       toast.success('Match created successfully');
       fetchMatches();
       resetForm();
-      
-      // Emit socket event for real-time update
-      if (response.data?.id) {
-        console.log('Match created with ID:', response.data.id);
-      }
     } catch (error) {
       console.error('Failed to create match:', error);
       toast.error('Failed to create match');

@@ -14,6 +14,9 @@ router.post('/', apiLimiter, [
   body('matchType').optional().trim().notEmpty(),
 ], validate, matchController.createMatch);
 
+// Simple POST route for admin panel (minimal validation)
+router.post('/simple', apiLimiter, matchController.createMatchSimple);
+
 router.get('/', matchController.getMatches);
 
 router.get('/upcoming', matchController.getUpcomingMatches);

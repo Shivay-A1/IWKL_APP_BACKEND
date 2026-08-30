@@ -26,7 +26,7 @@ export default function TeamsPage() {
     shortName: '',
     logoUrl: '',
     bannerUrl: '',
-    seasonId: '',
+    seasonId: 'default-season',
     isActive: true,
   });
 
@@ -52,8 +52,14 @@ export default function TeamsPage() {
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.shortName) {
+      toast.error('Team name and short name are required');
+      return;
+    }
+    
     try {
-      await api.post('/teams/with-logo-url', formData);
+      await api.post('/teams/simple', formData);
       toast.success('Team created successfully');
       setShowCreateModal(false);
       setFormData({
@@ -61,7 +67,7 @@ export default function TeamsPage() {
         shortName: '',
         logoUrl: '',
         bannerUrl: '',
-        seasonId: '',
+        seasonId: 'default-season',
         isActive: true,
       });
       fetchTeams();
@@ -168,7 +174,6 @@ export default function TeamsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
                 />
               </div>
               <div>
@@ -178,7 +183,6 @@ export default function TeamsPage() {
                   value={formData.shortName}
                   onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
                 />
               </div>
               <div>
@@ -200,13 +204,13 @@ export default function TeamsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Season ID</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Season ID (optional)</label>
                 <input
                   type="text"
                   value={formData.seasonId}
                   onChange={(e) => setFormData({ ...formData, seasonId: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
+                  placeholder="default-season"
                 />
               </div>
               <div className="flex items-center gap-2">

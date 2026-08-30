@@ -59,7 +59,7 @@ export const createMatchSimple = async (data: any) => {
     homeScore: data.homeScore || 0,
     awayScore: data.awayScore || 0,
     matchTimer: data.matchTimer || '00:00',
-    half: data.half || '1st Half',
+    halfTimeStatus: data.half || 'First Half',
     status: data.status || 'SCHEDULED',
     matchType: data.matchType || 'LEAGUE_MATCH',
     venue: data.venue || null,

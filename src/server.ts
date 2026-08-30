@@ -302,8 +302,7 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -358,8 +357,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -507,8 +505,7 @@ app.post('/api/fan-club/register', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -566,8 +563,7 @@ app.get('/api/fanclub', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -606,8 +602,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -670,8 +665,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }
@@ -719,8 +713,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     try {
-      const getPrisma = require('./config').default;
-      const prisma = getPrisma();
+      const { prisma } = require('./config');
       if (!prisma) {
         return res.status(503).json({ error: 'Database not available' });
       }

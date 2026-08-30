@@ -26,7 +26,7 @@ export default function TeamsPage() {
     shortName: '',
     logoUrl: '',
     bannerUrl: '',
-    seasonId: 'default-season',
+    seasonId: '1', // Use sample season ID from database setup
     isActive: true,
   });
 
@@ -67,7 +67,7 @@ export default function TeamsPage() {
         shortName: '',
         logoUrl: '',
         bannerUrl: '',
-        seasonId: 'default-season',
+        seasonId: '1',
         isActive: true,
       });
       fetchTeams();

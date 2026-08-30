@@ -74,7 +74,7 @@ export const createTeamSimple = async (data: any) => {
       shortName: data.shortName,
       logo: data.logoUrl || null,
       banner: data.bannerUrl || null,
-      seasonId: data.seasonId || 'default-season',
+      seasonId: data.seasonId || '1', // Use sample season ID '1' from database setup
       isActive: data.isActive !== undefined ? data.isActive : true,
     },
     include: {

@@ -39,6 +39,7 @@ export default function MatchesPage() {
   
   // Match Setup Form State
   const [formData, setFormData] = useState({
+    seasonId: '1', // Use sample season ID from database setup
     homeTeamId: '',
     awayTeamId: '',
     matchDate: '',
@@ -48,10 +49,10 @@ export default function MatchesPage() {
     status: 'SCHEDULED' as 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED',
   });
 
-  // Set default match date to today
+  // Set default match date to today and seasonId
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
-    setFormData(prev => ({ ...prev, matchDate: today }));
+    setFormData(prev => ({ ...prev, matchDate: today, seasonId: '1' }));
   }, []);
 
   // Live Controls State
@@ -200,6 +201,7 @@ export default function MatchesPage() {
 
   const resetForm = () => {
     setFormData({
+      seasonId: '1',
       homeTeamId: '',
       awayTeamId: '',
       matchDate: '',

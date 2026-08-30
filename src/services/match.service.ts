@@ -52,7 +52,7 @@ export const createMatch = async (data: any, adminId?: string) => {
 export const createMatchSimple = async (data: any) => {
   // Simplified match creation with default values
   const matchData = {
-    seasonId: data.seasonId || 'default-season',
+    seasonId: data.seasonId || '1', // Use sample season ID '1' from database setup
     homeTeamId: data.homeTeamId,
     awayTeamId: data.awayTeamId,
     matchDate: data.matchDate || new Date().toISOString(),

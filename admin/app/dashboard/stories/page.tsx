@@ -9,13 +9,16 @@ import toast from 'react-hot-toast';
 interface Story {
   id: string;
   title: string;
-  mediaUrl: string;
-  thumbnailUrl?: string;
-  category?: string;
-  isActive: boolean;
+  imageUrl: string;
+  videoUrl?: string;
+  isVideo: boolean;
+  caption?: string;
+  link?: string;
+  username?: string;
+  userImage?: string;
+  expiryTime?: string;
   order: number;
-  publishDate?: string;
-  expiryDate?: string;
+  enabled: boolean;
 }
 
 export default function StoriesPage() {
@@ -25,11 +28,16 @@ export default function StoriesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    mediaUrl: '',
-    thumbnailUrl: '',
-    category: '',
-    isActive: true,
+    imageUrl: '',
+    videoUrl: '',
+    isVideo: false,
+    caption: '',
+    link: '',
+    username: 'IWKL',
+    userImage: '',
+    expiryTime: '',
     order: 0,
+    enabled: true,
   });
 
   useEffect(() => {
@@ -44,10 +52,12 @@ export default function StoriesPage() {
   const fetchStories = async () => {
     try {
       const response = await api.get('/stories');
-      setStories(response.data);
+      console.log('Stories response:', response.data);
+      setStories(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch stories');
+      console.error('Failed to fetch stories:', error);
       toast.error('Failed to load stories');
+      setStories([]);
     } finally {
       setLoading(false);
     }
@@ -61,11 +71,16 @@ export default function StoriesPage() {
       setShowCreateModal(false);
       setFormData({
         title: '',
-        mediaUrl: '',
-        thumbnailUrl: '',
-        category: '',
-        isActive: true,
+        imageUrl: '',
+        videoUrl: '',
+        isVideo: false,
+        caption: '',
+        link: '',
+        username: 'IWKL',
+        userImage: '',
+        expiryTime: '',
         order: 0,
+        enabled: true,
       });
       fetchStories();
     } catch (error) {
@@ -73,12 +88,13 @@ export default function StoriesPage() {
     }
   };
 
-  const handleToggleStory = async (storyId: string, isActive: boolean) => {
+  const handleToggleStory = async (storyId: string) => {
     try {
-      await api.patch(`/stories/${storyId}`, { isActive });
+      await api.patch(`/stories/${storyId}/toggle`);
       toast.success('Story status updated');
       fetchStories();
     } catch (error) {
+      console.error('Failed to toggle story:', error);
       toast.error('Failed to update story status');
     }
   };
@@ -134,9 +150,13 @@ export default function StoriesPage() {
           {stories.map((story) => (
             <div key={story.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-48 bg-background">
-                {story.thumbnailUrl ? (
+                {story.isVideo && story.videoUrl ? (
+                  <div className="w-full h-full flex items-center justify-center bg-black">
+                    <span className="text-white text-sm">Video Story</span>
+                  </div>
+                ) : story.imageUrl ? (
                   <img
-                    src={story.thumbnailUrl}
+                    src={story.imageUrl}
                     alt={story.title}
                     className="w-full h-full object-cover"
                   />
@@ -147,19 +167,24 @@ export default function StoriesPage() {
                 )}
                 <div className="absolute top-2 right-2">
                   <button
-                    onClick={() => handleToggleStory(story.id, !story.isActive)}
+                    onClick={() => handleToggleStory(story.id)}
                     className={`p-2 rounded-full ${
-                      story.isActive ? 'bg-green-600' : 'bg-gray-600'
+                      story.enabled ? 'bg-green-600' : 'bg-gray-600'
                     }`}
                   >
-                    {story.isActive ? <Eye className="w-4 h-4 text-white" /> : <EyeOff className="w-4 h-4 text-white" />}
+                    {story.enabled ? <Eye className="w-4 h-4 text-white" /> : <EyeOff className="w-4 h-4 text-white" />}
                   </button>
                 </div>
               </div>
               <div className="p-4">
                 <h3 className="text-white font-semibold mb-2">{story.title}</h3>
-                {story.category && (
-                  <p className="text-gray-400 text-sm mb-2">{story.category}</p>
+                {story.caption && (
+                  <p className="text-gray-400 text-sm mb-2">{story.caption}</p>
+                )}
+                {story.link && (
+                  <a href={story.link} target="_blank" className="text-blue-400 text-sm mb-2 block">
+                    Link
+                  </a>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500 text-sm">Order: {story.order}</span>
@@ -192,30 +217,65 @@ export default function StoriesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Media URL</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
                 <input
                   type="url"
-                  value={formData.mediaUrl}
-                  onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail URL</label>
-                <input
-                  type="url"
-                  value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (optional)</label>
+                <input
+                  type="url"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Caption (optional)</label>
                 <input
                   type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.caption}
+                  onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Link (optional)</label>
+                <input
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">User Image URL (optional)</label>
+                <input
+                  type="url"
+                  value={formData.userImage}
+                  onChange={(e) => setFormData({ ...formData, userImage: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Expiry Time (optional)</label>
+                <input
+                  type="datetime-local"
+                  value={formData.expiryTime}
+                  onChange={(e) => setFormData({ ...formData, expiryTime: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                 />
               </div>
@@ -231,12 +291,22 @@ export default function StoriesPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  id="isVideo"
+                  checked={formData.isVideo}
+                  onChange={(e) => setFormData({ ...formData, isVideo: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isActive" className="text-gray-300">Active</label>
+                <label htmlFor="isVideo" className="text-gray-300">Is Video</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="enabled"
+                  checked={formData.enabled}
+                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="enabled" className="text-gray-300">Enabled</label>
               </div>
               <div className="flex gap-4">
                 <button

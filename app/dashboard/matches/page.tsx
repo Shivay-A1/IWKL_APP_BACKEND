@@ -224,7 +224,7 @@ export default function MatchesPage() {
       status: match.status,
     });
 
-    // Always load from database first, then fallback to localStorage
+    // Always load from database first (these are the real values)
     const homeScore = match.homeScore || 0;
     const awayScore = match.awayScore || 0;
     const matchTimer = match.matchTimer || '00:00';
@@ -236,14 +236,14 @@ export default function MatchesPage() {
     setTeamBScore(awayScore);
     setIsTimerRunning(match.status === 'LIVE');
 
-    // Save current scores to localStorage for persistence
-    localStorage.setItem(`match_${match.id}_scores`, JSON.stringify({
+    console.log('Loaded match from database:', {
+      matchId: match.id,
       homeScore,
       awayScore,
-      timer: matchTimer,
-      half: halfTimeStatus,
-      timestamp: Date.now()
-    }));
+      matchTimer,
+      halfTimeStatus,
+      status: match.status
+    });
   };
 
   const handleCreateMatch = async () => {
@@ -268,8 +268,17 @@ export default function MatchesPage() {
         half: '1st Half',
       });
       toast.success('Match created successfully');
-      fetchMatches();
-      resetForm();
+
+      // Fetch matches and automatically select the newly created match
+      await fetchMatches();
+
+      // Find and select the newly created match
+      const newMatch = (response.data || response);
+      if (newMatch && newMatch.id) {
+        handleSelectMatch(newMatch);
+      } else {
+        resetForm();
+      }
     } catch (error) {
       console.error('Failed to create match:', error);
       toast.error('Failed to create match');
@@ -355,10 +364,10 @@ export default function MatchesPage() {
 
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
     const points = action === '+1' ? 1 : action === '+2' ? 2 : action === 'bonus' ? 1 : action === 'super_raid' ? 2 : 2;
-    
+
     let newHomeScore = teamAScore;
     let newAwayScore = teamBScore;
-    
+
     if (team === 'A') {
       newHomeScore = teamAScore + points;
       setTeamAScore(newHomeScore);
@@ -368,6 +377,14 @@ export default function MatchesPage() {
     }
 
     if (selectedMatch) {
+      console.log('Updating score:', {
+        matchId: selectedMatch.id,
+        homeScore: newHomeScore,
+        awayScore: newAwayScore,
+        timer,
+        half
+      });
+
       try {
         await api.patch(`/matches/${selectedMatch.id}/live-score`, {
           homeScore: newHomeScore,
@@ -375,18 +392,11 @@ export default function MatchesPage() {
           matchTimer: timer,
           halfTimeStatus: half,
         });
-        
-        // Save to localStorage for persistence
-        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
-          homeScore: newHomeScore,
-          awayScore: newAwayScore,
-          timer,
-          half,
-          timestamp: Date.now()
-        }));
-        
+
+        console.log('Score update API call successful');
         toast.success('Score updated successfully');
       } catch (error) {
+        console.error('Failed to update score:', error);
         toast.error('Failed to update score');
         // Revert on error
         if (team === 'A') {

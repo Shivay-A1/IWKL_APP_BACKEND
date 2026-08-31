@@ -45,8 +45,8 @@ router.patch('/:id/score', [
 ], validate, matchController.updateMatchScore);
 
 router.patch('/:id/live-score', [
-  body('homeScore').isInt().withMessage('Home score must be a number'),
-  body('awayScore').isInt().withMessage('Away score must be a number'),
+  body('homeScore').optional().isInt().withMessage('Home score must be a number'),
+  body('awayScore').optional().isInt().withMessage('Away score must be a number'),
 ], validate, matchController.updateLiveScore);
 
 router.patch('/:id/status', [

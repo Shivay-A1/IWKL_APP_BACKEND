@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev:prod": "NEXT_PUBLIC_API_URL=https://iwklappbackend-production.up.railway.app/api next dev"
   },
   "dependencies": {
     "next": "14.2.35",

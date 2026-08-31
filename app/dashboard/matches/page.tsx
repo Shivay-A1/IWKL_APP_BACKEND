@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { RefreshCw, Plus, Clock, MapPin, Calendar, Trophy, Play, Pause, Square, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { io, Socket } from 'socket.io-client';
 
 interface Match {
   id: string;
@@ -37,6 +38,7 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
   
   // Match Setup Form State
   const [formData, setFormData] = useState({
@@ -67,7 +69,57 @@ export default function MatchesPage() {
     fetchMatches();
     fetchTeams();
     
-    // Timer interval
+    // Initialize Socket.IO connection
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://iwklappbackend-production.up.railway.app');
+    setSocket(socketInstance);
+    
+    // Listen for live score updates
+    socketInstance.on('live-score-updated', (data) => {
+      if (selectedMatch && data.matchId === selectedMatch.id) {
+        setTeamAScore(data.homeScore);
+        setTeamBScore(data.awayScore);
+        setTimer(data.matchTimer || '00:00');
+        setHalf(data.halfTimeStatus || '2nd Half');
+        
+        // Save to localStorage
+        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+          homeScore: data.homeScore,
+          awayScore: data.awayScore,
+          timer: data.matchTimer || '00:00',
+          half: data.halfTimeStatus || '2nd Half',
+          timestamp: Date.now()
+        }));
+      }
+      
+      // Refresh matches list
+      fetchMatches();
+    });
+    
+    // Listen for match status updates
+    socketInstance.on('match-status-updated', (data) => {
+      if (selectedMatch && data.matchId === selectedMatch.id) {
+        setSelectedMatch(prev => prev ? { ...prev, status: data.status } : null);
+      }
+      fetchMatches();
+    });
+    
+    // Listen for match deletions
+    socketInstance.on('match-deleted', (data) => {
+      if (selectedMatch && data.id === selectedMatch.id) {
+        setSelectedMatch(null);
+        setIsEditing(false);
+        resetForm();
+      }
+      fetchMatches();
+    });
+    
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
+  
+  // Timer interval
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
       interval = setInterval(() => {
@@ -81,7 +133,7 @@ export default function MatchesPage() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning, router]);
+  }, [isTimerRunning]);
 
   const fetchMatches = async () => {
     try {

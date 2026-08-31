@@ -56,6 +56,12 @@ export default function MatchesPage() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, matchDate: today, seasonId: '1' }));
+
+    // Restore last selected match from localStorage
+    const lastSelectedMatchId = localStorage.getItem('last_selected_match_id');
+    if (lastSelectedMatchId) {
+      // Will be loaded after matches are fetched
+    }
   }, []);
 
   // Live Controls State
@@ -68,21 +74,22 @@ export default function MatchesPage() {
   useEffect(() => {
     fetchMatches();
     fetchTeams();
-    
+
     // Initialize Socket.IO connection
     const socketInstance = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://iwklappbackend-production.up.railway.app');
     setSocket(socketInstance);
-    
+
     // Listen for live score updates
     socketInstance.on('live-score-updated', (data) => {
-      if (selectedMatch && data.matchId === selectedMatch.id) {
-        setTeamAScore(data.homeScore);
-        setTeamBScore(data.awayScore);
-        setTimer(data.matchTimer || '00:00');
-        setHalf(data.halfTimeStatus || '2nd Half');
-        
-        // Save to localStorage
-        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+      setTeamAScore(data.homeScore);
+      setTeamBScore(data.awayScore);
+      setTimer(data.matchTimer || '00:00');
+      setHalf(data.halfTimeStatus || '2nd Half');
+
+      // Save to localStorage if match is selected
+      const selectedMatchId = localStorage.getItem('last_selected_match_id');
+      if (selectedMatchId && data.matchId === selectedMatchId) {
+        localStorage.setItem(`match_${data.matchId}_scores`, JSON.stringify({
           homeScore: data.homeScore,
           awayScore: data.awayScore,
           timer: data.matchTimer || '00:00',
@@ -90,29 +97,33 @@ export default function MatchesPage() {
           timestamp: Date.now()
         }));
       }
-      
+
       // Refresh matches list
       fetchMatches();
     });
-    
+
     // Listen for match status updates
     socketInstance.on('match-status-updated', (data) => {
-      if (selectedMatch && data.matchId === selectedMatch.id) {
-        setSelectedMatch(prev => prev ? { ...prev, status: data.status } : null);
-      }
+      setSelectedMatch(prev => {
+        if (prev && prev.id === data.matchId) {
+          return { ...prev, status: data.status };
+        }
+        return prev;
+      });
       fetchMatches();
     });
-    
+
     // Listen for match deletions
     socketInstance.on('match-deleted', (data) => {
-      if (selectedMatch && data.id === selectedMatch.id) {
+      const selectedMatchId = localStorage.getItem('last_selected_match_id');
+      if (selectedMatchId && data.id === selectedMatchId) {
         setSelectedMatch(null);
         setIsEditing(false);
         resetForm();
       }
       fetchMatches();
     });
-    
+
     return () => {
       socketInstance.disconnect();
     };
@@ -147,16 +158,26 @@ export default function MatchesPage() {
           timestamp: Date.now()
         }));
       }, 500);
-      
+
       return () => clearTimeout(timeoutId);
     }
-  }, [selectedMatch, teamAScore, teamBScore, timer, half]);
+  }, [teamAScore, teamBScore, timer, half]);
 
   const fetchMatches = async () => {
     try {
       const response = await api.get('/matches');
       console.log('Matches response:', response.data);
-      setMatches(response.data || []);
+      const matchesData = response.data || [];
+      setMatches(matchesData);
+
+      // Restore last selected match if exists
+      const lastSelectedMatchId = localStorage.getItem('last_selected_match_id');
+      if (lastSelectedMatchId && !selectedMatch) {
+        const lastMatch = matchesData.find((m: Match) => m.id === lastSelectedMatchId);
+        if (lastMatch) {
+          handleSelectMatch(lastMatch);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch matches:', error);
       toast.error('Failed to load matches');
@@ -188,6 +209,10 @@ export default function MatchesPage() {
   const handleSelectMatch = (match: Match) => {
     setSelectedMatch(match);
     setIsEditing(true);
+
+    // Save last selected match ID to localStorage
+    localStorage.setItem('last_selected_match_id', match.id);
+
     setFormData({
       seasonId: match.seasonId || '1',
       homeTeamId: match.homeTeamId,
@@ -198,32 +223,27 @@ export default function MatchesPage() {
       matchType: match.matchType || 'LEAGUE_MATCH',
       status: match.status,
     });
-    
-    // Load saved scores from localStorage if match is LIVE or has saved data
-    const savedScores = localStorage.getItem(`match_${match.id}_scores`);
-    if (savedScores) {
-      try {
-        const parsed = JSON.parse(savedScores);
-        // Only use saved scores if they're recent (within 24 hours)
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          setTimer(parsed.timer || match.matchTimer || '00:00');
-          setHalf(parsed.half || match.halfTimeStatus || '2nd Half');
-          setTeamAScore(parsed.homeScore);
-          setTeamBScore(parsed.awayScore);
-          setIsTimerRunning(match.status === 'LIVE');
-          return;
-        }
-      } catch (e) {
-        console.error('Failed to parse saved scores:', e);
-      }
-    }
-    
-    // Fall back to database values
-    setTimer(match.matchTimer || '00:00');
-    setHalf(match.halfTimeStatus || '2nd Half');
-    setTeamAScore(match.homeScore);
-    setTeamBScore(match.awayScore);
+
+    // Always load from database first, then fallback to localStorage
+    const homeScore = match.homeScore || 0;
+    const awayScore = match.awayScore || 0;
+    const matchTimer = match.matchTimer || '00:00';
+    const halfTimeStatus = match.halfTimeStatus || '2nd Half';
+
+    setTimer(matchTimer);
+    setHalf(halfTimeStatus);
+    setTeamAScore(homeScore);
+    setTeamBScore(awayScore);
     setIsTimerRunning(match.status === 'LIVE');
+
+    // Save current scores to localStorage for persistence
+    localStorage.setItem(`match_${match.id}_scores`, JSON.stringify({
+      homeScore,
+      awayScore,
+      timer: matchTimer,
+      half: halfTimeStatus,
+      timestamp: Date.now()
+    }));
   };
 
   const handleCreateMatch = async () => {
@@ -269,12 +289,22 @@ export default function MatchesPage() {
         matchTimer: timer,
         halfTimeStatus: half,
       });
-      
+
+      // Save current scores to localStorage for persistence
+      localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+        homeScore: teamAScore,
+        awayScore: teamBScore,
+        timer,
+        half,
+        timestamp: Date.now()
+      }));
+
       // If status changed to COMPLETED, clear localStorage
       if (formData.status === 'COMPLETED' && selectedMatch.status !== 'COMPLETED') {
         localStorage.removeItem(`match_${selectedMatch.id}_scores`);
+        localStorage.removeItem('last_selected_match_id');
       }
-      
+
       toast.success('Match updated successfully');
       fetchMatches();
     } catch (error) {
@@ -318,6 +348,9 @@ export default function MatchesPage() {
     setTeamAScore(0);
     setTeamBScore(0);
     setIsTimerRunning(false);
+
+    // Clear last selected match from localStorage
+    localStorage.removeItem('last_selected_match_id');
   };
 
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
@@ -768,7 +801,7 @@ export default function MatchesPage() {
           </div>
 
           {/* Special Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <h4 className="text-sm font-medium text-gray-600 mb-2">Team A Special Actions</h4>
               <div className="flex gap-2 flex-wrap">
@@ -786,6 +819,36 @@ export default function MatchesPage() {
               </div>
             </div>
           </div>
+
+          {/* Complete Match Button */}
+          {selectedMatch && selectedMatch.status !== 'COMPLETED' && (
+            <button
+              onClick={async () => {
+                if (!selectedMatch) return;
+                if (!confirm('Are you sure you want to complete this match?')) return;
+
+                try {
+                  await api.patch(`/matches/${selectedMatch.id}/status`, {
+                    status: 'COMPLETED'
+                  });
+
+                  // Clear localStorage for this match
+                  localStorage.removeItem(`match_${selectedMatch.id}_scores`);
+
+                  toast.success('Match completed successfully');
+                  setSelectedMatch(prev => prev ? { ...prev, status: 'COMPLETED' } : null);
+                  setFormData(prev => ({ ...prev, status: 'COMPLETED' }));
+                  setIsTimerRunning(false);
+                  fetchMatches();
+                } catch (error) {
+                  toast.error('Failed to complete match');
+                }
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
+            >
+              Complete Match
+            </button>
+          )}
         </div>
 
         {/* LIVE PREVIEW CARD */}

@@ -135,18 +135,22 @@ export default function MatchesPage() {
     return () => clearInterval(interval);
   }, [isTimerRunning]);
   
-  // Auto-save scores to localStorage
+  // Auto-save scores to localStorage (debounced)
   useEffect(() => {
     if (selectedMatch) {
-      localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
-        homeScore: teamAScore,
-        awayScore: teamBScore,
-        timer,
-        half,
-        timestamp: Date.now()
-      }));
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+          homeScore: teamAScore,
+          awayScore: teamBScore,
+          timer,
+          half,
+          timestamp: Date.now()
+        }));
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [selectedMatch, teamAScore, teamBScore]);
+  }, [selectedMatch, teamAScore, teamBScore, timer, half]);
 
   const fetchMatches = async () => {
     try {

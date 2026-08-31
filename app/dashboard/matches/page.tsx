@@ -146,7 +146,7 @@ export default function MatchesPage() {
         timestamp: Date.now()
       }));
     }
-  }, [teamAScore, teamBScore, timer, half, selectedMatch]);
+  }, [selectedMatch, teamAScore, teamBScore, timer, half]);
 
   const fetchMatches = async () => {
     try {

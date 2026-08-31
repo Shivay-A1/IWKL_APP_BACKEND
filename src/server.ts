@@ -7,8 +7,10 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import apiRoutes from './routes';
+import path from 'path';
 
-dotenv.config();
+// Load .env from backend directory
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const httpServer = createServer(app);
@@ -16,7 +18,10 @@ const httpServer = createServer(app);
 // Setup Socket.IO
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'https://iwkl.in', 'https://*.up.railway.app'],
+    origin: function(origin, callback) {
+      // Allow all origins for Railway deployment
+      callback(null, true);
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }

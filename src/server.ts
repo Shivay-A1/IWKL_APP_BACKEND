@@ -8,6 +8,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import apiRoutes from './routes';
 import path from 'path';
+import { setIO } from './config/socket';
 
 // Load .env from backend directory
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -26,6 +27,9 @@ const io = new SocketIOServer(httpServer, {
     credentials: true
   }
 });
+
+// Set io in socket config module
+setIO(io);
 
 // Make io globally available
 global.io = io;

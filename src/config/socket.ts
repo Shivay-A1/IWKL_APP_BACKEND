@@ -55,6 +55,11 @@ export const initializeSocket = (server: any) => {
   return io;
 };
 
+// Allow setting io from external initialization (e.g., from server.ts)
+export const setIO = (socketIOServer: SocketIOServer) => {
+  io = socketIOServer;
+};
+
 export const getIO = () => {
   if (!io) {
     throw new Error('Socket.IO not initialized');

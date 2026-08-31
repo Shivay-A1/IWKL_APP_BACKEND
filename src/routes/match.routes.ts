@@ -76,4 +76,6 @@ router.get('/:id/raids', matchController.getMatchRaids);
 
 router.post('/:id/raids', matchController.createRaid);
 
+router.post('/:id/special-action', matchController.recordSpecialAction);
+
 export default router;

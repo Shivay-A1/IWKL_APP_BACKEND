@@ -1205,3 +1205,98 @@ export const createRaid = async (matchId: string, data: any, adminId?: string) =
 
   return raid;
 };
+
+export const recordSpecialAction = async (matchId: string, team: string, action: string) => {
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    include: {
+      homeTeam: true,
+      awayTeam: true,
+      stadium: true,
+    },
+  });
+
+  if (!match) {
+    throw new AppError('Match not found', 404);
+  }
+
+  // Determine which team field to update
+  const isHomeTeam = team === 'A';
+  const pointsMap: { [key: string]: number } = {
+    'super_tackle': 2,
+    'do_or_die': 1,
+    'review': 0,
+  };
+
+  const points = pointsMap[action] || 0;
+
+  // Update match based on action
+  const updateData: any = {};
+
+  if (action === 'super_tackle') {
+    if (isHomeTeam) {
+      updateData.homeTacklePoints = { increment: points };
+      updateData.homeScore = { increment: points };
+    } else {
+      updateData.awayTacklePoints = { increment: points };
+      updateData.awayScore = { increment: points };
+    }
+  } else if (action === 'do_or_die') {
+    if (isHomeTeam) {
+      updateData.homeRaidPoints = { increment: points };
+      updateData.homeScore = { increment: points };
+    } else {
+      updateData.awayRaidPoints = { increment: points };
+      updateData.awayScore = { increment: points };
+    }
+  }
+  // Review doesn't change score, just logs the action
+
+  const updatedMatch = await prisma.match.update({
+    where: { id: matchId },
+    data: updateData,
+    include: {
+      season: true,
+      homeTeam: true,
+      awayTeam: true,
+      stadium: true,
+    },
+  });
+
+  // Create match log entry
+  await createMatchLog(matchId, 'SPECIAL_ACTION', {
+    team,
+    action,
+    points,
+  }, isHomeTeam ? match.homeTeamId : match.awayTeamId);
+
+  // Emit score update via Socket.IO
+  try {
+    if (global.io) {
+      const scoreData = {
+        matchId,
+        homeScore: updatedMatch.homeScore,
+        awayScore: updatedMatch.awayScore,
+        homeRaidPoints: updatedMatch.homeRaidPoints,
+        awayRaidPoints: updatedMatch.awayRaidPoints,
+        homeTacklePoints: updatedMatch.homeTacklePoints,
+        awayTacklePoints: updatedMatch.awayTacklePoints,
+        homeBonusPoints: updatedMatch.homeBonusPoints,
+        awayBonusPoints: updatedMatch.awayBonusPoints,
+        homeAllOutCount: updatedMatch.homeAllOutCount,
+        awayAllOutCount: updatedMatch.awayAllOutCount,
+        matchTimer: updatedMatch.matchTimer,
+        halfTimeStatus: updatedMatch.halfTimeStatus,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+      };
+      console.log('Emitting live-score-updated from special action:', scoreData);
+      global.io.emit('live-score-updated', scoreData);
+      global.io.to(`match-${matchId}`).emit('live-score-updated', scoreData);
+    }
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
+
+  return updatedMatch;
+};

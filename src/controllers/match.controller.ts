@@ -252,3 +252,21 @@ export const createRaid = async (req: AuthRequest, res: Response, next: any) => 
     next(error);
   }
 };
+
+export const recordSpecialAction = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const { team, action } = req.body;
+    const match = await matchService.recordSpecialAction(req.params.id, team, action);
+
+    // Emit socket event for real-time update
+    if (global.io) {
+      global.io.emit('match-updated', match);
+      global.io.emit('matches-updated', match);
+      global.io.to(`match-${match.id}`).emit('match-updated', match);
+    }
+
+    res.json(match);
+  } catch (error) {
+    next(error);
+  }
+};

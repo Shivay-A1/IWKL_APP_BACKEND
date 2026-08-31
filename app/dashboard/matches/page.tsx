@@ -468,26 +468,40 @@ export default function MatchesPage() {
                 {liveMatches.map(match => (
                   <div
                     key={match.id}
-                    onClick={() => handleSelectMatch(match)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       selectedMatch?.id === match.id
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-purple-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center gap-3 flex-1 cursor-pointer"
+                        onClick={() => handleSelectMatch(match)}
+                      >
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                       </div>
-                      <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMatch(match);
+                            handleDeleteMatch();
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -505,26 +519,40 @@ export default function MatchesPage() {
                 {upcomingMatches.map(match => (
                   <div
                     key={match.id}
-                    onClick={() => handleSelectMatch(match)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       selectedMatch?.id === match.id
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-purple-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center gap-3 flex-1 cursor-pointer"
+                        onClick={() => handleSelectMatch(match)}
+                      >
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                       </div>
-                      <span className="text-sm text-gray-500">{new Date(match.matchDate).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-500">{new Date(match.matchDate).toLocaleDateString()}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMatch(match);
+                            handleDeleteMatch();
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -542,26 +570,40 @@ export default function MatchesPage() {
                 {completedMatches.map(match => (
                   <div
                     key={match.id}
-                    onClick={() => handleSelectMatch(match)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       selectedMatch?.id === match.id
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-purple-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center gap-3 flex-1 cursor-pointer"
+                        onClick={() => handleSelectMatch(match)}
+                      >
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
                         )}
                       </div>
-                      <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMatch(match);
+                            handleDeleteMatch();
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

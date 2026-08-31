@@ -15,8 +15,11 @@ class SocketClient {
     _socket = IO.io(
       AppConstants.socketUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket'])
+          .setTransports(['websocket', 'polling'])
           .enableAutoConnect()
+          .setReconnectionAttempts(5)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
           .build(),
     );
 
@@ -26,6 +29,14 @@ class SocketClient {
 
     _socket.onDisconnect((_) {
       print('Socket disconnected');
+    });
+
+    _socket.onReconnect((_) {
+      print('Socket reconnected');
+    });
+
+    _socket.onReconnectAttempt((_) {
+      print('Socket reconnecting...');
     });
 
     _socket.onError((error) {

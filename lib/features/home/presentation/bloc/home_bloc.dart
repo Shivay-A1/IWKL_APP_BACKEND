@@ -18,14 +18,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _setupSocketListeners() {
+    print('Setting up socket listeners...');
     _socketClient.connect();
 
     // Listen for match creation
     _socketClient.on('match-created', (data) {
+      print('Match created event received: $data');
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
         final newMatch = Match.fromJson(data);
-        
+
         if (newMatch.status == 'LIVE') {
           // Add to live matches
           emit(currentState.copyWith(liveMatch: newMatch));
@@ -58,10 +60,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     // Listen for live score updates
     _socketClient.on('live-score-updated', (data) {
+      print('Live score updated event received: $data');
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
         final updatedMatch = Match.fromJson(data);
-        
+
         if (currentState.liveMatch?.id == updatedMatch.id) {
           emit(currentState.copyWith(liveMatch: updatedMatch));
         }
@@ -70,10 +73,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     // Listen for match status updates
     _socketClient.on('match-status-updated', (data) {
+      print('Match status updated event received: $data');
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
         final updatedMatch = Match.fromJson(data);
-        
+
         if (updatedMatch.status == 'LIVE') {
           // Move from upcoming to live
           final updatedUpcoming = currentState.upcomingMatches
@@ -92,14 +96,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     // Listen for match deletion
     _socketClient.on('match-deleted', (data) {
+      print('Match deleted event received: $data');
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
         final matchId = data['id'] as String;
-        
+
         if (currentState.liveMatch?.id == matchId) {
           emit(currentState.copyWith(liveMatch: null));
         }
-        
+
         final updatedUpcoming = currentState.upcomingMatches
             .where((match) => match.id != matchId)
             .toList();

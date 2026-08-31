@@ -1,6 +1,7 @@
 import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 import { getPaginationParams, calculatePagination } from '../utils';
+import { emitScoreUpdate, emitMatchStatusUpdate, emitPointsTableUpdate } from '../config/socket';
 
 // Helper function to create match history entry
 const createMatchHistory = async (matchId: string, adminId: string | null, action: string, field: string | null, oldValue: any, newValue: any, reason: string | null) => {
@@ -565,9 +566,6 @@ export const updateLiveScore = async (id: string, data: any) => {
     },
   });
 
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
   // Emit score update via Socket.IO (with error handling)
   try {
     emitScoreUpdate(id, {
@@ -591,7 +589,6 @@ export const updateLiveScore = async (id: string, data: any) => {
     console.error('Socket.IO emit error (non-critical):', socketError);
     // Continue even if Socket.IO fails - the data is saved
   }
-  */
 
   return { match: updatedMatch, result };
 };
@@ -615,17 +612,17 @@ export const startMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'START', 'status', 'SCHEDULED', 'LIVE', 'Match started');
 
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
   // Emit status update via Socket.IO
-  emitMatchStatusUpdate(id, {
-    matchId: id,
-    status: 'LIVE',
-    matchTimer: '00:00',
-    halfTimeStatus: 'First Half',
-  });
-  */
+  try {
+    emitMatchStatusUpdate(id, {
+      matchId: id,
+      status: 'LIVE',
+      matchTimer: '00:00',
+      halfTimeStatus: 'First Half',
+    });
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
   return match;
 };
@@ -647,16 +644,16 @@ export const pauseMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'PAUSE', 'halfTimeStatus', match.halfTimeStatus, 'Paused', 'Match paused');
 
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
   // Emit status update via Socket.IO
-  emitMatchStatusUpdate(id, {
-    matchId: id,
-    status: match.status,
-    halfTimeStatus: 'Paused',
-  });
-  */
+  try {
+    emitMatchStatusUpdate(id, {
+      matchId: id,
+      status: match.status,
+      halfTimeStatus: 'Paused',
+    });
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
   return match;
 };
@@ -694,16 +691,16 @@ export const resumeMatch = async (id: string, adminId?: string) => {
   // Create history entry
   await createMatchHistory(id, adminId || null, 'RESUME', 'halfTimeStatus', match.halfTimeStatus, newHalfTimeStatus, 'Match resumed');
 
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
   // Emit status update via Socket.IO
-  emitMatchStatusUpdate(id, {
-    matchId: id,
-    status: updatedMatch.status,
-    halfTimeStatus: updatedMatch.halfTimeStatus,
-  });
-  */
+  try {
+    emitMatchStatusUpdate(id, {
+      matchId: id,
+      status: updatedMatch.status,
+      halfTimeStatus: updatedMatch.halfTimeStatus,
+    });
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
   return updatedMatch;
 };
@@ -787,22 +784,25 @@ export const endMatch = async (id: string, data: any, adminId?: string) => {
   await updateTeamStats(match.seasonId, match.awayTeamId, match.awayScore, match.homeScore, winnerId === match.awayTeamId, winnerId === match.homeTeamId);
 
   // Emit status update via Socket.IO
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
-  emitMatchStatusUpdate(id, {
-    matchId: id,
-    status: 'COMPLETED',
-    halfTimeStatus: 'Full Time',
-    homeScore: match.homeScore,
-    awayScore: match.awayScore,
-    winnerId,
-  });
-  */
+  try {
+    emitMatchStatusUpdate(id, {
+      matchId: id,
+      status: 'COMPLETED',
+      halfTimeStatus: 'Full Time',
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+      winnerId,
+    });
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
   // Emit points table update
-  // @ts-ignore - emitPointsTableUpdate signature will be correct after migration
-  emitPointsTableUpdate(match.seasonId);
+  try {
+    emitPointsTableUpdate(match.seasonId);
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
   // Create notifications for users following the teams
   await createMatchNotifications(match, result);
@@ -893,7 +893,64 @@ const updateTeamStats = async (seasonId: string, teamId: string, scoreFor: numbe
 export const updateMatchStatus = async (id: string, data: any) => {
   const { status } = data;
 
-  const match = await prisma.match.update({
+  const match = await prisma.match.findUnique({
+    where: { id },
+    include: {
+      season: true,
+      homeTeam: true,
+      awayTeam: true,
+      stadium: true,
+    },
+  });
+
+  if (!match) {
+    throw new AppError('Match not found', 404);
+  }
+
+  // If completing the match, also update points table
+  if (status === 'COMPLETED' && match.status !== 'COMPLETED') {
+    const winnerId = match.homeScore > match.awayScore ? match.homeTeamId : 
+                      match.awayScore > match.homeScore ? match.awayTeamId : null;
+    
+    // Create or update match result
+    await prisma.matchResult.upsert({
+      where: { matchId: id },
+      update: {
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        winnerId,
+      },
+      create: {
+        matchId: id,
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        winnerId,
+      },
+    });
+
+    // Update points table
+    await updatePointsTable(
+      match.seasonId,
+      match.homeTeamId,
+      match.awayTeamId,
+      match.homeScore,
+      match.awayScore,
+      winnerId,
+      match.homeRaidPoints,
+      match.awayRaidPoints,
+      match.homeTacklePoints,
+      match.awayTacklePoints
+    );
+
+    // Emit points table update
+    try {
+      emitPointsTableUpdate(match.seasonId);
+    } catch (socketError) {
+      console.error('Socket.IO emit error (non-critical):', socketError);
+    }
+  }
+
+  const updatedMatch = await prisma.match.update({
     where: { id },
     data: { status },
     include: {
@@ -905,16 +962,16 @@ export const updateMatchStatus = async (id: string, data: any) => {
   });
 
   // Emit status update via Socket.IO
-  // Socket.IO emission disabled for now
-  // TODO: Implement proper socket configuration
-  /*
-  emitMatchStatusUpdate(id, {
-    matchId: id,
-    status,
-  });
-  */
+  try {
+    emitMatchStatusUpdate(id, {
+      matchId: id,
+      status,
+    });
+  } catch (socketError) {
+    console.error('Socket.IO emit error (non-critical):', socketError);
+  }
 
-  return match;
+  return updatedMatch;
 };
 
 export const getMatchHistory = async (matchId: string) => {
@@ -1024,9 +1081,6 @@ export const logMatchEvent = async (matchId: string, data: any, adminId?: string
       },
     });
 
-    // Socket.IO emission disabled for now
-    // TODO: Implement proper socket configuration
-    /*
     // Emit score update via Socket.IO
     try {
       emitScoreUpdate(matchId, {
@@ -1049,7 +1103,6 @@ export const logMatchEvent = async (matchId: string, data: any, adminId?: string
     } catch (socketError) {
       console.error('Socket.IO emit error (non-critical):', socketError);
     }
-    */
 
     return { match: updatedMatch, logged: true };
   }

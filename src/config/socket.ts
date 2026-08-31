@@ -77,10 +77,10 @@ export const emitMatchStatusUpdate = (matchId: string, data: any) => {
   io.emit('match-status-update', data);
 };
 
-export const emitPointsTableUpdate = (seasonId: string, data: any) => {
+export const emitPointsTableUpdate = (seasonId: string, data?: any) => {
   const io = getIO();
-  io.to(`season-${seasonId}`).emit('points-table-update', data);
-  io.emit('points-table-update', data);
+  io.to(`season-${seasonId}`).emit('points-table-update', data || { seasonId });
+  io.emit('points-table-update', data || { seasonId });
 };
 
 // OTT-specific events

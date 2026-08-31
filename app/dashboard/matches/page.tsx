@@ -81,21 +81,15 @@ export default function MatchesPage() {
 
     // Listen for live score updates
     socketInstance.on('live-score-updated', (data) => {
-      setTeamAScore(data.homeScore);
-      setTeamBScore(data.awayScore);
-      setTimer(data.matchTimer || '00:00');
-      setHalf(data.halfTimeStatus || '2nd Half');
+      console.log('Socket live-score-updated received:', data);
 
-      // Save to localStorage if match is selected
+      // Only update scores if it's for the currently selected match
       const selectedMatchId = localStorage.getItem('last_selected_match_id');
       if (selectedMatchId && data.matchId === selectedMatchId) {
-        localStorage.setItem(`match_${data.matchId}_scores`, JSON.stringify({
-          homeScore: data.homeScore,
-          awayScore: data.awayScore,
-          timer: data.matchTimer || '00:00',
-          half: data.halfTimeStatus || '2nd Half',
-          timestamp: Date.now()
-        }));
+        setTeamAScore(data.homeScore);
+        setTeamBScore(data.awayScore);
+        setTimer(data.matchTimer || '00:00');
+        setHalf(data.halfTimeStatus || '2nd Half');
       }
 
       // Refresh matches list
@@ -146,28 +140,36 @@ export default function MatchesPage() {
     return () => clearInterval(interval);
   }, [isTimerRunning]);
   
-  // Auto-save scores to localStorage (debounced)
-  useEffect(() => {
-    if (selectedMatch) {
-      const timeoutId = setTimeout(() => {
-        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
-          homeScore: teamAScore,
-          awayScore: teamBScore,
-          timer,
-          half,
-          timestamp: Date.now()
-        }));
-      }, 500);
+  // Auto-save scores to localStorage (debounced) - DISABLED to prevent conflicts
+  // useEffect(() => {
+  //   if (selectedMatch) {
+  //     const timeoutId = setTimeout(() => {
+  //       localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+  //         homeScore: teamAScore,
+  //         awayScore: teamBScore,
+  //         timer,
+  //         half,
+  //         timestamp: Date.now()
+  //       }));
+  //     }, 500);
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [teamAScore, teamBScore, timer, half]);
+  //     return () => clearTimeout(timeoutId);
+  //   }
+  // }, [teamAScore, teamBScore, timer, half]);
 
   const fetchMatches = async () => {
     try {
       const response = await api.get('/matches');
       console.log('Matches response:', response.data);
-      const matchesData = response.data || [];
+
+      // Handle different response structures
+      let matchesData = [];
+      if (Array.isArray(response.data)) {
+        matchesData = response.data;
+      } else if (response.data?.data && Array.isArray(response.data.data)) {
+        matchesData = response.data.data;
+      }
+
       setMatches(matchesData);
 
       // Restore last selected match if exists
@@ -365,14 +367,18 @@ export default function MatchesPage() {
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
     const points = action === '+1' ? 1 : action === '+2' ? 2 : action === 'bonus' ? 1 : action === 'super_raid' ? 2 : 2;
 
-    let newHomeScore = teamAScore;
-    let newAwayScore = teamBScore;
+    // Ensure scores are numbers
+    const currentHomeScore = typeof teamAScore === 'number' ? teamAScore : 0;
+    const currentAwayScore = typeof teamBScore === 'number' ? teamBScore : 0;
+
+    let newHomeScore = currentHomeScore;
+    let newAwayScore = currentAwayScore;
 
     if (team === 'A') {
-      newHomeScore = teamAScore + points;
+      newHomeScore = currentHomeScore + points;
       setTeamAScore(newHomeScore);
     } else {
-      newAwayScore = teamBScore + points;
+      newAwayScore = currentAwayScore + points;
       setTeamBScore(newAwayScore);
     }
 
@@ -400,9 +406,9 @@ export default function MatchesPage() {
         toast.error('Failed to update score');
         // Revert on error
         if (team === 'A') {
-          setTeamAScore(teamAScore);
+          setTeamAScore(currentHomeScore);
         } else {
-          setTeamBScore(teamBScore);
+          setTeamBScore(currentAwayScore);
         }
       }
     }

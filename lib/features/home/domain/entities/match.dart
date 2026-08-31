@@ -11,6 +11,7 @@ class Match {
   final String? homeTeamLogo;
   final String? awayTeamName;
   final String? awayTeamLogo;
+  final String? matchTimer;
 
   Match({
     required this.id,
@@ -25,6 +26,7 @@ class Match {
     this.homeTeamLogo,
     this.awayTeamName,
     this.awayTeamLogo,
+    this.matchTimer,
   });
 
   // Helper getters for backward compatibility
@@ -37,7 +39,7 @@ class Match {
   String? get team2Logo => awayTeamLogo;
   int get team1Score => homeScore;
   int get team2Score => awayScore;
-  String get matchTime => _formatMatchTime(scheduledAt, status);
+  String get matchTime => _formatMatchTime(scheduledAt, status, matchTimer);
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -52,13 +54,17 @@ class Match {
     }
   }
 
-  String _formatMatchTime(DateTime date, String status) {
-    if (status == 'live') {
+  String _formatMatchTime(DateTime date, String status, String? timer) {
+    if (status == 'LIVE' || status == 'live') {
+      // Use the actual timer from backend if available
+      if (timer != null && timer.isNotEmpty) {
+        return timer;
+      }
       return 'LIVE';
     }
     final now = DateTime.now();
     final difference = date.difference(now);
-    
+
     if (difference.inDays > 0) {
       return '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
     } else if (difference.inHours > 0) {
@@ -82,6 +88,7 @@ class Match {
       homeTeamLogo: json['homeTeam']?['logo'] as String? ?? json['homeTeam']?['logoUrl'] as String? ?? json['team1Logo'] as String?,
       awayTeamName: json['awayTeam']?['name'] as String? ?? json['team2Name'] as String?,
       awayTeamLogo: json['awayTeam']?['logo'] as String? ?? json['awayTeam']?['logoUrl'] as String? ?? json['team2Logo'] as String?,
+      matchTimer: json['matchTimer'] as String?,
     );
   }
 }

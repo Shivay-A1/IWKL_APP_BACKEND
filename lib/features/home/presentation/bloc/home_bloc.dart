@@ -14,12 +14,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<LoadHomeData>(_onLoadHomeData);
   }
 
-  @override
-  Future<void> close() {
-    _socketClient.disconnect();
-    return super.close();
-  }
-
   Future<void> _onLoadHomeData(LoadHomeData event, Emitter<HomeState> emit) async {
     emit(HomeLoading());
     try {

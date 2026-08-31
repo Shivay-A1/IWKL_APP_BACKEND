@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { RefreshCw, Plus, Clock, MapPin, Calendar, Trophy, Play, Pause, Square, Minus } from 'lucide-react';
+import { RefreshCw, Plus, Clock, MapPin, Calendar, Trophy, Play, Pause, Square, Plus as PlusIcon, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Match {
@@ -11,8 +11,8 @@ interface Match {
   seasonId?: string;
   homeTeamId: string;
   awayTeamId: string;
-  homeTeam?: { id: string; name: string; logo?: string; logoUrl?: string };
-  awayTeam?: { id: string; name: string; logo?: string; logoUrl?: string };
+  homeTeam?: { id: string; name: string; logoUrl: string };
+  awayTeam?: { id: string; name: string; logoUrl: string };
   homeScore: number;
   awayScore: number;
   status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED';
@@ -54,18 +54,6 @@ export default function MatchesPage() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, matchDate: today, seasonId: '1' }));
-    
-    // Load saved state from localStorage
-    const savedMatchId = localStorage.getItem('selectedMatchId');
-    const savedTimer = localStorage.getItem('timer');
-    const savedHalf = localStorage.getItem('half');
-    const savedTeamAScore = localStorage.getItem('teamAScore');
-    const savedTeamBScore = localStorage.getItem('teamBScore');
-    
-    if (savedTimer) setTimer(savedTimer);
-    if (savedHalf) setHalf(savedHalf);
-    if (savedTeamAScore) setTeamAScore(parseInt(savedTeamAScore));
-    if (savedTeamBScore) setTeamBScore(parseInt(savedTeamBScore));
   }, []);
 
   // Live Controls State
@@ -74,17 +62,6 @@ export default function MatchesPage() {
   const [teamAScore, setTeamAScore] = useState(0);
   const [teamBScore, setTeamBScore] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-
-  // Save state to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('timer', timer);
-    localStorage.setItem('half', half);
-    localStorage.setItem('teamAScore', teamAScore.toString());
-    localStorage.setItem('teamBScore', teamBScore.toString());
-    if (selectedMatch) {
-      localStorage.setItem('selectedMatchId', selectedMatch.id);
-    }
-  }, [timer, half, teamAScore, teamBScore, selectedMatch]);
 
   useEffect(() => {
     fetchMatches();
@@ -134,31 +111,7 @@ export default function MatchesPage() {
   };
 
   const handleRefresh = () => {
-    const currentMatchId = selectedMatch?.id;
-    fetchMatches().then(() => {
-      // Restore selected match and scores after refresh
-      if (currentMatchId) {
-        const updatedMatch = matches.find(m => m.id === currentMatchId);
-        if (updatedMatch) {
-          setSelectedMatch(updatedMatch);
-          setTeamAScore(updatedMatch.homeScore);
-          setTeamBScore(updatedMatch.awayScore);
-          setTimer(updatedMatch.matchTimer || '00:00');
-          setHalf(updatedMatch.halfTimeStatus || '2nd Half');
-          // Update form data with the latest match data
-          setFormData({
-            seasonId: updatedMatch.seasonId || '1',
-            homeTeamId: updatedMatch.homeTeamId,
-            awayTeamId: updatedMatch.awayTeamId,
-            matchDate: updatedMatch.matchDate.split('T')[0],
-            matchTime: updatedMatch.matchDate.split('T')[1]?.substring(0, 5) || '',
-            venue: updatedMatch.venue || '',
-            matchType: updatedMatch.matchType || 'LEAGUE_MATCH',
-            status: updatedMatch.status,
-          });
-        }
-      }
-    });
+    fetchMatches();
     fetchTeams();
     toast.success('Data refreshed');
   };
@@ -201,31 +154,10 @@ export default function MatchesPage() {
         homeScore: 0,
         awayScore: 0,
         matchTimer: '00:00',
-        halfTimeStatus: '1st Half',
+        half: '1st Half',
       });
       toast.success('Match created successfully');
-      fetchMatches().then(() => {
-        // Auto-select the newly created match
-        if (response.data && response.data.id) {
-          const newMatch = response.data;
-          setSelectedMatch(newMatch);
-          setIsEditing(true);
-          setFormData({
-            seasonId: newMatch.seasonId || '1',
-            homeTeamId: newMatch.homeTeamId,
-            awayTeamId: newMatch.awayTeamId,
-            matchDate: newMatch.matchDate.split('T')[0],
-            matchTime: newMatch.matchDate.split('T')[1]?.substring(0, 5) || '',
-            venue: newMatch.venue || '',
-            matchType: newMatch.matchType || 'LEAGUE_MATCH',
-            status: newMatch.status,
-          });
-          setTimer(newMatch.matchTimer || '00:00');
-          setHalf(newMatch.halfTimeStatus || '1st Half');
-          setTeamAScore(newMatch.homeScore || 0);
-          setTeamBScore(newMatch.awayScore || 0);
-        }
-      });
+      fetchMatches();
       resetForm();
     } catch (error) {
       console.error('Failed to create match:', error);
@@ -244,31 +176,12 @@ export default function MatchesPage() {
         homeScore: teamAScore,
         awayScore: teamBScore,
         matchTimer: timer,
-        halfTimeStatus: half,
+        half,
       });
       toast.success('Match updated successfully');
       fetchMatches();
     } catch (error) {
       toast.error('Failed to update match');
-    }
-  };
-
-  const handleCompleteMatch = async () => {
-    if (!selectedMatch) return;
-    if (!confirm('Are you sure you want to complete this match? This will update the points table.')) return;
-
-    try {
-      await api.patch(`/matches/${selectedMatch.id}/status`, {
-        status: 'COMPLETED',
-      });
-      toast.success('Match completed successfully. Points table updated.');
-      fetchMatches();
-      // Reset the selection
-      setSelectedMatch(null);
-      setIsEditing(false);
-      resetForm();
-    } catch (error) {
-      toast.error('Failed to complete match');
     }
   };
 
@@ -289,48 +202,11 @@ export default function MatchesPage() {
   };
 
   const resetForm = () => {
-    // Keep the selected match if we're editing, only reset form fields
-    if (selectedMatch) {
-      setFormData({
-        seasonId: selectedMatch.seasonId || '1',
-        homeTeamId: selectedMatch.homeTeamId,
-        awayTeamId: selectedMatch.awayTeamId,
-        matchDate: selectedMatch.matchDate.split('T')[0],
-        matchTime: selectedMatch.matchDate.split('T')[1]?.substring(0, 5) || '',
-        venue: selectedMatch.venue || '',
-        matchType: selectedMatch.matchType || 'LEAGUE_MATCH',
-        status: selectedMatch.status,
-      });
-    } else {
-      setFormData({
-        seasonId: '1',
-        homeTeamId: '',
-        awayTeamId: '',
-        matchDate: new Date().toISOString().split('T')[0],
-        matchTime: '',
-        venue: '',
-        matchType: 'LEAGUE_MATCH',
-        status: 'SCHEDULED',
-      });
-    }
-    // Don't reset timer, half, and scores if a match is selected
-    if (!selectedMatch) {
-      setTimer('00:00');
-      setHalf('2nd Half');
-      setTeamAScore(0);
-      setTeamBScore(0);
-      setIsTimerRunning(false);
-    }
-  };
-
-  const clearAll = () => {
-    setSelectedMatch(null);
-    setIsEditing(false);
     setFormData({
       seasonId: '1',
       homeTeamId: '',
       awayTeamId: '',
-      matchDate: new Date().toISOString().split('T')[0],
+      matchDate: '',
       matchTime: '',
       venue: '',
       matchType: 'LEAGUE_MATCH',
@@ -341,40 +217,25 @@ export default function MatchesPage() {
     setTeamAScore(0);
     setTeamBScore(0);
     setIsTimerRunning(false);
-    localStorage.removeItem('selectedMatchId');
   };
 
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
     const points = action === '+1' ? 1 : action === '+2' ? 2 : action === 'bonus' ? 1 : action === 'super_raid' ? 2 : 2;
     
-    // Calculate new scores
-    const newTeamAScore = team === 'A' ? teamAScore + points : teamAScore;
-    const newTeamBScore = team === 'B' ? teamBScore + points : teamBScore;
-    
-    // Update local state
     if (team === 'A') {
-      setTeamAScore(newTeamAScore);
+      setTeamAScore(prev => prev + points);
     } else {
-      setTeamBScore(newTeamBScore);
+      setTeamBScore(prev => prev + points);
     }
 
     if (selectedMatch) {
       try {
         await api.patch(`/matches/${selectedMatch.id}/live-score`, {
-          homeScore: newTeamAScore,
-          awayScore: newTeamBScore,
-          matchTimer: timer,
-          halfTimeStatus: half,
+          homeScore: team === 'A' ? teamAScore + points : teamAScore,
+          awayScore: team === 'B' ? teamBScore + points : teamBScore,
         });
-        toast.success('Score updated successfully');
       } catch (error) {
         toast.error('Failed to update score');
-        // Revert local state on error
-        if (team === 'A') {
-          setTeamAScore(teamAScore);
-        } else {
-          setTeamBScore(teamBScore);
-        }
       }
     }
   };
@@ -413,7 +274,11 @@ export default function MatchesPage() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-800">Select Match</h2>
             <button
-              onClick={clearAll}
+              onClick={() => {
+                setSelectedMatch(null);
+                setIsEditing(false);
+                resetForm();
+              }}
               className="bg-gradient-to-r from-purple-600 via-purple-500 to-yellow-500 text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
@@ -439,13 +304,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
@@ -476,13 +341,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-sm text-gray-500">{new Date(match.matchDate).toLocaleDateString()}</span>
@@ -513,13 +378,13 @@ export default function MatchesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {match.homeTeam && (
-                          <img src={match.homeTeam.logo || match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
                         {match.awayTeam && (
-                          <img src={match.awayTeam.logo || match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
+                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full" />
                         )}
                       </div>
                       <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
@@ -541,9 +406,7 @@ export default function MatchesPage() {
 
         {/* MATCH SETUP CARD */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6">
-            {selectedMatch ? 'Match Setup' : 'Create New Match'}
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-6">Match Setup</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Team A Dropdown */}
@@ -657,20 +520,12 @@ export default function MatchesPage() {
               {isEditing ? 'Update Match' : 'Create Match'}
             </button>
             {isEditing && (
-              <>
-                <button
-                  onClick={handleCompleteMatch}
-                  className="px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
-                >
-                  Complete Match
-                </button>
-                <button
-                  onClick={handleDeleteMatch}
-                  className="px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors"
-                >
-                  Delete
-                </button>
-              </>
+              <button
+                onClick={handleDeleteMatch}
+                className="px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
             )}
           </div>
         </div>
@@ -684,14 +539,6 @@ export default function MatchesPage() {
               <button className="bg-purple-800 text-white px-3 py-1 rounded-full text-xs">Player Stats</button>
             </div>
           </div>
-          
-          {!selectedMatch && (
-            <div className="text-center py-8">
-              <p className="text-gray-400 text-sm">Select a match to enable score controls</p>
-            </div>
-          )}
-          
-          {selectedMatch && (
 
           {/* Timer Area */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
@@ -814,13 +661,11 @@ export default function MatchesPage() {
               </div>
             </div>
           </div>
-          )}
         </div>
 
         {/* LIVE PREVIEW CARD */}
-        {selectedMatch ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">Live Preview</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-6">Live Preview</h2>
 
           <div className="bg-gradient-to-r from-purple-600 to-pink-500 rounded-xl p-6">
             <div className="flex items-center justify-between">
@@ -877,7 +722,6 @@ export default function MatchesPage() {
             </div>
           </div>
         </div>
-        )}
       </div>
     </div>
   );

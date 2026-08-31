@@ -5,7 +5,10 @@ let io: SocketIOServer;
 export const initializeSocket = (server: any) => {
   io = new SocketIOServer(server, {
     cors: {
-      origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'https://iwkl.in', 'https://www.iwkl.in', 'https://iwkl-platform.onrender.com'],
+      origin: function(origin, callback) {
+        // Allow all origins for Railway deployment
+        callback(null, true);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -67,8 +70,9 @@ export const emitMatchUpdate = (matchId: string, data: any) => {
 
 export const emitScoreUpdate = (matchId: string, data: any) => {
   const io = getIO();
-  io.to(`match-${matchId}`).emit('score-update', data);
-  io.emit('live-scores-update', data);
+  console.log('Emitting live-score-updated:', data);
+  io.to(`match-${matchId}`).emit('live-score-updated', data);
+  io.emit('live-score-updated', data);
 };
 
 export const emitMatchStatusUpdate = (matchId: string, data: any) => {

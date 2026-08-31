@@ -77,6 +77,12 @@ export const createMatchSimple = async (data: any) => {
     },
   });
 
+  // Emit socket event for real-time update
+  if (global.io) {
+    global.io.emit('match-created', match);
+    global.io.emit('matches-updated', match);
+  }
+
   return match;
 };
 

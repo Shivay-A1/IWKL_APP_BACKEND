@@ -1249,8 +1249,10 @@ export const recordSpecialAction = async (matchId: string, team: string, action:
       updateData.awayRaidPoints = { increment: points };
       updateData.awayScore = { increment: points };
     }
+  } else if (action === 'review') {
+    // Review doesn't change score, just add a dummy update to satisfy Prisma
+    updateData.matchDate = match.matchDate;
   }
-  // Review doesn't change score, just logs the action
 
   const updatedMatch = await prisma.match.update({
     where: { id: matchId },

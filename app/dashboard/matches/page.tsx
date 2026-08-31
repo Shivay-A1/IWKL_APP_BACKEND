@@ -445,7 +445,49 @@ export default function MatchesPage() {
   };
 
   const handleSpecialAction = async (team: 'A' | 'B', action: 'super_tackle' | 'do_or_die' | 'review') => {
-    toast.success(`${action.replace('_', ' ')} recorded for Team ${team}`);
+    if (!selectedMatch) {
+      toast.error('Please select a match first');
+      return;
+    }
+
+    console.log('Recording special action:', {
+      matchId: selectedMatch.id,
+      team,
+      action
+    });
+
+    try {
+      const response = await api.post(`/matches/${selectedMatch.id}/special-action`, {
+        team,
+        action,
+      });
+
+      console.log('Special action API call successful:', response.data);
+
+      // Refresh matches to get updated data
+      await fetchMatches();
+
+      // Update local state with the response data
+      if (response.data) {
+        const updatedMatch = response.data;
+        setTeamAScore(updatedMatch.homeScore || teamAScore);
+        setTeamBScore(updatedMatch.awayScore || teamBScore);
+      }
+
+      toast.success(`${action.replace('_', ' ')} recorded for Team ${team}`);
+    } catch (error: any) {
+      console.error('Failed to record special action:', error);
+      if (error.response?.status === 404) {
+        toast.error('Match not found. Please select a valid match');
+        // Refresh matches and clear selection
+        await fetchMatches();
+        setSelectedMatch(null);
+        setIsEditing(false);
+        resetForm();
+      } else {
+        toast.error('Failed to record special action');
+      }
+    }
   };
 
   const liveMatches = Array.isArray(matches) ? matches.filter(m => m.status === 'LIVE') : [];

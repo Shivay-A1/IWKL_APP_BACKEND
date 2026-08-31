@@ -128,15 +128,21 @@ export const getCompletedMatches = async (req: AuthRequest, res: Response, next:
 export const updateLiveScore = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const result = await matchService.updateLiveScore(req.params.id, req.body);
-    
+
+    console.log('Emitting live-score-updated event:', result);
+
     // Emit socket event for real-time score update
     if (global.io) {
       global.io.emit('live-score-updated', result);
       global.io.to(`match-${req.params.id}`).emit('live-score-updated', result);
+      console.log('Socket event emitted successfully');
+    } else {
+      console.log('global.io is not available');
     }
-    
+
     res.json(result);
   } catch (error) {
+    console.error('Error in updateLiveScore:', error);
     next(error);
   }
 };

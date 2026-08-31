@@ -572,25 +572,32 @@ export const updateLiveScore = async (id: string, data: any) => {
     },
   });
 
-  // Emit score update via Socket.IO (with error handling)
+  // Emit score update via Socket.IO (using global.io directly)
   try {
-    emitScoreUpdate(id, {
-      matchId: id,
-      homeScore: updatedMatch.homeScore,
-      awayScore: updatedMatch.awayScore,
-      homeRaidPoints: updatedMatch.homeRaidPoints,
-      awayRaidPoints: updatedMatch.awayRaidPoints,
-      homeTacklePoints: updatedMatch.homeTacklePoints,
-      awayTacklePoints: updatedMatch.awayTacklePoints,
-      homeBonusPoints: updatedMatch.homeBonusPoints,
-      awayBonusPoints: updatedMatch.awayBonusPoints,
-      homeAllOutCount: updatedMatch.homeAllOutCount,
-      awayAllOutCount: updatedMatch.awayAllOutCount,
-      matchTimer: updatedMatch.matchTimer,
-      halfTimeStatus: updatedMatch.halfTimeStatus,
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
-    });
+    if (global.io) {
+      const scoreData = {
+        matchId: id,
+        homeScore: updatedMatch.homeScore,
+        awayScore: updatedMatch.awayScore,
+        homeRaidPoints: updatedMatch.homeRaidPoints,
+        awayRaidPoints: updatedMatch.awayRaidPoints,
+        homeTacklePoints: updatedMatch.homeTacklePoints,
+        awayTacklePoints: updatedMatch.awayTacklePoints,
+        homeBonusPoints: updatedMatch.homeBonusPoints,
+        awayBonusPoints: updatedMatch.awayBonusPoints,
+        homeAllOutCount: updatedMatch.homeAllOutCount,
+        awayAllOutCount: updatedMatch.awayAllOutCount,
+        matchTimer: updatedMatch.matchTimer,
+        halfTimeStatus: updatedMatch.halfTimeStatus,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+      };
+      console.log('Emitting live-score-updated from service:', scoreData);
+      global.io.emit('live-score-updated', scoreData);
+      global.io.to(`match-${id}`).emit('live-score-updated', scoreData);
+    } else {
+      console.log('global.io is not available');
+    }
   } catch (socketError) {
     console.error('Socket.IO emit error (non-critical):', socketError);
     // Continue even if Socket.IO fails - the data is saved

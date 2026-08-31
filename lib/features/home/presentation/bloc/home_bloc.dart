@@ -24,119 +24,28 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     _socketClient.connect();
 
-    // Listen for live score updates
+    // Listen for live score updates - reload data
     _socketClient.on('live-score-updated', (data) {
       print('Received live-score-updated: $data');
-      if (state is HomeLoaded) {
-        final currentState = state as HomeLoaded;
-        final matchId = data['matchId'];
-
-        // Update live match score
-        if (currentState.liveMatch?.id == matchId) {
-          final updatedLiveMatch = Match(
-            id: currentState.liveMatch!.id,
-            homeTeamId: currentState.liveMatch!.homeTeamId,
-            awayTeamId: currentState.liveMatch!.awayTeamId,
-            homeTeam: currentState.liveMatch!.homeTeam,
-            awayTeam: currentState.liveMatch!.awayTeam,
-            homeScore: data['homeScore'] ?? currentState.liveMatch!.homeScore,
-            awayScore: data['awayScore'] ?? currentState.liveMatch!.awayScore,
-            status: currentState.liveMatch!.status,
-            matchDate: currentState.liveMatch!.matchDate,
-            venue: currentState.liveMatch!.venue,
-            matchType: currentState.liveMatch!.matchType,
-            matchTimer: data['matchTimer'] ?? currentState.liveMatch!.matchTimer,
-            halfTimeStatus: data['halfTimeStatus'] ?? currentState.liveMatch!.halfTimeStatus,
-          );
-          emit(currentState.copyWith(liveMatch: updatedLiveMatch));
-        }
-
-        // Update upcoming match score
-        final updatedUpcoming = currentState.upcomingMatches.map((match) {
-          if (match.id == matchId) {
-            return Match(
-              id: match.id,
-              homeTeamId: match.homeTeamId,
-              awayTeamId: match.awayTeamId,
-              homeTeam: match.homeTeam,
-              awayTeam: match.awayTeam,
-              homeScore: data['homeScore'] ?? match.homeScore,
-              awayScore: data['awayScore'] ?? match.awayScore,
-              status: match.status,
-              matchDate: match.matchDate,
-              venue: match.venue,
-              matchType: match.matchType,
-              matchTimer: data['matchTimer'] ?? match.matchTimer,
-              halfTimeStatus: data['halfTimeStatus'] ?? match.halfTimeStatus,
-            );
-          }
-          return match;
-        }).toList();
-
-        emit(currentState.copyWith(upcomingMatches: updatedUpcoming));
-      }
+      add(LoadHomeData());
     });
 
-    // Listen for match status updates
+    // Listen for match status updates - reload data
     _socketClient.on('match-status-updated', (data) {
       print('Received match-status-updated: $data');
-      if (state is HomeLoaded) {
-        final currentState = state as HomeLoaded;
-        final matchId = data['matchId'];
-        final newStatus = data['status'];
-
-        // Move match between lists based on status
-        final liveMatch = currentState.liveMatch?.id == matchId && newStatus == 'LIVE'
-            ? currentState.liveMatch
-            : null;
-
-        final upcomingMatches = currentState.upcomingMatches.where((match) {
-          if (match.id == matchId) {
-            return newStatus == 'SCHEDULED';
-          }
-          return true;
-        }).toList();
-
-        final completedMatches = currentState.completedMatches?.where((match) {
-          if (match.id == matchId) {
-            return newStatus == 'COMPLETED';
-          }
-          return true;
-        }).toList() ?? [];
-
-        emit(currentState.copyWith(
-          liveMatch: liveMatch,
-          upcomingMatches: upcomingMatches,
-          completedMatches: completedMatches,
-        ));
-      }
+      add(LoadHomeData());
     });
 
-    // Listen for match updates
+    // Listen for match updates - reload data
     _socketClient.on('match-updated', (data) {
       print('Received match-updated: $data');
-      if (state is HomeLoaded) {
-        add(LoadHomeData());
-      }
+      add(LoadHomeData());
     });
 
-    // Listen for match deletion
+    // Listen for match deletion - reload data
     _socketClient.on('match-deleted', (data) {
       print('Received match-deleted: $data');
-      if (state is HomeLoaded) {
-        final currentState = state as HomeLoaded;
-        final matchId = data['matchId'];
-
-        final liveMatch = currentState.liveMatch?.id == matchId ? null : currentState.liveMatch;
-        final upcomingMatches = currentState.upcomingMatches.where((match) => match.id != matchId).toList();
-        final completedMatches = currentState.completedMatches?.where((match) => match.id != matchId).toList() ?? [];
-
-        emit(currentState.copyWith(
-          liveMatch: liveMatch,
-          upcomingMatches: upcomingMatches,
-          completedMatches: completedMatches,
-        ));
-      }
+      add(LoadHomeData());
     });
   }
 

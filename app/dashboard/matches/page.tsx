@@ -209,6 +209,8 @@ export default function MatchesPage() {
   };
 
   const handleSelectMatch = (match: Match) => {
+    console.log('Selecting match:', match.id);
+
     setSelectedMatch(match);
     setIsEditing(true);
 
@@ -368,6 +370,11 @@ export default function MatchesPage() {
   };
 
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
+    if (!selectedMatch) {
+      toast.error('Please select a match first');
+      return;
+    }
+
     const points = action === '+1' ? 1 : action === '+2' ? 2 : action === 'bonus' ? 1 : action === 'super_raid' ? 2 : 2;
 
     // Ensure scores are numbers
@@ -385,34 +392,54 @@ export default function MatchesPage() {
       setTeamBScore(newAwayScore);
     }
 
-    if (selectedMatch) {
-      console.log('Updating score:', {
-        matchId: selectedMatch.id,
+    console.log('Updating score:', {
+      matchId: selectedMatch.id,
+      homeScore: newHomeScore,
+      awayScore: newAwayScore,
+      timer,
+      half
+    });
+
+    try {
+      const response = await api.patch(`/matches/${selectedMatch.id}/live-score`, {
         homeScore: newHomeScore,
         awayScore: newAwayScore,
-        timer,
-        half
+        matchTimer: timer,
+        halfTimeStatus: half,
       });
 
-      try {
-        await api.patch(`/matches/${selectedMatch.id}/live-score`, {
-          homeScore: newHomeScore,
-          awayScore: newAwayScore,
-          matchTimer: timer,
-          halfTimeStatus: half,
-        });
+      console.log('Score update API call successful:', response.data);
 
-        console.log('Score update API call successful');
-        toast.success('Score updated successfully');
-      } catch (error) {
-        console.error('Failed to update score:', error);
+      // Refresh matches to get updated data
+      await fetchMatches();
+
+      // Update local state with the response data
+      if (response.data?.match) {
+        const updatedMatch = response.data.match;
+        setTeamAScore(updatedMatch.homeScore || newHomeScore);
+        setTeamBScore(updatedMatch.awayScore || newAwayScore);
+        setTimer(updatedMatch.matchTimer || timer);
+        setHalf(updatedMatch.halfTimeStatus || half);
+      }
+
+      toast.success('Score updated successfully');
+    } catch (error: any) {
+      console.error('Failed to update score:', error);
+      if (error.response?.status === 404) {
+        toast.error('Match not found. Please select a valid match');
+        // Refresh matches and clear selection
+        await fetchMatches();
+        setSelectedMatch(null);
+        setIsEditing(false);
+        resetForm();
+      } else {
         toast.error('Failed to update score');
-        // Revert on error
-        if (team === 'A') {
-          setTeamAScore(currentHomeScore);
-        } else {
-          setTeamBScore(currentAwayScore);
-        }
+      }
+      // Revert on error
+      if (team === 'A') {
+        setTeamAScore(currentHomeScore);
+      } else {
+        setTeamBScore(currentAwayScore);
       }
     }
   };
@@ -482,15 +509,27 @@ export default function MatchesPage() {
                         className="flex items-center gap-3 flex-1 cursor-pointer"
                         onClick={() => handleSelectMatch(match)}
                       >
-                        {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.homeTeam ? (
+                          match.homeTeam.logoUrl ? (
+                            <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.homeTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
-                        {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.awayTeam ? (
+                          match.awayTeam.logoUrl ? (
+                            <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.awayTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>
@@ -533,15 +572,27 @@ export default function MatchesPage() {
                         className="flex items-center gap-3 flex-1 cursor-pointer"
                         onClick={() => handleSelectMatch(match)}
                       >
-                        {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.homeTeam ? (
+                          match.homeTeam.logoUrl ? (
+                            <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.homeTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
-                        {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.awayTeam ? (
+                          match.awayTeam.logoUrl ? (
+                            <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.awayTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-gray-500">{new Date(match.matchDate).toLocaleDateString()}</span>
@@ -584,15 +635,27 @@ export default function MatchesPage() {
                         className="flex items-center gap-3 flex-1 cursor-pointer"
                         onClick={() => handleSelectMatch(match)}
                       >
-                        {match.homeTeam && (
-                          <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.homeTeam ? (
+                          match.homeTeam.logoUrl ? (
+                            <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.homeTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                         <span className="font-medium text-gray-800">{match.homeTeam?.name}</span>
                         <span className="text-gray-400">vs</span>
                         <span className="font-medium text-gray-800">{match.awayTeam?.name}</span>
-                        {match.awayTeam && (
-                          <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-team.png'; }} />
-                        )}
+                        {match.awayTeam ? (
+                          match.awayTeam.logoUrl ? (
+                            <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="w-8 h-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {match.awayTeam.name?.charAt(0) || 'T'}
+                            </div>
+                          )
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-lg font-bold text-gray-800">{match.homeScore} - {match.awayScore}</span>

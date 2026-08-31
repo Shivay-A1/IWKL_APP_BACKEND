@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class PremiumMatchesScreen extends StatefulWidget {
   const PremiumMatchesScreen({super.key});
@@ -12,17 +14,80 @@ class PremiumMatchesScreen extends StatefulWidget {
 
 class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<dynamic> _allMatches = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchMatches();
+  }
+
+  Future<void> _fetchMatches() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get('${AppConstants.baseUrl}/matches');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // Handle different response structures
+        if (data is Map && data['data'] is List) {
+          setState(() {
+            _allMatches = data['data'];
+            _isLoading = false;
+          });
+        } else if (data is List) {
+          setState(() {
+            _allMatches = data;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load matches';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  List<dynamic> _getLiveMatches() {
+    return _allMatches.where((m) => m['status'] == 'LIVE').toList();
+  }
+
+  List<dynamic> _getUpcomingMatches() {
+    return _allMatches.where((m) => m['status'] == 'SCHEDULED').toList();
+  }
+
+  List<dynamic> _getCompletedMatches() {
+    return _allMatches.where((m) => m['status'] == 'COMPLETED').toList();
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String _formatTime(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final minute = date.minute < 10 ? '0${date.minute}' : '${date.minute}';
+      return '${date.hour}:$minute';
+    } catch (e) {
+      return '';
+    }
   }
 
   @override
@@ -44,6 +109,12 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _fetchMatches,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppDesignSystem.gold,
@@ -60,110 +131,112 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildLiveMatches(),
-          _buildUpcomingMatches(),
-          _buildCompletedMatches(),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppDesignSystem.gold),
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchMatches,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppDesignSystem.primaryPurple,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildLiveMatches(),
+                    _buildUpcomingMatches(),
+                    _buildCompletedMatches(),
+                  ],
+                ),
     );
   }
 
   Widget _buildLiveMatches() {
+    final liveMatches = _getLiveMatches();
+    if (liveMatches.isEmpty) {
+      return const Center(
+        child: Text(
+          'No live matches',
+          style: TextStyle(color: AppDesignSystem.mutedText),
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
-      children: [
-        _buildMatchCard(
-          isLive: true,
-          team1: 'Delhi Warriors',
-          team2: 'Punjab Wings',
-          team1Score: '28',
-          team2Score: '24',
-          matchTime: 'Q3 • 5:30 left',
-          venue: 'Delhi Stadium',
-          quarter: 'Q3',
-        ),
-        _buildMatchCard(
-          isLive: true,
-          team1: 'Mumbai Strikers',
-          team2: 'Kolkata Rangers',
-          team1Score: '22',
-          team2Score: '20',
-          matchTime: 'Q2 • 8:15 left',
-          venue: 'Mumbai Arena',
-          quarter: 'Q2',
-        ),
-      ],
+      children: liveMatches.map((match) => _buildMatchCardFromApi(match, true)).toList(),
     );
   }
 
   Widget _buildUpcomingMatches() {
+    final upcomingMatches = _getUpcomingMatches();
+    if (upcomingMatches.isEmpty) {
+      return const Center(
+        child: Text(
+          'No upcoming matches',
+          style: TextStyle(color: AppDesignSystem.mutedText),
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
-      children: [
-        _buildMatchCard(
-          isLive: false,
-          team1: 'Gujarat Gems',
-          team2: 'Ayodhya Shakti',
-          team1Score: '-',
-          team2Score: '-',
-          matchTime: 'Aug 15, 7:00 PM',
-          venue: 'Ahmedabad Stadium',
-          quarter: null,
-        ),
-        _buildMatchCard(
-          isLive: false,
-          team1: 'Namma Bengaluru',
-          team2: 'Haryanvi Fighters',
-          team1Score: '-',
-          team2Score: '-',
-          matchTime: 'Aug 16, 8:00 PM',
-          venue: 'Bangalore Arena',
-          quarter: null,
-        ),
-        _buildMatchCard(
-          isLive: false,
-          team1: 'Kashmiri Queens',
-          team2: 'Delhi Warriors',
-          team1Score: '-',
-          team2Score: '-',
-          matchTime: 'Aug 17, 7:30 PM',
-          venue: 'Srinagar Arena',
-          quarter: null,
-        ),
-      ],
+      children: upcomingMatches.map((match) => _buildMatchCardFromApi(match, false)).toList(),
     );
   }
 
   Widget _buildCompletedMatches() {
+    final completedMatches = _getCompletedMatches();
+    if (completedMatches.isEmpty) {
+      return const Center(
+        child: Text(
+          'No completed matches',
+          style: TextStyle(color: AppDesignSystem.mutedText),
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
-      children: [
-        _buildMatchCard(
-          isLive: false,
-          team1: 'Punjab Wings',
-          team2: 'Mumbai Strikers',
-          team1Score: '35',
-          team2Score: '30',
-          matchTime: 'Aug 12, Final',
-          venue: 'Mohali Stadium',
-          quarter: 'FT',
-          isCompleted: true,
-        ),
-        _buildMatchCard(
-          isLive: false,
-          team1: 'Kolkata Rangers',
-          team2: 'Gujarat Gems',
-          team1Score: '28',
-          team2Score: '32',
-          matchTime: 'Aug 11, Final',
-          venue: 'Kolkata Stadium',
-          quarter: 'FT',
-          isCompleted: true,
-        ),
-      ],
+      children: completedMatches.map((match) => _buildMatchCardFromApi(match, false, true)).toList(),
+    );
+  }
+
+  Widget _buildMatchCardFromApi(dynamic match, bool isLive, [bool isCompleted = false]) {
+    final homeTeam = match['homeTeam']?['name'] ?? match['homeTeamName'] ?? 'Home Team';
+    final awayTeam = match['awayTeam']?['name'] ?? match['awayTeamName'] ?? 'Away Team';
+    final homeScore = match['homeScore']?.toString() ?? '-';
+    final awayScore = match['awayScore']?.toString() ?? '-';
+    final venue = match['venue'] ?? 'Unknown Venue';
+    final matchDate = match['matchDate'] ?? match['scheduledAt'] ?? '';
+    final dateStr = _formatDate(matchDate);
+    final timeStr = _formatTime(matchDate);
+    final matchTimer = match['matchTimer'] ?? '';
+    final matchTime = isLive ? matchTimer : '$dateStr $timeStr';
+    final quarter = isLive ? match['halfTimeStatus'] ?? (isCompleted ? 'FT' : null) : null;
+
+    return _buildMatchCard(
+      isLive: isLive,
+      team1: homeTeam,
+      team2: awayTeam,
+      team1Score: homeScore,
+      team2Score: awayScore,
+      matchTime: matchTime,
+      venue: venue,
+      quarter: quarter,
+      isCompleted: isCompleted,
     );
   }
 

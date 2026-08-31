@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { RefreshCw, Plus, Clock, MapPin, Calendar, Trophy, Play, Pause, Square, Plus as PlusIcon, Minus } from 'lucide-react';
+import { RefreshCw, Plus, Clock, MapPin, Calendar, Trophy, Play, Pause, Square, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Match {

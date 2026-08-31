@@ -65,8 +65,8 @@ export default function MatchesPage() {
   }, []);
 
   // Live Controls State
-  const [timer, setTimer] = useState('00:00');
-  const [half, setHalf] = useState('2nd Half');
+  const [timer, setTimer] = useState('20:00'); // Start at 20 minutes
+  const [half, setHalf] = useState('1st Half');
   const [teamAScore, setTeamAScore] = useState(0);
   const [teamBScore, setTeamBScore] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -123,14 +123,18 @@ export default function MatchesPage() {
     };
   }, []);
   
-  // Timer interval
+  // Timer interval - counts down from 20 minutes
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
       interval = setInterval(() => {
         setTimer(prev => {
           const [min, sec] = prev.split(':').map(Number);
-          const totalSeconds = min * 60 + sec + 1;
+          const totalSeconds = min * 60 + sec - 1; // Count down
+          if (totalSeconds <= 0) {
+            setIsTimerRunning(false);
+            return '00:00';
+          }
           const newMin = Math.floor(totalSeconds / 60);
           const newSec = totalSeconds % 60;
           return `${String(newMin).padStart(2, '0')}:${String(newSec).padStart(2, '0')}`;
@@ -887,7 +891,7 @@ export default function MatchesPage() {
                 <button
                   onClick={() => {
                     const [min, sec] = timer.split(':').map(Number);
-                    const totalSeconds = Math.max(0, min * 60 + sec + 1);
+                    const totalSeconds = Math.min(20 * 60, min * 60 + sec + 1); // Max 20 minutes
                     const newMin = Math.floor(totalSeconds / 60);
                     const newSec = totalSeconds % 60;
                     setTimer(`${String(newMin).padStart(2, '0')}:${String(newSec).padStart(2, '0')}`);
@@ -899,7 +903,7 @@ export default function MatchesPage() {
                 <button
                   onClick={() => {
                     const [min, sec] = timer.split(':').map(Number);
-                    const totalSeconds = Math.max(0, min * 60 + sec - 1);
+                    const totalSeconds = Math.max(0, min * 60 + sec - 1); // Min 0
                     const newMin = Math.floor(totalSeconds / 60);
                     const newSec = totalSeconds % 60;
                     setTimer(`${String(newMin).padStart(2, '0')}:${String(newSec).padStart(2, '0')}`);

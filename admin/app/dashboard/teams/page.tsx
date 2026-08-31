@@ -60,7 +60,13 @@ export default function TeamsPage() {
     }
     
     try {
-      await api.post('/teams/simple', formData);
+      // Use provided logo URL or default placeholder
+      const logoUrl = formData.logoUrl || 'https://raw.githubusercontent.com/Shivay-A1/IWKL_APP_BACKEND/main/assets/teams/default_team.png';
+      
+      await api.post('/teams/simple', {
+        ...formData,
+        logo: logoUrl, // Map logoUrl to logo field for backend
+      });
       toast.success('Team created successfully');
       setShowCreateModal(false);
       setFormData({

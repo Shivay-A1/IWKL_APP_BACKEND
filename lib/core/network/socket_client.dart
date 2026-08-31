@@ -16,10 +16,11 @@ class SocketClient {
       AppConstants.socketUrl,
       IO.OptionBuilder()
           .setTransports(['websocket', 'polling'])
-          .enableAutoConnect()
-          .setReconnectionAttempts(5)
+          .disableAutoConnect()
+          .setReconnectionAttempts(10)
           .setReconnectionDelay(1000)
-          .setReconnectionDelayMax(5000)
+          .setReconnectionDelayMax(10000)
+          .setTimeout(10000)
           .build(),
     );
 
@@ -39,9 +40,16 @@ class SocketClient {
       print('Socket reconnecting...');
     });
 
+    _socket.onReconnectFailed((_) {
+      print('Socket reconnection failed');
+    });
+
     _socket.onError((error) {
       print('Socket error: $error');
     });
+
+    // Manually connect
+    _socket.connect();
   }
 
   void disconnect() {

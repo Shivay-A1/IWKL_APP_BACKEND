@@ -129,10 +129,32 @@ export default function MatchesPage() {
       matchType: match.matchType || 'LEAGUE_MATCH',
       status: match.status,
     });
+    
+    // Load saved scores from localStorage if match is LIVE or has saved data
+    const savedScores = localStorage.getItem(`match_${match.id}_scores`);
+    if (savedScores) {
+      try {
+        const parsed = JSON.parse(savedScores);
+        // Only use saved scores if they're recent (within 24 hours)
+        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          setTimer(parsed.timer || match.matchTimer || '00:00');
+          setHalf(parsed.half || match.halfTimeStatus || '2nd Half');
+          setTeamAScore(parsed.homeScore);
+          setTeamBScore(parsed.awayScore);
+          setIsTimerRunning(match.status === 'LIVE');
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to parse saved scores:', e);
+      }
+    }
+    
+    // Fall back to database values
     setTimer(match.matchTimer || '00:00');
     setHalf(match.halfTimeStatus || '2nd Half');
     setTeamAScore(match.homeScore);
     setTeamBScore(match.awayScore);
+    setIsTimerRunning(match.status === 'LIVE');
   };
 
   const handleCreateMatch = async () => {
@@ -170,14 +192,20 @@ export default function MatchesPage() {
 
     try {
       const matchDateTime = `${formData.matchDate}T${formData.matchTime || '00:00'}:00`;
-      await api.patch(`/matches/${selectedMatch.id}`, {
+      const response = await api.patch(`/matches/${selectedMatch.id}`, {
         ...formData,
         matchDate: matchDateTime,
         homeScore: teamAScore,
         awayScore: teamBScore,
         matchTimer: timer,
-        half,
+        halfTimeStatus: half,
       });
+      
+      // If status changed to COMPLETED, clear localStorage
+      if (formData.status === 'COMPLETED' && selectedMatch.status !== 'COMPLETED') {
+        localStorage.removeItem(`match_${selectedMatch.id}_scores`);
+      }
+      
       toast.success('Match updated successfully');
       fetchMatches();
     } catch (error) {
@@ -191,6 +219,10 @@ export default function MatchesPage() {
 
     try {
       await api.delete(`/matches/${selectedMatch.id}`);
+      
+      // Clear localStorage for this match
+      localStorage.removeItem(`match_${selectedMatch.id}_scores`);
+      
       toast.success('Match deleted successfully');
       setSelectedMatch(null);
       setIsEditing(false);
@@ -222,20 +254,44 @@ export default function MatchesPage() {
   const handleScoreUpdate = async (team: 'A' | 'B', action: '+1' | '+2' | 'bonus' | 'super_raid' | 'all_out') => {
     const points = action === '+1' ? 1 : action === '+2' ? 2 : action === 'bonus' ? 1 : action === 'super_raid' ? 2 : 2;
     
+    let newHomeScore = teamAScore;
+    let newAwayScore = teamBScore;
+    
     if (team === 'A') {
-      setTeamAScore(prev => prev + points);
+      newHomeScore = teamAScore + points;
+      setTeamAScore(newHomeScore);
     } else {
-      setTeamBScore(prev => prev + points);
+      newAwayScore = teamBScore + points;
+      setTeamBScore(newAwayScore);
     }
 
     if (selectedMatch) {
       try {
         await api.patch(`/matches/${selectedMatch.id}/live-score`, {
-          homeScore: team === 'A' ? teamAScore + points : teamAScore,
-          awayScore: team === 'B' ? teamBScore + points : teamBScore,
+          homeScore: newHomeScore,
+          awayScore: newAwayScore,
+          matchTimer: timer,
+          halfTimeStatus: half,
         });
+        
+        // Save to localStorage for persistence
+        localStorage.setItem(`match_${selectedMatch.id}_scores`, JSON.stringify({
+          homeScore: newHomeScore,
+          awayScore: newAwayScore,
+          timer,
+          half,
+          timestamp: Date.now()
+        }));
+        
+        toast.success('Score updated successfully');
       } catch (error) {
         toast.error('Failed to update score');
+        // Revert on error
+        if (team === 'A') {
+          setTeamAScore(teamAScore);
+        } else {
+          setTeamBScore(teamBScore);
+        }
       }
     }
   };

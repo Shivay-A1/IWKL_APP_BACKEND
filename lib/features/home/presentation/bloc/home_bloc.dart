@@ -22,31 +22,51 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (_isSocketInitialized) return;
     _isSocketInitialized = true;
 
-    _socketClient.connect();
+    try {
+      _socketClient.connect();
 
-    // Listen for live score updates - reload data
-    _socketClient.on('live-score-updated', (data) {
-      print('Received live-score-updated: $data');
-      add(LoadHomeData());
-    });
+      // Listen for live score updates - reload data
+      _socketClient.on('live-score-updated', (data) {
+        print('Received live-score-updated: $data');
+        try {
+          add(LoadHomeData());
+        } catch (e) {
+          print('Error handling live-score-updated: $e');
+        }
+      });
 
-    // Listen for match status updates - reload data
-    _socketClient.on('match-status-updated', (data) {
-      print('Received match-status-updated: $data');
-      add(LoadHomeData());
-    });
+      // Listen for match status updates - reload data
+      _socketClient.on('match-status-updated', (data) {
+        print('Received match-status-updated: $data');
+        try {
+          add(LoadHomeData());
+        } catch (e) {
+          print('Error handling match-status-updated: $e');
+        }
+      });
 
-    // Listen for match updates - reload data
-    _socketClient.on('match-updated', (data) {
-      print('Received match-updated: $data');
-      add(LoadHomeData());
-    });
+      // Listen for match updates - reload data
+      _socketClient.on('match-updated', (data) {
+        print('Received match-updated: $data');
+        try {
+          add(LoadHomeData());
+        } catch (e) {
+          print('Error handling match-updated: $e');
+        }
+      });
 
-    // Listen for match deletion - reload data
-    _socketClient.on('match-deleted', (data) {
-      print('Received match-deleted: $data');
-      add(LoadHomeData());
-    });
+      // Listen for match deletion - reload data
+      _socketClient.on('match-deleted', (data) {
+        print('Received match-deleted: $data');
+        try {
+          add(LoadHomeData());
+        } catch (e) {
+          print('Error handling match-deleted: $e');
+        }
+      });
+    } catch (e) {
+      print('Error setting up socket listeners: $e');
+    }
   }
 
   Future<void> _onLoadHomeData(LoadHomeData event, Emitter<HomeState> emit) async {

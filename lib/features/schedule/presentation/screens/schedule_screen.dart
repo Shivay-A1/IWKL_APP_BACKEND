@@ -1,51 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dio/dio.dart';
+import 'package:iwkl_app/core/constants/app_constants.dart';
 
-class ScheduleScreen extends StatelessWidget {
+class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
-  final List<Map<String, dynamic>> _matches = const [
-    {
-      'team1': 'Gujarat Gems',
-      'team2': 'Maharashtra Mavericks',
-      'date': 'Aug 10, 2026',
-      'time': '7:00 PM',
-      'venue': 'Mumbai Arena',
-      'status': 'Upcoming',
-    },
-    {
-      'team1': 'Punjab Panthers',
-      'team2': 'Delhi Daredevils',
-      'date': 'Aug 11, 2026',
-      'time': '8:00 PM',
-      'venue': 'Delhi Stadium',
-      'status': 'Upcoming',
-    },
-    {
-      'team1': 'Karnataka Kings',
-      'team2': 'Tamil Nadu Titans',
-      'date': 'Aug 12, 2026',
-      'time': '7:30 PM',
-      'venue': 'Bangalore Arena',
-      'status': 'Upcoming',
-    },
-    {
-      'team1': 'Gujarat Gems',
-      'team2': 'Punjab Panthers',
-      'date': 'Aug 13, 2026',
-      'time': '9:00 PM',
-      'venue': 'Ahmedabad Stadium',
-      'status': 'Upcoming',
-    },
-    {
-      'team1': 'Maharashtra Mavericks',
-      'team2': 'Karnataka Kings',
-      'date': 'Aug 14, 2026',
-      'time': '7:00 PM',
-      'venue': 'Pune Arena',
-      'status': 'Upcoming',
-    },
-  ];
+  @override
+  State<ScheduleScreen> createState() => _ScheduleScreenState();
+}
+
+class _ScheduleScreenState extends State<ScheduleScreen> {
+  List<dynamic> _matches = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMatches();
+  }
+
+  Future<void> _fetchMatches() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get('${AppConstants.baseUrl}/matches');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // Handle different response structures
+        if (data is Map && data['data'] is List) {
+          setState(() {
+            _matches = data['data'];
+            _isLoading = false;
+          });
+        } else if (data is List) {
+          setState(() {
+            _matches = data;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load matches';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String _formatTime(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'LIVE':
+        return '#EF4444'; // Red
+      case 'COMPLETED':
+        return '#10B981'; // Green
+      case 'SCHEDULED':
+      case 'UPCOMING':
+        return '#9333EA'; // Purple
+      default:
+        return '#6B7280'; // Gray
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,19 +99,64 @@ class ScheduleScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _fetchMatches,
+          ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _matches.length,
-        itemBuilder: (context, index) {
-          final match = _matches[index];
-          return _buildMatchCard(match, index);
-        },
-      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF9333EA)),
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchMatches,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF9333EA),
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _matches.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No matches scheduled',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _matches.length,
+                      itemBuilder: (context, index) {
+                        final match = _matches[index];
+                        return _buildMatchCard(match, index);
+                      },
+                    ),
     );
   }
 
-  Widget _buildMatchCard(Map<String, dynamic> match, int index) {
+  Widget _buildMatchCard(dynamic match, int index) {
+    final homeTeam = match['homeTeam']?['name'] ?? match['homeTeamName'] ?? 'Home Team';
+    final awayTeam = match['awayTeam']?['name'] ?? match['awayTeamName'] ?? 'Away Team';
+    final venue = match['venue'] ?? 'Unknown Venue';
+    final status = match['status'] ?? 'SCHEDULED';
+    final matchDate = match['matchDate'] ?? match['scheduledAt'] ?? '';
+    final dateStr = _formatDate(matchDate);
+    final timeStr = _formatTime(matchDate);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -103,16 +182,11 @@ class ScheduleScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF9333EA),
-                      Color(0xFFEC4899),
-                    ],
-                  ),
+                  color: Color(int.parse(_getStatusColor(status).replaceAll('#', '0xFF'))),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  match['status'],
+                  status.toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
@@ -121,7 +195,7 @@ class ScheduleScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '${match['date']} • ${match['time']}',
+                '$dateStr • $timeStr',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
                   fontSize: 12,
@@ -144,7 +218,7 @@ class ScheduleScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      match['team1'],
+                      homeTeam,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -180,7 +254,7 @@ class ScheduleScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      match['team2'],
+                      awayTeam,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -204,7 +278,7 @@ class ScheduleScreen extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                match['venue'],
+                venue,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
                   fontSize: 12,

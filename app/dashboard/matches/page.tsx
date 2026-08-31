@@ -328,17 +328,20 @@ export default function MatchesPage() {
     if (!confirm('Are you sure you want to delete this match?')) return;
 
     try {
+      console.log('Deleting match:', selectedMatch.id);
       await api.delete(`/matches/${selectedMatch.id}`);
-      
+
       // Clear localStorage for this match
       localStorage.removeItem(`match_${selectedMatch.id}_scores`);
-      
+      localStorage.removeItem('last_selected_match_id');
+
       toast.success('Match deleted successfully');
       setSelectedMatch(null);
       setIsEditing(false);
       resetForm();
       fetchMatches();
     } catch (error) {
+      console.error('Failed to delete match:', error);
       toast.error('Failed to delete match');
     }
   };

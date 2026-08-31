@@ -111,7 +111,20 @@ export default function MatchesPage() {
   };
 
   const handleRefresh = () => {
-    fetchMatches();
+    const currentMatchId = selectedMatch?.id;
+    fetchMatches().then(() => {
+      // Restore selected match and scores after refresh
+      if (currentMatchId) {
+        const updatedMatch = matches.find(m => m.id === currentMatchId);
+        if (updatedMatch) {
+          setSelectedMatch(updatedMatch);
+          setTeamAScore(updatedMatch.homeScore);
+          setTeamBScore(updatedMatch.awayScore);
+          setTimer(updatedMatch.matchTimer || '00:00');
+          setHalf(updatedMatch.halfTimeStatus || '2nd Half');
+        }
+      }
+    });
     fetchTeams();
     toast.success('Data refreshed');
   };

@@ -10,6 +10,7 @@ interface Team {
   id: string;
   name: string;
   shortName: string;
+  logo?: string;
   logoUrl?: string;
   bannerUrl?: string;
   seasonId: string;
@@ -129,9 +130,9 @@ export default function TeamsPage() {
           {teams.map((team) => (
             <div key={team.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-48 bg-background">
-                {team.logoUrl ? (
+                {team.logo || team.logoUrl ? (
                   <img
-                    src={team.logoUrl}
+                    src={team.logo || team.logoUrl}
                     alt={team.name}
                     className="w-full h-full object-contain p-4"
                   />

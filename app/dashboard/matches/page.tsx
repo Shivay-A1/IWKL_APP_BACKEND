@@ -65,7 +65,7 @@ export default function MatchesPage() {
   }, []);
 
   // Live Controls State
-  const [timer, setTimer] = useState('20:00'); // Start at 20 minutes
+  const [timer, setTimer] = useState('00:00'); // Start at 00:00
   const [half, setHalf] = useState('1st Half');
   const [teamAScore, setTeamAScore] = useState(0);
   const [teamBScore, setTeamBScore] = useState(0);
@@ -123,17 +123,17 @@ export default function MatchesPage() {
     };
   }, []);
   
-  // Timer interval - counts down from 20 minutes
+  // Timer interval - counts up from 00:00 to 20:00
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
       interval = setInterval(() => {
         setTimer(prev => {
           const [min, sec] = prev.split(':').map(Number);
-          const totalSeconds = min * 60 + sec - 1; // Count down
-          if (totalSeconds <= 0) {
+          const totalSeconds = min * 60 + sec + 1; // Count up
+          if (totalSeconds >= 20 * 60) { // Stop at 20 minutes
             setIsTimerRunning(false);
-            return '00:00';
+            return '20:00';
           }
           const newMin = Math.floor(totalSeconds / 60);
           const newSec = totalSeconds % 60;
@@ -273,7 +273,7 @@ export default function MatchesPage() {
         homeScore: 0,
         awayScore: 0,
         matchTimer: '00:00',
-        half: '1st Half',
+        halfTimeStatus: '1st Half',
       });
       toast.success('Match created successfully');
 
@@ -364,7 +364,7 @@ export default function MatchesPage() {
       status: 'SCHEDULED',
     });
     setTimer('00:00');
-    setHalf('2nd Half');
+    setHalf('1st Half');
     setTeamAScore(0);
     setTeamBScore(0);
     setIsTimerRunning(false);

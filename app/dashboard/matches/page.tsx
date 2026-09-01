@@ -92,8 +92,8 @@ export default function MatchesPage() {
         setHalf(data.halfTimeStatus || '2nd Half');
       }
 
-      // Refresh matches list
-      fetchMatches();
+      // Don't refresh matches list in admin panel to prevent overwriting local state
+      // Admin panel already has the latest state from the update
     });
 
     // Listen for match status updates
@@ -104,7 +104,7 @@ export default function MatchesPage() {
         }
         return prev;
       });
-      fetchMatches();
+      // Don't refresh matches list to prevent overwriting local state
     });
 
     // Listen for match deletions
@@ -115,7 +115,7 @@ export default function MatchesPage() {
         setIsEditing(false);
         resetForm();
       }
-      fetchMatches();
+      fetchMatches(); // Refresh only on deletion to remove the deleted match
     });
 
     return () => {

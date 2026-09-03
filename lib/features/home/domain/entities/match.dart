@@ -75,19 +75,22 @@ class Match {
   }
 
   factory Match.fromJson(Map<String, dynamic> json) {
+    final homeTeam = json['homeTeam'] as Map<String, dynamic>?;
+    final awayTeam = json['awayTeam'] as Map<String, dynamic>?;
+    
     return Match(
       id: json['id'] as String,
-      homeTeamId: json['homeTeamId'] as String? ?? json['homeTeam']?['id'] as String? ?? '',
-      awayTeamId: json['awayTeamId'] as String? ?? json['awayTeam']?['id'] as String? ?? '',
-      venue: json['venue'] as String? ?? json['stadium'] as String? ?? 'Unknown Venue',
+      homeTeamId: json['homeTeamId'] as String? ?? homeTeam?['id'] as String? ?? '',
+      awayTeamId: json['awayTeamId'] as String? ?? awayTeam?['id'] as String? ?? '',
+      venue: json['venue'] as String? ?? json['stadium'] as String? ?? json['stadium']?['name'] as String? ?? 'Unknown Venue',
       scheduledAt: DateTime.parse(json['scheduledAt'] as String? ?? json['matchDate'] as String? ?? DateTime.now().toIso8601String()),
       status: json['status'] as String? ?? 'SCHEDULED',
       homeScore: json['homeScore'] as int? ?? json['team1Score'] as int? ?? 0,
       awayScore: json['awayScore'] as int? ?? json['team2Score'] as int? ?? 0,
-      homeTeamName: json['homeTeam']?['name'] as String? ?? json['team1Name'] as String?,
-      homeTeamLogo: json['homeTeam']?['logo'] as String? ?? json['homeTeam']?['logoUrl'] as String? ?? json['team1Logo'] as String?,
-      awayTeamName: json['awayTeam']?['name'] as String? ?? json['team2Name'] as String?,
-      awayTeamLogo: json['awayTeam']?['logo'] as String? ?? json['awayTeam']?['logoUrl'] as String? ?? json['team2Logo'] as String?,
+      homeTeamName: homeTeam?['name'] as String? ?? json['team1Name'] as String?,
+      homeTeamLogo: homeTeam?['logo'] as String? ?? homeTeam?['logoUrl'] as String? ?? json['team1Logo'] as String?,
+      awayTeamName: awayTeam?['name'] as String? ?? json['team2Name'] as String?,
+      awayTeamLogo: awayTeam?['logo'] as String? ?? awayTeam?['logoUrl'] as String? ?? json['team2Logo'] as String?,
       matchTimer: json['matchTimer'] as String?,
     );
   }

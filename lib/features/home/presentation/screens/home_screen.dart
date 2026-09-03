@@ -303,11 +303,11 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             const SizedBox(height: 24),
 
             // Upcoming Matches
-            _buildSectionTitle('Upcoming Matches'),
-            state.upcomingMatches.isNotEmpty
-                ? _buildHorizontalMatches(state.upcomingMatches)
-                : _buildPlaceholderMatches(),
-            const SizedBox(height: 24),
+            if (state.upcomingMatches.isNotEmpty) ...[
+              _buildSectionTitle('Upcoming Matches'),
+              _buildHorizontalMatches(state.upcomingMatches),
+              const SizedBox(height: 24),
+            ],
 
             // Latest News
             _buildSectionTitle('Latest News'),

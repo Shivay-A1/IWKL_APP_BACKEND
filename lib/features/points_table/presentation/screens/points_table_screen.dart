@@ -192,6 +192,7 @@ class _PointsTableScreenState extends State<PointsTableScreen> {
   Widget _buildTeamRow(dynamic team, int index) {
     final position = index + 1;
     final teamName = team['team']?['name'] ?? team['teamName'] ?? 'Unknown Team';
+    final teamLogo = team['team']?['logo'] ?? team['team']?['logoUrl'] ?? '';
     final played = team['matchesPlayed'] ?? team['played'] ?? 0;
     final won = team['matchesWon'] ?? team['won'] ?? 0;
     final lost = team['matchesLost'] ?? team['lost'] ?? 0;
@@ -229,6 +230,28 @@ class _PointsTableScreenState extends State<PointsTableScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          // Team Logo
+          if (teamLogo.isNotEmpty)
+            Container(
+              width: 30,
+              height: 30,
+              margin: const EdgeInsets.only(right: 8),
+              child: ClipOval(
+                child: Image.network(
+                  teamLogo,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.sports_kabaddi,
+                      size: 20,
+                      color: Colors.white54,
+                    );
+                  },
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 38),
           // Team Name
           Expanded(
             child: Column(

@@ -217,6 +217,8 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
   Widget _buildMatchCardFromApi(dynamic match, bool isLive, [bool isCompleted = false]) {
     final homeTeam = match['homeTeam']?['name'] ?? match['homeTeamName'] ?? 'Home Team';
     final awayTeam = match['awayTeam']?['name'] ?? match['awayTeamName'] ?? 'Away Team';
+    final homeTeamLogo = match['homeTeam']?['logo'] ?? match['homeTeam']?['logoUrl'] ?? '';
+    final awayTeamLogo = match['awayTeam']?['logo'] ?? match['awayTeam']?['logoUrl'] ?? '';
     final homeScore = match['homeScore']?.toString() ?? '-';
     final awayScore = match['awayScore']?.toString() ?? '-';
     final venue = match['venue'] ?? 'Unknown Venue';
@@ -231,6 +233,8 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
       isLive: isLive,
       team1: homeTeam,
       team2: awayTeam,
+      team1Logo: homeTeamLogo,
+      team2Logo: awayTeamLogo,
       team1Score: homeScore,
       team2Score: awayScore,
       matchTime: matchTime,
@@ -244,6 +248,8 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
     required bool isLive,
     required String team1,
     required String team2,
+    required String team1Logo,
+    required String team2Logo,
     required String team1Score,
     required String team2Score,
     required String matchTime,
@@ -341,11 +347,25 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
                             width: 2,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.sports_kabaddi,
-                          size: 30,
-                          color: AppDesignSystem.mutedText,
-                        ),
+                        child: team1Logo.isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  team1Logo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.sports_kabaddi,
+                                      size: 30,
+                                      color: AppDesignSystem.mutedText,
+                                    );
+                                  },
+                                ),
+                              )
+                            : const Icon(
+                                Icons.sports_kabaddi,
+                                size: 30,
+                                color: AppDesignSystem.mutedText,
+                              ),
                       ),
                       const SizedBox(height: AppDesignSystem.smSpacing),
                       Text(
@@ -435,11 +455,25 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
                             width: 2,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.sports_kabaddi,
-                          size: 30,
-                          color: AppDesignSystem.mutedText,
-                        ),
+                        child: team2Logo.isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  team2Logo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.sports_kabaddi,
+                                      size: 30,
+                                      color: AppDesignSystem.mutedText,
+                                    );
+                                  },
+                                ),
+                              )
+                            : const Icon(
+                                Icons.sports_kabaddi,
+                                size: 30,
+                                color: AppDesignSystem.mutedText,
+                              ),
                       ),
                       const SizedBox(height: AppDesignSystem.smSpacing),
                       Text(

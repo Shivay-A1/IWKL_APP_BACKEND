@@ -8,6 +8,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import apiRoutes from './routes';
 import path from 'path';
+import fs from 'fs';
 import { setIO } from './config/socket';
 
 // Load .env from backend directory
@@ -157,7 +158,21 @@ app.use(cors({
 }));
 
 // Serve static files from uploads directory
-app.use('/uploads', express.static('uploads', {
+// Ensure uploads directories exist
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+const storiesDir = path.join(uploadsDir, 'stories');
+const bannersDir = path.join(uploadsDir, 'banners');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(storiesDir)) {
+  fs.mkdirSync(storiesDir, { recursive: true });
+}
+if (!fs.existsSync(bannersDir)) {
+  fs.mkdirSync(bannersDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir, {
   maxAge: '1d',
   etag: true,
   lastModified: true,

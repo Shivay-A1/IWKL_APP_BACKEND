@@ -64,7 +64,7 @@ router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimi
   body('title').trim().notEmpty().withMessage('Banner title is required'),
 ], validate, bannerController.createBanner);
 
-// POST /homepage-banners/upload - Upload banner with file
+// POST /homepage-banners/upload - Upload banner with file (no auth for admin panel)
 router.post('/upload', bannerUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) {

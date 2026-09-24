@@ -10,11 +10,6 @@ export const createBanner = async (data: any, file?: Express.Multer.File) => {
     const base64Data = file.buffer.toString('base64');
     const mimeType = file.mimetype;
     imageData = `data:${mimeType};base64,${base64Data}`;
-    
-    // Use backend URL for imageUrl as fallback
-    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    const bannerId = `banner_${Date.now()}`;
-    imageUrl = `${backendUrl}/api/homepage-banners/${bannerId}/image`;
   }
 
   const banner = await prisma.homepageBanner.create({
@@ -31,6 +26,19 @@ export const createBanner = async (data: any, file?: Express.Multer.File) => {
     },
   });
 
+  // Update imageUrl to use backend endpoint if file was uploaded
+  if (file) {
+    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    imageUrl = `${backendUrl}/api/homepage-banners/${banner.id}/image`;
+    
+    await prisma.homepageBanner.update({
+      where: { id: banner.id },
+      data: { imageUrl },
+    });
+    
+    banner.imageUrl = imageUrl;
+  }
+
   return banner;
 };
 
@@ -39,7 +47,15 @@ export const getBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  return banners;
+  const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+  
+  // Normalize image URLs - use backend endpoint for banners with imageData
+  return banners.map(banner => ({
+    ...banner,
+    imageUrl: banner.imageData 
+      ? `${backendUrl}/api/homepage-banners/${banner.id}/image`
+      : banner.imageUrl
+  }));
 };
 
 export const getBannerById = async (id: string) => {
@@ -102,5 +118,13 @@ export const getActiveBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  return banners;
+  const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+  
+  // Normalize image URLs - use backend endpoint for banners with imageData
+  return banners.map(banner => ({
+    ...banner,
+    imageUrl: banner.imageData 
+      ? `${backendUrl}/api/homepage-banners/${banner.id}/image`
+      : banner.imageUrl
+  }));
 };

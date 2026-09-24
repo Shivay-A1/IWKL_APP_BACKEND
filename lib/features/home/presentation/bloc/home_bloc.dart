@@ -77,6 +77,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         (failure) => emit(HomeLoaded(
           stories: [],
           sliders: [],
+          banners: [],
           liveMatch: null,
           upcomingMatches: [],
           news: [],
@@ -88,6 +89,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         (data) => emit(HomeLoaded(
           stories: data['stories'] ?? [],
           sliders: data['sliders'] ?? [],
+          banners: data['banners'] ?? [],
           liveMatch: data['liveMatch'] as Match?,
           upcomingMatches: data['upcomingMatches'] ?? [],
           news: data['news'] ?? [],
@@ -101,6 +103,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(HomeLoaded(
         stories: [],
         sliders: [],
+        banners: [],
         liveMatch: null,
         upcomingMatches: [],
         news: [],

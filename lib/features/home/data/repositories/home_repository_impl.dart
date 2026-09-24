@@ -20,6 +20,17 @@ class HomeRepositoryImpl implements HomeRepository {
       final matchesResponse = await _apiClient.get(ApiEndpoints.matches);
       final matchesData = matchesResponse.data['data'] as List<dynamic>? ?? [];
       
+      // Fetch stories from Railway backend
+      final storiesResponse = await _apiClient.get(ApiEndpoints.stories);
+      final storiesData = storiesResponse.data as List<dynamic>? ?? [];
+      final stories = storiesData
+          .map((s) => Story.fromJson(s as Map<String, dynamic>))
+          .toList();
+      
+      // Fetch banners from Railway backend
+      final bannersResponse = await _apiClient.get('/api/homepage-banners');
+      final bannersData = bannersResponse.data as List<dynamic>? ?? [];
+      
       // Separate live and upcoming matches
       final liveMatches = matchesData.where((m) => m['status'] == 'LIVE').toList();
       final upcomingMatches = matchesData.where((m) => m['status'] == 'SCHEDULED').toList();
@@ -33,8 +44,9 @@ class HomeRepositoryImpl implements HomeRepository {
           .toList();
       
       return Right({
-        'stories': <Story>[],
+        'stories': stories,
         'sliders': <String>[],
+        'banners': bannersData,
         'liveMatch': liveMatch,
         'upcomingMatches': upcomingMatchEntities,
         'news': <News>[],

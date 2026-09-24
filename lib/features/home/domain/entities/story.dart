@@ -22,12 +22,14 @@ class Story {
 
   factory Story.fromJson(Map<String, dynamic> json) {
     return Story(
-      id: json['id'] as String,
-      mediaUrl: json['mediaUrl'] as String,
-      mediaType: json['mediaType'] as String,
-      thumbnail: json['thumbnail'] as String?,
-      title: json['title'] as String?,
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      id: json['id']?.toString() ?? '',
+      mediaUrl: json['imageUrl']?.toString() ?? json['videoUrl']?.toString() ?? json['mediaUrl']?.toString() ?? '',
+      mediaType: json['isVideo'] == true ? 'video' : 'image',
+      thumbnail: json['imageUrl']?.toString() ?? json['videoUrl']?.toString() ?? json['thumbnail']?.toString(),
+      title: json['title']?.toString() ?? json['caption']?.toString() ?? '',
+      expiresAt: json['expiryTime'] != null 
+          ? DateTime.parse(json['expiryTime'] as String)
+          : DateTime.now().add(const Duration(days: 7)),
       isSeen: json['isSeen'] as bool?,
     );
   }

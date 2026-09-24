@@ -57,12 +57,20 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                          // Stories Section - Only show if available
+                          if (state.stories.isNotEmpty) ...[
+                            _buildStoriesSection(state.stories),
+                            const SizedBox(height: AppDesignSystem.lgSpacing),
+                          ],
                           
-                          // Stories Section (3 lines horizontally scrollable)
-                          _buildStoriesSection(state.stories),
-                          const SizedBox(height: AppDesignSystem.lgSpacing),
+                          // Banners Section (Below stories)
+                          if (state.banners.isNotEmpty) ...[
+                            _buildBannersSection(state.banners),
+                            const SizedBox(height: AppDesignSystem.lgSpacing),
+                          ],
                           
-                          // Hero Banner (Immediately after stories)
+                          // Hero Banner (Immediately after banners)
                           _buildHeroBanner(state.sliders),
                           const SizedBox(height: AppDesignSystem.lgSpacing),
                           
@@ -292,13 +300,17 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildStoriesSection(List<dynamic> stories) {
-    // Use data from admin panel, fallback to real team names if empty (single line)
-    final displayStories = stories.isEmpty 
-        ? AppConstants.allTeams.map((teamName) => {
-            'title': teamName,
-            'imageUrl': AppConstants.teamLogos[teamName] ?? '',
-          }).toList()
-        : stories;
+    // Only show stories from admin panel, no fallback
+    final displayStories = stories.map((story) {
+      if (story is Map<String, dynamic>) {
+        return story;
+      }
+      // Convert Story entity to map if needed
+      return {
+        'title': (story as dynamic).title ?? 'Story',
+        'imageUrl': (story as dynamic).imageUrl ?? (story as dynamic).thumbnail ?? '',
+      };
+    }).toList();
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,6 +343,87 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                   title: story['title'] ?? story['teamName'] ?? 'Story',
                   imageUrl: story['imageUrl'] ?? story['image'] ?? '',
                   onTap: () => _openStoryViewer(displayStories, index),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBannersSection(List<dynamic> banners) {
+    if (banners.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+          child: Text(
+            'Banners',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppDesignSystem.getPrimaryText(context),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppDesignSystem.mdSpacing),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+            itemCount: banners.length,
+            itemBuilder: (context, index) {
+              final banner = banners[index];
+              final imageUrl = banner is Map<String, dynamic> 
+                ? (banner['imageUrl'] as String?) ?? ''
+                : banner.toString();
+              
+              return Padding(
+                padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
+                child: Container(
+                  width: 300,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: AppDesignSystem.primaryGradient,
+                            borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
+                          ),
+                          child: Center(
+                            child: Text(
+                              banner is Map<String, dynamic> 
+                                ? (banner['title'] as String?) ?? 'Banner'
+                                : 'Banner',
+                              style: TextStyle(
+                                color: AppDesignSystem.getPrimaryText(context),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               );
             },
@@ -2716,20 +2809,62 @@ class _StoryViewerScreenState extends State<_StoryViewerScreen> {
             onPageChanged: (index) {
               setState(() => _currentIndex = index);
             },
+            scrollDirection: Axis.horizontal,
             itemCount: widget.stories.length,
             itemBuilder: (context, index) {
               final story = widget.stories[index];
-              return Container(
-                color: Colors.black,
+              final imageUrl = story['imageUrl'] ?? story['image'] ?? story['mediaUrl'] ?? '';
+              return GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity != null) {
+                    if (details.primaryVelocity! > 0) {
+                      // Swipe right - go to previous
+                      if (_currentIndex > 0) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    } else {
+                      // Swipe left - go to next
+                      if (_currentIndex < widget.stories.length - 1) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    }
+                  }
+                },
                 child: Container(
-                  color: AppDesignSystem.cardBackground,
-                  child: const Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 80,
-                      color: AppDesignSystem.secondaryText,
-                    ),
-                  ),
+                  color: Colors.black,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppDesignSystem.cardBackground,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image,
+                                  size: 80,
+                                  color: AppDesignSystem.secondaryText,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: AppDesignSystem.cardBackground,
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 80,
+                              color: AppDesignSystem.secondaryText,
+                            ),
+                          ),
+                        ),
                 ),
               );
             },

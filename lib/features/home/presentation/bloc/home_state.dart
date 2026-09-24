@@ -12,6 +12,7 @@ class HomeLoading extends HomeState {}
 class HomeLoaded extends HomeState {
   final List<Story> stories;
   final List<String> sliders;
+  final List<dynamic> banners;
   final Match? liveMatch;
   final List<Match> upcomingMatches;
   final List<News> news;
@@ -26,6 +27,7 @@ class HomeLoaded extends HomeState {
   HomeLoaded({
     required this.stories,
     required this.sliders,
+    this.banners = const [],
     this.liveMatch,
     required this.upcomingMatches,
     required this.news,
@@ -41,6 +43,7 @@ class HomeLoaded extends HomeState {
   HomeLoaded copyWith({
     List<Story>? stories,
     List<String>? sliders,
+    List<dynamic>? banners,
     Match? liveMatch,
     List<Match>? upcomingMatches,
     List<News>? news,
@@ -55,6 +58,7 @@ class HomeLoaded extends HomeState {
     return HomeLoaded(
       stories: stories ?? this.stories,
       sliders: sliders ?? this.sliders,
+      banners: banners ?? this.banners,
       liveMatch: liveMatch ?? this.liveMatch,
       upcomingMatches: upcomingMatches ?? this.upcomingMatches,
       news: news ?? this.news,

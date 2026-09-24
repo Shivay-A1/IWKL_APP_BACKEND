@@ -144,7 +144,6 @@ router.use('/player-registration', playerRegistrationRoutes);
 router.use('/social-media-partner', socialMediaPartnerRoutes);
 router.use('/files', fileUploadRoutes);
 router.use('/ott', ottRoutes);
-router.use('/stories', appStoriesRoutes);
 router.use('/push-notifications', pushNotificationRoutes);
 router.use('/app-settings', appSettingsRoutes);
 router.use('/mobile-banners', mobileBannerRoutes);

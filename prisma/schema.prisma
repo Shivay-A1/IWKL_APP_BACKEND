@@ -1200,6 +1200,7 @@ model Story {
   title       String?
   imageUrl    String?
   videoUrl    String?
+  filePath    String?  // For uploaded files
   isVideo     Boolean  @default(false)
   caption     String?
   link        String?

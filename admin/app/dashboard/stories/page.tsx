@@ -39,6 +39,9 @@ export default function StoriesPage() {
     order: 0,
     enabled: true,
   });
+  const [uploadType, setUploadType] = useState<'url' | 'upload'>('url');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchStories();
@@ -61,7 +64,26 @@ export default function StoriesPage() {
   const handleCreateStory = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/stories', formData);
+      if (uploadType === 'upload' && selectedFile) {
+        setUploading(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedFile);
+        formDataUpload.append('title', formData.title);
+        formDataUpload.append('caption', formData.caption || '');
+        formDataUpload.append('link', formData.link || '');
+        formDataUpload.append('username', formData.username);
+        formDataUpload.append('userImage', formData.userImage || '');
+        formDataUpload.append('expiryTime', formData.expiryTime || '');
+        formDataUpload.append('order', formData.order.toString());
+        formDataUpload.append('enabled', formData.enabled.toString());
+        formDataUpload.append('isVideo', formData.isVideo.toString());
+
+        await api.post('/stories/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await api.post('/stories', formData);
+      }
       toast.success('Story created successfully');
       setShowCreateModal(false);
       setFormData({
@@ -77,9 +99,13 @@ export default function StoriesPage() {
         order: 0,
         enabled: true,
       });
+      setSelectedFile(null);
+      setUploadType('url');
       fetchStories();
     } catch (error) {
       toast.error('Failed to create story');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -211,24 +237,61 @@ export default function StoriesPage() {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
+
+              <div className="flex gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setUploadType('url')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'url' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadType('upload')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'upload' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Upload
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (optional)</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
+
+              {uploadType === 'url' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (optional)</label>
+                    <input
+                      type="url"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image/Video</label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    required
+                  />
+                  {selectedFile && (
+                    <p className="text-gray-400 text-sm mt-2">Selected: {selectedFile.name}</p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Caption (optional)</label>
                 <input
@@ -306,9 +369,10 @@ export default function StoriesPage() {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg disabled:opacity-50"
                 >
-                  Create Story
+                  {uploading ? 'Uploading...' : 'Create Story'}
                 </button>
                 <button
                   type="button"

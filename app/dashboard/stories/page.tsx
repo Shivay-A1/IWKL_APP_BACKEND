@@ -39,6 +39,9 @@ export default function StoriesPage() {
     order: 0,
     enabled: true,
   });
+  const [uploadType, setUploadType] = useState<'url' | 'upload'>('url');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchStories();
@@ -61,7 +64,26 @@ export default function StoriesPage() {
   const handleCreateStory = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/stories', formData);
+      if (uploadType === 'upload' && selectedFile) {
+        setUploading(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedFile);
+        formDataUpload.append('title', formData.title);
+        formDataUpload.append('caption', formData.caption || '');
+        formDataUpload.append('link', formData.link || '');
+        formDataUpload.append('username', formData.username);
+        formDataUpload.append('userImage', formData.userImage || '');
+        formDataUpload.append('expiryTime', formData.expiryTime || '');
+        formDataUpload.append('order', formData.order.toString());
+        formDataUpload.append('enabled', formData.enabled.toString());
+        formDataUpload.append('isVideo', formData.isVideo.toString());
+
+        await api.post('/stories/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await api.post('/stories', formData);
+      }
       toast.success('Story created successfully');
       setShowCreateModal(false);
       setFormData({
@@ -77,9 +99,20 @@ export default function StoriesPage() {
         order: 0,
         enabled: true,
       });
+      setSelectedFile(null);
+      setUploadType('url');
       fetchStories();
     } catch (error) {
       toast.error('Failed to create story');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleToggleUploadType = (type: 'url' | 'upload') => {
+    setUploadType(type);
+    if (type === 'upload') {
+      setSelectedFile(null);
     }
   };
 
@@ -197,8 +230,8 @@ export default function StoriesPage() {
       </main>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-bold text-white mb-6">Create Story</h3>
             <form onSubmit={handleCreateStory} className="space-y-4">
               <div>
@@ -211,104 +244,162 @@ export default function StoriesPage() {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleToggleUploadType('url')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'url' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  With Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleUploadType('upload')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'upload' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Upload
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (optional)</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Caption (optional)</label>
-                <input
-                  type="text"
-                  value={formData.caption}
-                  onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Link (optional)</label>
-                <input
-                  type="url"
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">User Image URL (optional)</label>
-                <input
-                  type="url"
-                  value={formData.userImage}
-                  onChange={(e) => setFormData({ ...formData, userImage: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Expiry Time (optional)</label>
-                <input
-                  type="datetime-local"
-                  value={formData.expiryTime}
-                  onChange={(e) => setFormData({ ...formData, expiryTime: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isVideo"
-                  checked={formData.isVideo}
-                  onChange={(e) => setFormData({ ...formData, isVideo: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="isVideo" className="text-gray-300">Is Video</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="enabled"
-                  checked={formData.enabled}
-                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="enabled" className="text-gray-300">Enabled</label>
-              </div>
+
+              {uploadType === 'url' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (optional)</label>
+                    <input
+                      type="url"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Caption (optional)</label>
+                    <input
+                      type="text"
+                      value={formData.caption}
+                      onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Link (optional)</label>
+                    <input
+                      type="url"
+                      value={formData.link}
+                      onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">User Image URL (optional)</label>
+                    <input
+                      type="url"
+                      value={formData.userImage}
+                      onChange={(e) => setFormData({ ...formData, userImage: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Expiry Time (optional)</label>
+                    <input
+                      type="datetime-local"
+                      value={formData.expiryTime}
+                      onChange={(e) => setFormData({ ...formData, expiryTime: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
+                    <input
+                      type="number"
+                      value={formData.order}
+                      onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isVideo"
+                      checked={formData.isVideo}
+                      onChange={(e) => setFormData({ ...formData, isVideo: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="isVideo" className="text-gray-300">Is Video</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="enabled"
+                      checked={formData.enabled}
+                      onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="enabled" className="text-gray-300">Enabled</label>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image/Video</label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    required
+                  />
+                  {selectedFile && (
+                    <p className="text-gray-400 text-sm mt-2">Selected: {selectedFile.name}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-4">
+                    <input
+                      type="checkbox"
+                      id="isVideoUpload"
+                      checked={formData.isVideo}
+                      onChange={(e) => setFormData({ ...formData, isVideo: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="isVideoUpload" className="text-gray-300">Is Video</label>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="enabledUpload"
+                      checked={formData.enabled}
+                      onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="enabledUpload" className="text-gray-300">Enabled</label>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg disabled:opacity-50"
                 >
-                  Create Story
+                  {uploading ? 'Uploading...' : 'Create Story'}
                 </button>
                 <button
                   type="button"

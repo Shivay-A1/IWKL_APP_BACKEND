@@ -17,7 +17,7 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://iwklappbackend-production.up.railway.app/api',
+    NEXT_PUBLIC_API_URL: 'https://iwklappbackend-production.up.railway.app/api',
   },
 }
 

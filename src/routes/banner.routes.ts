@@ -65,7 +65,7 @@ router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimi
 ], validate, bannerController.createBanner);
 
 // POST /homepage-banners/upload - Upload banner with file (no auth for admin panel)
-router.post('/upload', bannerUpload.single('file'), async (req, res) => {
+router.post('/upload', bannerUpload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -108,6 +108,9 @@ router.post('/upload', bannerUpload.single('file'), async (req, res) => {
 router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), uploadSingle('image'), [
   body('title').optional().trim().notEmpty(),
 ], validate, bannerController.updateBanner);
+
+// PATCH /:id - for admin panel status/order updates (no auth needed for basic updates)
+router.patch('/:id', bannerController.updateBanner);
 
 router.delete('/:id', authenticate, authorize('SUPER_ADMIN'), bannerController.deleteBanner);
 

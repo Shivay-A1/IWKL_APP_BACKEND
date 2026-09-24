@@ -4,7 +4,17 @@ import * as bannerService from '../services/banner.service';
 
 export const createBanner = async (req: FileRequest, res: Response, next: any) => {
   try {
-    const banner = await bannerService.createBanner(req.body, req.file);
+    // Map admin panel field names to service expectations
+    const data = {
+      imageUrl: req.body.imageUrl || req.body.image,
+      title: req.body.title,
+      subtitle: req.body.subtitle,
+      ctaText: req.body.ctaText || req.body.buttonText,
+      ctaLink: req.body.ctaLink || req.body.buttonUrl,
+      displayOrder: req.body.displayOrder || req.body.order,
+      isActive: req.body.isActive,
+    };
+    const banner = await bannerService.createBanner(data, req.file);
     res.status(201).json(banner);
   } catch (error) {
     next(error);
@@ -31,7 +41,17 @@ export const getBannerById = async (req: AuthRequest, res: Response, next: any) 
 
 export const updateBanner = async (req: FileRequest, res: Response, next: any) => {
   try {
-    const banner = await bannerService.updateBanner(req.params.id, req.body, req.file);
+    // Map admin panel field names to service expectations
+    const data = {
+      imageUrl: req.body.imageUrl || req.body.image,
+      title: req.body.title,
+      subtitle: req.body.subtitle,
+      ctaText: req.body.ctaText || req.body.buttonText,
+      ctaLink: req.body.ctaLink || req.body.buttonUrl,
+      displayOrder: req.body.displayOrder || req.body.order,
+      isActive: req.body.isActive,
+    };
+    const banner = await bannerService.updateBanner(req.params.id, data, req.file);
     res.json(banner);
   } catch (error) {
     next(error);

@@ -1,19 +1,25 @@
 import { prisma } from '../config';
 import { AppError } from '../middleware/error';
-import { uploadToS3, generateS3Key, deleteFromS3 } from '../utils';
 
 export const createBanner = async (data: any, file?: Express.Multer.File) => {
-  let image = data.image;
+  let imageUrl = data.imageUrl;
 
   if (file) {
-    const key = generateS3Key('banners', file.originalname);
-    image = await uploadToS3(file.buffer, key, file.mimetype);
+    // Store file locally in uploads/banners directory
+    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    imageUrl = `${backendUrl}/uploads/banners/${file.filename}`;
   }
 
-  const banner = await prisma.banner.create({
+  const banner = await prisma.homepageBanner.create({
     data: {
-      ...data,
-      image,
+      imageUrl,
+      title: data.title,
+      subtitle: data.subtitle,
+      ctaText: data.ctaText,
+      ctaLink: data.ctaLink,
+      displayOrder: data.displayOrder ? parseInt(data.displayOrder) : 0,
+      isActive: data.isActive !== undefined ? data.isActive === 'true' : true,
+      filePath: file ? file.path : null,
     },
   });
 
@@ -21,15 +27,15 @@ export const createBanner = async (data: any, file?: Express.Multer.File) => {
 };
 
 export const getBanners = async () => {
-  const banners = await prisma.banner.findMany({
-    orderBy: { order: 'asc' },
+  const banners = await prisma.homepageBanner.findMany({
+    orderBy: { displayOrder: 'asc' },
   });
 
   return banners;
 };
 
 export const getBannerById = async (id: string) => {
-  const banner = await prisma.banner.findUnique({
+  const banner = await prisma.homepageBanner.findUnique({
     where: { id },
   });
 
@@ -41,18 +47,24 @@ export const getBannerById = async (id: string) => {
 };
 
 export const updateBanner = async (id: string, data: any, file?: Express.Multer.File) => {
-  let image = data.image;
+  let imageUrl = data.imageUrl;
 
   if (file) {
-    const key = generateS3Key('banners', file.originalname);
-    image = await uploadToS3(file.buffer, key, file.mimetype);
+    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    imageUrl = `${backendUrl}/uploads/banners/${file.filename}`;
   }
 
-  const banner = await prisma.banner.update({
+  const banner = await prisma.homepageBanner.update({
     where: { id },
     data: {
-      ...data,
-      ...(image && { image }),
+      ...(imageUrl && { imageUrl }),
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.subtitle !== undefined && { subtitle: data.subtitle }),
+      ...(data.ctaText !== undefined && { ctaText: data.ctaText }),
+      ...(data.ctaLink !== undefined && { ctaLink: data.ctaLink }),
+      ...(data.displayOrder !== undefined && { displayOrder: parseInt(data.displayOrder) }),
+      ...(data.isActive !== undefined && { isActive: data.isActive === 'true' }),
+      ...(file && { filePath: file.path }),
     },
   });
 
@@ -60,35 +72,20 @@ export const updateBanner = async (id: string, data: any, file?: Express.Multer.
 };
 
 export const deleteBanner = async (id: string) => {
-  const banner = await prisma.banner.findUnique({ where: { id } });
+  const banner = await prisma.homepageBanner.findUnique({ where: { id } });
   if (!banner) {
     throw new AppError('Banner not found', 404);
   }
 
-  // Delete from S3
-  if (banner.image) {
-    const key = banner.image.split('/').pop();
-    await deleteFromS3(`banners/${key}`);
-  }
-
-  await prisma.banner.delete({ where: { id } });
+  await prisma.homepageBanner.delete({ where: { id } });
 };
 
 export const getActiveBanners = async () => {
-  const now = new Date();
-  const banners = await prisma.banner.findMany({
+  const banners = await prisma.homepageBanner.findMany({
     where: {
       isActive: true,
-      OR: [
-        { startDate: null },
-        { startDate: { lte: now } },
-      ],
-      AND: [
-        { endDate: null },
-        { endDate: { gte: now } },
-      ],
     },
-    orderBy: { order: 'asc' },
+    orderBy: { displayOrder: 'asc' },
   });
 
   return banners;

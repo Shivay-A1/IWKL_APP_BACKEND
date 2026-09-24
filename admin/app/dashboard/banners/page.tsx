@@ -59,7 +59,7 @@ export default function BannersPage() {
       if (uploadType === 'upload' && selectedFile) {
         setUploading(true);
         const formDataUpload = new FormData();
-        formDataUpload.append('file', selectedFile);
+        formDataUpload.append('image', selectedFile);
         formDataUpload.append('title', formData.title);
         formDataUpload.append('subtitle', formData.subtitle || '');
         formDataUpload.append('buttonText', formData.ctaText || '');

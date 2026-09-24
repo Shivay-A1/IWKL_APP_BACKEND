@@ -2,17 +2,13 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../../uploads/stories');
+const uploadsDir = path.join(process.cwd(), 'uploads/stories');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

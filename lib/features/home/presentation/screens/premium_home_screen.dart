@@ -386,8 +386,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               
               // Use base64 data if available, otherwise use URL
               final imageProvider = imageData != null && imageData.isNotEmpty
-                  ? MemoryImage(base64Decode(imageData.contains(',') ? imageData.split(',')[1] : imageData))
-                  : NetworkImage(imageUrl);
+                  ? MemoryImage(base64Decode(imageData.contains(',') ? imageData.split(',')[1] : imageData)) as ImageProvider<Object>
+                  : NetworkImage(imageUrl) as ImageProvider<Object>;
               
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),

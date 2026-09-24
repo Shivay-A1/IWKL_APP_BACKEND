@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import * as bannerController from '../controllers/banner.controller';
-import { authenticate, authorize, validate, uploadSingle, apiLimiter } from '../middleware';
+import { authenticate, authorize, validate, uploadSingle, apiLimiter, upload } from '../middleware';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -23,13 +23,14 @@ ensureFilePathColumn();
 
 const router = Router();
 
-// Configure multer for banner uploads
+// Configure upload directory for banners
 const uploadDir = path.join(process.cwd(), 'uploads', 'banners');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+// Create separate multer instance for banner uploads
+const bannerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
@@ -39,8 +40,8 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
-  storage,
+const bannerUpload = multer({
+  storage: bannerStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -64,7 +65,7 @@ router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimi
 ], validate, bannerController.createBanner);
 
 // POST /homepage-banners/upload - Upload banner with file
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', bannerUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });

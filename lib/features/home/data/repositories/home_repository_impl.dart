@@ -28,7 +28,7 @@ class HomeRepositoryImpl implements HomeRepository {
           .toList();
       
       // Fetch banners from Railway backend
-      final bannersResponse = await _apiClient.get('/api/homepage-banners');
+      final bannersResponse = await _apiClient.get('/homepage-banners');
       final bannersData = bannersResponse.data as List<dynamic>? ?? [];
       
       // Separate live and upcoming matches

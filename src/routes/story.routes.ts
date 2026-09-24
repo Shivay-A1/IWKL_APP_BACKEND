@@ -103,11 +103,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       isVideo,
     } = req.body;
 
-    // Create file URL and file path with full backend URL
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
-    const fileUrl = `${baseUrl}/uploads/stories/${req.file.filename}`;
+    // Create file URL and file path with Railway backend URL
+    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    const fileUrl = `${backendUrl}/uploads/stories/${req.file.filename}`;
     const filePath = `uploads/stories/${req.file.filename}`;
     const isVideoFile = req.file.mimetype.startsWith('video/');
 

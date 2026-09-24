@@ -255,11 +255,10 @@ export default function BannersPage() {
                 </button>
                 <button
                   type="button"
-                  disabled
-                  className={`flex-1 py-2 px-4 rounded-lg bg-gray-800 text-gray-500 cursor-not-allowed`}
-                  title="Upload disabled on Railway (no persistent storage)"
+                  onClick={() => handleToggleUploadType('upload')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'upload' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
                 >
-                  Upload (Disabled)
+                  Upload
                 </button>
               </div>
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -379,9 +380,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             itemCount: banners.length,
             itemBuilder: (context, index) {
               final banner = banners[index];
-              final imageUrl = banner is Map<String, dynamic> 
-                ? (banner['imageUrl'] as String?) ?? ''
-                : banner.toString();
+              final bannerMap = banner is Map<String, dynamic> ? banner : {};
+              final imageUrl = bannerMap['imageUrl'] as String? ?? '';
+              final imageData = bannerMap['imageData'] as String?;
+              
+              // Use base64 data if available, otherwise use URL
+              final imageProvider = imageData != null && imageData.isNotEmpty
+                  ? MemoryImage(base64Decode(imageData.contains(',') ? imageData.split(',')[1] : imageData))
+                  : NetworkImage(imageUrl);
               
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
@@ -399,8 +405,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
-                    child: Image.network(
-                      imageUrl,
+                    child: Image(
+                      image: imageProvider,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -410,9 +416,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           ),
                           child: Center(
                             child: Text(
-                              banner is Map<String, dynamic> 
-                                ? (banner['title'] as String?) ?? 'Banner'
-                                : 'Banner',
+                              bannerMap['title'] as String? ?? 'Banner',
                               style: TextStyle(
                                 color: AppDesignSystem.getPrimaryText(context),
                                 fontSize: 16,

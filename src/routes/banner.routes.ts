@@ -9,6 +9,18 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Auto-migrate filePath column if it doesn't exist
+const ensureFilePathColumn = async () => {
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "HomepageBanner" ADD COLUMN "filePath" TEXT`);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log('filePath column already exists or migration not needed');
+  }
+};
+
+ensureFilePathColumn();
+
 const router = Router();
 
 // Configure multer for banner uploads

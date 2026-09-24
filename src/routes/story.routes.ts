@@ -45,7 +45,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/stories - Create new story (Admin only)
+// POST /api/stories - Create new story (Public for testing)
 router.post('/', async (req, res) => {
   try {
     const {

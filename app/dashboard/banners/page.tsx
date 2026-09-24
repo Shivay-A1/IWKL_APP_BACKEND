@@ -8,13 +8,13 @@ import toast from 'react-hot-toast';
 
 interface Banner {
   id: string;
-  title: string;
+  title?: string;
   imageUrl: string;
   subtitle?: string;
-  buttonText?: string;
-  buttonUrl?: string;
+  ctaText?: string;
+  ctaLink?: string;
   isActive: boolean;
-  order: number;
+  displayOrder: number;
 }
 
 export default function BannersPage() {
@@ -22,14 +22,17 @@ export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [uploadType, setUploadType] = useState<'url' | 'upload'>('url');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     imageUrl: '',
     subtitle: '',
-    buttonText: '',
-    buttonUrl: '',
+    ctaText: '',
+    ctaLink: '',
     isActive: true,
-    order: 0,
+    displayOrder: 0,
   });
 
   useEffect(() => {
@@ -53,21 +56,48 @@ export default function BannersPage() {
   const handleCreateBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/homepage-banners', formData);
+      if (uploadType === 'upload' && selectedFile) {
+        setUploading(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedFile);
+        formDataUpload.append('title', formData.title);
+        formDataUpload.append('subtitle', formData.subtitle || '');
+        formDataUpload.append('buttonText', formData.ctaText || '');
+        formDataUpload.append('buttonUrl', formData.ctaLink || '');
+        formDataUpload.append('order', formData.displayOrder.toString());
+        formDataUpload.append('isActive', formData.isActive.toString());
+
+        await api.post('/homepage-banners/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await api.post('/homepage-banners', formData);
+      }
       toast.success('Banner created successfully');
       setShowCreateModal(false);
       setFormData({
         title: '',
         imageUrl: '',
         subtitle: '',
-        buttonText: '',
-        buttonUrl: '',
+        ctaText: '',
+        ctaLink: '',
         isActive: true,
-        order: 0,
+        displayOrder: 0,
       });
+      setSelectedFile(null);
+      setUploadType('url');
       fetchBanners();
     } catch (error) {
       toast.error('Failed to create banner');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleToggleUploadType = (type: 'url' | 'upload') => {
+    setUploadType(type);
+    if (type === 'upload') {
+      setSelectedFile(null);
     }
   };
 
@@ -138,9 +168,9 @@ export default function BannersPage() {
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex gap-4 overflow-x-auto pb-4">
           {banners.map((banner) => (
-            <div key={banner.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
+            <div key={banner.id} className="bg-card rounded-xl overflow-hidden shadow-lg min-w-[300px] flex-shrink-0">
               <div className="relative h-48 bg-background">
                 {banner.imageUrl ? (
                   <img
@@ -165,22 +195,22 @@ export default function BannersPage() {
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="text-white font-semibold mb-2">{banner.title}</h3>
+                <h3 className="text-white font-semibold mb-2">{banner.title || 'Banner'}</h3>
                 {banner.subtitle && (
                   <p className="text-gray-400 text-sm mb-2">{banner.subtitle}</p>
                 )}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleReorderBanner(banner.id, Math.max(0, banner.order - 1))}
+                      onClick={() => handleReorderBanner(banner.id, Math.max(0, banner.displayOrder - 1))}
                       className="text-gray-400 hover:text-white"
-                      disabled={banner.order === 0}
+                      disabled={banner.displayOrder === 0}
                     >
                       <ArrowUp className="w-4 h-4" />
                     </button>
-                    <span className="text-gray-500 text-sm">Order: {banner.order}</span>
+                    <span className="text-gray-500 text-sm">Order: {banner.displayOrder}</span>
                     <button
-                      onClick={() => handleReorderBanner(banner.id, banner.order + 1)}
+                      onClick={() => handleReorderBanner(banner.id, banner.displayOrder + 1)}
                       className="text-gray-400 hover:text-white"
                     >
                       <ArrowDown className="w-4 h-4" />
@@ -200,8 +230,8 @@ export default function BannersPage() {
       </main>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-bold text-white mb-6">Create Banner</h3>
             <form onSubmit={handleCreateBanner} className="space-y-4">
               <div>
@@ -214,68 +244,116 @@ export default function BannersPage() {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
-                />
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleToggleUploadType('url')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'url' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  With Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleUploadType('upload')}
+                  className={`flex-1 py-2 px-4 rounded-lg ${uploadType === 'upload' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Upload
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subtitle</label>
-                <input
-                  type="text"
-                  value={formData.subtitle}
-                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Button Text</label>
-                <input
-                  type="text"
-                  value={formData.buttonText}
-                  onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Button URL</label>
-                <input
-                  type="url"
-                  value={formData.buttonUrl}
-                  onChange={(e) => setFormData({ ...formData, buttonUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="isActive" className="text-gray-300">Active</label>
-              </div>
+
+              {uploadType === 'url' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Subtitle</label>
+                    <input
+                      type="text"
+                      value={formData.subtitle}
+                      onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Button Text</label>
+                    <input
+                      type="text"
+                      value={formData.ctaText}
+                      onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Button URL</label>
+                    <input
+                      type="url"
+                      value={formData.ctaLink}
+                      onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
+                    <input
+                      type="number"
+                      value={formData.displayOrder}
+                      onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) })}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="isActive" className="text-gray-300">Active</label>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    required
+                  />
+                  {selectedFile && (
+                    <p className="text-gray-400 text-sm mt-2">Selected: {selectedFile.name}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-4">
+                    <input
+                      type="checkbox"
+                      id="isActiveUpload"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="isActiveUpload" className="text-gray-300">Active</label>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg disabled:opacity-50"
                 >
-                  Create Banner
+                  {uploading ? 'Uploading...' : 'Create Banner'}
                 </button>
                 <button
                   type="button"

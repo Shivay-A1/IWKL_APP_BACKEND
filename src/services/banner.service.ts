@@ -13,7 +13,8 @@ export const createBanner = async (data: any, file?: Express.Multer.File) => {
     
     // Use backend URL for imageUrl as fallback
     const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    imageUrl = `${backendUrl}/api/homepage-banners/${Date.now()}/image`;
+    const bannerId = `banner_${Date.now()}`;
+    imageUrl = `${backendUrl}/api/homepage-banners/${bannerId}/image`;
   }
 
   const banner = await prisma.homepageBanner.create({

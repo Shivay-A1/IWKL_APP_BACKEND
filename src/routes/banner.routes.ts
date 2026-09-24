@@ -64,17 +64,32 @@ router.get('/:id/image', async (req, res) => {
       where: { id: req.params.id }
     });
 
-    if (!banner || !banner.imageData) {
-      return res.status(404).json({ error: 'Image not found' });
+    if (!banner) {
+      return res.status(404).json({ error: 'Banner not found' });
     }
 
-    // Extract base64 data and send as image
-    const base64Data = banner.imageData.split(',')[1];
-    const mimeType = banner.imageData.split(';')[0].split(':')[1];
-    
-    const buffer = Buffer.from(base64Data, 'base64');
-    res.set('Content-Type', mimeType);
-    res.send(buffer);
+    // If base64 data exists, serve it
+    if (banner.imageData) {
+      const base64Data = banner.imageData.split(',')[1];
+      const mimeType = banner.imageData.split(';')[0].split(':')[1];
+      
+      const buffer = Buffer.from(base64Data, 'base64');
+      res.set('Content-Type', mimeType);
+      res.send(buffer);
+    } 
+    // Otherwise, try to serve from file system (for old banners)
+    else if (banner.filePath) {
+      const filePath = path.join(process.cwd(), 'uploads', 'banners', banner.filePath);
+      if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+      } else {
+        return res.status(404).json({ error: 'File not found' });
+      }
+    } 
+    // If neither exists, return 404
+    else {
+      return res.status(404).json({ error: 'Image not found' });
+    }
   } catch (error) {
     console.error('Error serving banner image:', error);
     res.status(500).json({ error: 'Failed to serve image' });

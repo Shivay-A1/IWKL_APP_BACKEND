@@ -281,11 +281,11 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stories - Always show with placeholder if empty
-            state.stories.isNotEmpty 
-                ? StoryBar(stories: state.stories)
-                : _buildPlaceholderStories(),
-            const SizedBox(height: 16),
+            // Stories - Only show if available
+            if (state.stories.isNotEmpty) ...[
+              StoryBar(stories: state.stories),
+              const SizedBox(height: 16),
+            ],
 
             // Hero Slider - Always show with placeholder if empty
             state.sliders.isNotEmpty 
@@ -1271,67 +1271,6 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   }
 
   // Placeholder UI Components
-  Widget _buildPlaceholderStories() {
-    return SizedBox(
-      height: 110,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 75,
-            margin: const EdgeInsets.only(right: 12),
-            child: Column(
-              children: [
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF4C085D),
-                        const Color(0xFF6F1AB6),
-                      ],
-                    ),
-                    border: Border.all(
-                      color: const Color(0xFF9333EA),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4C085D).withOpacity(0.4),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      ),
-                      BoxShadow(
-                        color: const Color(0xFF9333EA).withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.add_circle_outline, color: Colors.white70, size: 32),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  index == 0 ? 'You' : 'Team ${index + 1}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms).scale();
-        },
-      ),
-    );
-  }
-
   Widget _buildPlaceholderHeroSlider() {
     return Container(
       height: 220,

@@ -107,8 +107,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       isVideo,
     } = req.body;
 
-    // Create file URL
+    // Create file URL and file path
     const fileUrl = `/uploads/stories/${req.file.filename}`;
+    const filePath = `uploads/stories/${req.file.filename}`;
     const isVideoFile = req.file.mimetype.startsWith('video/');
 
     const story = await prisma.story.create({
@@ -116,6 +117,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         title,
         imageUrl: !isVideoFile ? fileUrl : null,
         videoUrl: isVideoFile ? fileUrl : null,
+        filePath: filePath,
         isVideo: isVideoFile || isVideo === 'true',
         caption,
         link,

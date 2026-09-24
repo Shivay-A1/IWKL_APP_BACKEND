@@ -15,6 +15,8 @@ interface Banner {
   ctaLink?: string;
   isActive: boolean;
   displayOrder: number;
+  imageData?: string;
+  filePath?: string;
 }
 
 export default function BannersPage() {
@@ -177,6 +179,11 @@ export default function BannersPage() {
                     src={banner.imageUrl}
                     alt={banner.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to backend image endpoint if imageUrl fails
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://iwklappbackend-production.up.railway.app/api/homepage-banners/${banner.id}/image`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

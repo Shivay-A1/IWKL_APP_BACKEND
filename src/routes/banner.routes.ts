@@ -58,6 +58,28 @@ const bannerUpload = multer({
 router.get('/', bannerController.getBanners);
 router.get('/active', bannerController.getActiveBanners);
 router.get('/:id', bannerController.getBannerById);
+router.get('/:id/image', async (req, res) => {
+  try {
+    const banner = await prisma.homepageBanner.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!banner || !banner.imageData) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Extract base64 data and send as image
+    const base64Data = banner.imageData.split(',')[1];
+    const mimeType = banner.imageData.split(';')[0].split(':')[1];
+    
+    const buffer = Buffer.from(base64Data, 'base64');
+    res.set('Content-Type', mimeType);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error serving banner image:', error);
+    res.status(500).json({ error: 'Failed to serve image' });
+  }
+});
 
 // Protected routes - require authentication and authorization
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimiter, uploadSingle('image'), [
@@ -80,19 +102,26 @@ router.post('/upload', bannerUpload.single('image'), async (req, res) => {
       isActive,
     } = req.body;
 
-    // Create file URL and file path with Railway backend URL
+    // Convert file to base64
+    const base64Data = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype;
+    const imageData = `data:${mimeType};base64,${base64Data}`;
+    
+    // Use backend URL for imageUrl
     const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    const fileUrl = `${backendUrl}/uploads/banners/${req.file.filename}`;
-    const filePath = `uploads/banners/${req.file.filename}`;
+    const bannerId = `banner_${Date.now()}`;
+    const imageUrl = `${backendUrl}/api/homepage-banners/${bannerId}/image`;
 
     const banner = await prisma.homepageBanner.create({
       data: {
+        id: bannerId,
         title: title || null,
-        imageUrl: fileUrl,
+        imageUrl: imageUrl,
+        imageData: imageData,
         subtitle: subtitle || null,
         ctaText: buttonText || null,
         ctaLink: buttonUrl || null,
-        filePath: filePath,
+        filePath: req.file.filename,
         displayOrder: order ? parseInt(order) : 0,
         isActive: isActive !== undefined ? isActive === 'true' : true,
       },

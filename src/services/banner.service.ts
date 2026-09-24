@@ -3,23 +3,30 @@ import { AppError } from '../middleware/error';
 
 export const createBanner = async (data: any, file?: Express.Multer.File) => {
   let imageUrl = data.imageUrl;
+  let imageData = null;
 
   if (file) {
-    // Store file locally in uploads/banners directory
+    // Convert file to base64 and store in database
+    const base64Data = file.buffer.toString('base64');
+    const mimeType = file.mimetype;
+    imageData = `data:${mimeType};base64,${base64Data}`;
+    
+    // Use backend URL for imageUrl as fallback
     const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    imageUrl = `${backendUrl}/uploads/banners/${file.filename}`;
+    imageUrl = `${backendUrl}/api/homepage-banners/${Date.now()}/image`;
   }
 
   const banner = await prisma.homepageBanner.create({
     data: {
       imageUrl,
+      imageData,
       title: data.title,
       subtitle: data.subtitle,
       ctaText: data.ctaText,
       ctaLink: data.ctaLink,
       displayOrder: data.displayOrder ? parseInt(data.displayOrder) : 0,
       isActive: data.isActive !== undefined ? data.isActive === 'true' : true,
-      filePath: file ? file.path : null,
+      filePath: file ? file.filename : null,
     },
   });
 
@@ -48,23 +55,29 @@ export const getBannerById = async (id: string) => {
 
 export const updateBanner = async (id: string, data: any, file?: Express.Multer.File) => {
   let imageUrl = data.imageUrl;
+  let imageData = undefined;
 
   if (file) {
+    const base64Data = file.buffer.toString('base64');
+    const mimeType = file.mimetype;
+    imageData = `data:${mimeType};base64,${base64Data}`;
+    
     const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    imageUrl = `${backendUrl}/uploads/banners/${file.filename}`;
+    imageUrl = `${backendUrl}/api/homepage-banners/${id}/image`;
   }
 
   const banner = await prisma.homepageBanner.update({
     where: { id },
     data: {
       ...(imageUrl && { imageUrl }),
+      ...(imageData !== undefined && { imageData }),
       ...(data.title !== undefined && { title: data.title }),
       ...(data.subtitle !== undefined && { subtitle: data.subtitle }),
       ...(data.ctaText !== undefined && { ctaText: data.ctaText }),
       ...(data.ctaLink !== undefined && { ctaLink: data.ctaLink }),
       ...(data.displayOrder !== undefined && { displayOrder: parseInt(data.displayOrder) }),
       ...(data.isActive !== undefined && { isActive: data.isActive === 'true' }),
-      ...(file && { filePath: file.path }),
+      ...(file && { filePath: file.filename }),
     },
   });
 

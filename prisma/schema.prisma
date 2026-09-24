@@ -666,6 +666,7 @@ model Banner {
 model HomepageBanner {
   id          String   @id @default(cuid())
   imageUrl    String
+  imageData   String?  @db.Text // Base64 encoded image data
   title       String?
   subtitle    String?
   ctaText     String?

@@ -188,44 +188,19 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
                           ),
                           const SizedBox(height: AppDesignSystem.mdSpacing),
 
-                          // Phone Field with OTP
-                          Row(
-                            children: [
-                              Expanded(
-                                child: PremiumTextField(
-                                  label: 'Phone Number',
-                                  hintText: 'Enter your phone',
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  prefixIcon: Icons.phone,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Phone number is required';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: AppDesignSystem.smSpacing),
-                              Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  gradient: AppDesignSystem.primaryGradient,
-                                  borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _otpSent || state is AuthLoading ? null : _sendOTP,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                  ),
-                                  child: Text(
-                                    _otpSent ? 'Sent' : 'Send OTP',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          // Phone Field
+                          PremiumTextField(
+                            label: 'Phone Number',
+                            hintText: 'Enter your phone',
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            prefixIcon: Icons.phone,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Phone number is required';
+                              }
+                              return null;
+                            },
                           ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
                             begin: -0.3,
                             end: 0,
@@ -233,37 +208,87 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
                           ),
                           const SizedBox(height: AppDesignSystem.mdSpacing),
 
-                          // OTP Field (show after OTP sent)
-                          if (_otpSent) ...[
-                            PremiumTextField(
-                              label: 'OTP',
-                              hintText: 'Enter 6-digit OTP',
-                              controller: _otpController,
-                              keyboardType: TextInputType.number,
-                              prefixIcon: Icons.security,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'OTP is required';
-                                }
-                                if (value.length != 6) {
-                                  return 'OTP must be 6 digits';
-                                }
-                                return null;
-                              },
-                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                            const SizedBox(height: AppDesignSystem.mdSpacing),
-                            ElevatedButton(
-                              onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
+                          // Send OTP Button
+                          Container(
+                            width: double.infinity,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              gradient: AppDesignSystem.primaryGradient,
+                              borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
+                            ),
+                            child: ElevatedButton(
+                              onPressed: _otpSent || state is AuthLoading ? null : _sendOTP,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppDesignSystem.gold,
-                                minimumSize: const Size(double.infinity, 50),
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
                               ),
                               child: Text(
-                                _otpVerified ? 'Verified ✓' : 'Verify OTP',
-                                style: const TextStyle(color: Colors.black),
+                                _otpSent ? 'OTP Sent ✓' : 'Send OTP',
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                               ),
-                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                            const SizedBox(height: AppDesignSystem.mdSpacing),
+                            ),
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
+                            begin: const Offset(0.95, 0.95),
+                            end: const Offset(1, 1),
+                            curve: AppDesignSystem.elasticCurve,
+                          ),
+                          const SizedBox(height: AppDesignSystem.lgSpacing),
+
+                          // OTP Card (appears after OTP sent with animation)
+                          if (_otpSent) ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppDesignSystem.primaryPurple.withValues(alpha: 0.2),
+                                    AppDesignSystem.gradientPurple.withValues(alpha: 0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: AppDesignSystem.gold.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
+                              child: Column(
+                                children: [
+                                  PremiumTextField(
+                                    label: 'OTP',
+                                    hintText: 'Enter 6-digit OTP',
+                                    controller: _otpController,
+                                    keyboardType: TextInputType.number,
+                                    prefixIcon: Icons.security,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'OTP is required';
+                                      }
+                                      if (value.length != 6) {
+                                        return 'OTP must be 6 digits';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: AppDesignSystem.mdSpacing),
+                                  ElevatedButton(
+                                    onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppDesignSystem.gold,
+                                      minimumSize: const Size(double.infinity, 50),
+                                    ),
+                                    child: Text(
+                                      _otpVerified ? 'Verified ✓' : 'Verify OTP',
+                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideY(
+                              begin: 0.3,
+                              end: 0,
+                              curve: AppDesignSystem.smoothCurve,
+                            ),
+                            const SizedBox(height: AppDesignSystem.lgSpacing),
                           ],
 
                           // Password Field

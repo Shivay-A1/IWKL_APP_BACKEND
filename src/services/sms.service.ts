@@ -18,7 +18,8 @@ export class SMSService {
   }
 
   /**
-   * Send OTP to phone number using StartMessaging API
+   * Send OTP to phone number using StartMessaging Auth API
+   * This API doesn't require template ID - simpler for OTP verification
    */
   static async sendOTP(phone: string, otp: string): Promise<SendOTPResponse> {
     try {
@@ -30,18 +31,16 @@ export class SMSService {
       console.log(`📱 OTP for ${formattedPhone}: ${otp}`);
 
       const response = await axios.post(
-        `${STARTMESSAGING_API_URL}/otp/send`,
+        `${STARTMESSAGING_API_URL}/v1/auth/send-otp`,
         {
-          phoneNumber: countryCode,
-          templateId: 'YOUR_TEMPLATE_ID', // TODO: Get template ID from StartMessaging dashboard
-          variables: {
-            otp: otp,
-            appName: 'IWKL'
-          }
+          phone: countryCode,
+          channel: 'sms',
+          otp_length: 6,
+          expiry_seconds: 300
         },
         {
           headers: {
-            'X-API-Key': STARTMESSAGING_API_KEY,
+            'Authorization': `Bearer ${STARTMESSAGING_API_KEY}`,
             'Content-Type': 'application/json',
           },
         }
@@ -51,7 +50,7 @@ export class SMSService {
         return {
           success: true,
           message: 'OTP sent successfully',
-          requestId: response.data.requestId,
+          requestId: response.data.request_id,
         };
       } else {
         return {
@@ -61,7 +60,7 @@ export class SMSService {
       }
     } catch (error: any) {
       console.error('SMS sending error:', error);
-      // If SMS fails, log it but return success for testing
+      // If SMS fails, log it but return success for testing with our generated OTP
       console.log(`⚠️ SMS API failed, but OTP was generated: ${otp}`);
       return {
         success: true,

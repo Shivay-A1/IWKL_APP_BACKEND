@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Users, Calendar, Video, Newspaper, Radio, Bell, Trophy } from 'lucide-react';
+import { Users, Calendar, Video, Newspaper, Radio, Bell, Trophy, Send, Image } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -127,7 +127,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickActions />
+          <QuickActions router={router} />
           <RecentActivity />
         </div>
 
@@ -158,7 +158,7 @@ export default function DashboardPage() {
             <ManagementModule
               title="Banners"
               description="Manage home banners"
-              icon={<Newspaper className="w-6 h-6" />}
+              icon={<Image className="w-6 h-6" />}
               path="/dashboard/banners"
               color="bg-blue-600"
             />
@@ -186,9 +186,16 @@ export default function DashboardPage() {
             <ManagementModule
               title="Gallery"
               description="Manage gallery images"
-              icon={<Users className="w-6 h-6" />}
+              icon={<Image className="w-6 h-6" />}
               path="/dashboard/gallery"
               color="bg-pink-600"
+            />
+            <ManagementModule
+              title="Notifications"
+              description="Send notifications to users"
+              icon={<Bell className="w-6 h-6" />}
+              path="/dashboard/notifications"
+              color="bg-yellow-600"
             />
           </div>
         </div>
@@ -213,21 +220,21 @@ function StatCard({ title, value, icon, color }: { title: string; value: number;
   );
 }
 
-function QuickActions() {
+function QuickActions({ router }: { router: any }) {
   return (
     <div className="bg-card rounded-xl p-6 shadow-lg">
       <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-4">
-        <button className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
+        <button onClick={() => router.push('/dashboard/matches')} className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
           Create Match
         </button>
-        <button className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
+        <button onClick={() => router.push('/dashboard/videos')} className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
           Upload Video
         </button>
-        <button className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
+        <button onClick={() => router.push('/dashboard/news')} className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
           Add News
         </button>
-        <button className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
+        <button onClick={() => router.push('/dashboard/notifications')} className="bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors">
           Send Notification
         </button>
       </div>

@@ -185,8 +185,6 @@ class AppDesignSystem {
     fontWeight: FontWeight.w600,
     color: Colors.white,
     letterSpacing: -0.3,
-  );,
-    height: 1.5,
   );
 
   static const TextStyle softGreyCaption = TextStyle(

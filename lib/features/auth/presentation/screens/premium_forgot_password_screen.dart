@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
+import 'package:iwkl_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:iwkl_app/features/auth/presentation/bloc/auth_event.dart';
+import 'package:iwkl_app/features/auth/presentation/bloc/auth_state.dart';
 
 class PremiumForgotPasswordScreen extends StatefulWidget {
   const PremiumForgotPasswordScreen({super.key});
@@ -31,34 +34,31 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
 
   void _sendOTP() {
     if (_phoneController.text.isNotEmpty) {
-      // TODO: Implement send OTP API call
-      setState(() {
-        _otpSent = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP sent successfully')),
-      );
+      context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
     }
   }
 
   void _verifyOTP() {
     if (_otpController.text.isNotEmpty) {
-      // TODO: Implement verify OTP API call
-      setState(() {
-        _otpVerified = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP verified successfully')),
-      );
+      context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
     }
   }
 
   void _resetPassword() {
     if (_formKey.currentState!.validate() && _otpVerified) {
-      // TODO: Implement reset password API call
-      print('Reset password for: ${_phoneController.text}');
-      Navigator.pop(context);
+      context.read<AuthBloc>().add(ResetPasswordEvent(
+        _phoneController.text,
+        _newPasswordController.text,
+        _otpController.text,
+      ));
     }
+  }
+
+  VoidCallback _getResetPasswordCallback() {
+    if (!_otpVerified) {
+      return () {};
+    }
+    return _resetPassword;
   }
 
   @override
@@ -92,179 +92,213 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
               padding: const EdgeInsets.all(AppDesignSystem.xlSpacing),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppDesignSystem.gold.withOpacity(0.3),
-                            AppDesignSystem.softGold.withOpacity(0.1),
-                            Colors.transparent,
+                child: BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is AuthSuccess) {
+                      if (state.message.contains('OTP sent')) {
+                        setState(() {
+                          _otpSent = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      } else if (state.message.contains('verified')) {
+                        setState(() {
+                          _otpVerified = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      } else if (state.message.contains('reset')) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                        Navigator.pop(context);
+                      }
+                    } else if (state is AuthError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.message)),
+                      );
+                    }
+                  },
+                  child: BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Logo
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  AppDesignSystem.gold.withOpacity(0.3),
+                                  AppDesignSystem.softGold.withOpacity(0.1),
+                                  Colors.transparent,
+                                ],
+                              ),
+                              border: Border.all(
+                                color: AppDesignSystem.gold.withOpacity(0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.lock_reset,
+                              size: 50,
+                              color: AppDesignSystem.gold,
+                            ),
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                          const SizedBox(height: AppDesignSystem.lgSpacing),
+
+                          // Title
+                          const Text(
+                            'Forgot Password',
+                            style: AppDesignSystem.largeBoldTitle,
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                          const SizedBox(height: AppDesignSystem.smSpacing),
+
+                          Text(
+                            'Enter your phone number to reset password',
+                            style: AppDesignSystem.readableBody,
+                            textAlign: TextAlign.center,
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                          const SizedBox(height: AppDesignSystem.xlSpacing),
+
+                          // Phone Field with OTP
+                          Row(
+                            children: [
+                              Expanded(
+                                child: PremiumTextField(
+                                  label: 'Phone Number',
+                                  hintText: 'Enter your phone',
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  prefixIcon: Icons.phone,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Phone number is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: AppDesignSystem.smSpacing),
+                              Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  gradient: AppDesignSystem.primaryGradient,
+                                  borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _otpSent || state is AuthLoading ? null : _sendOTP,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                  ),
+                                  child: Text(
+                                    _otpSent ? 'Sent' : 'Send OTP',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
+                            begin: -0.3,
+                            end: 0,
+                            curve: AppDesignSystem.smoothCurve,
+                          ),
+                          const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                          // OTP Field (show after OTP sent)
+                          if (_otpSent) ...[
+                            PremiumTextField(
+                              label: 'OTP',
+                              hintText: 'Enter 6-digit OTP',
+                              controller: _otpController,
+                              keyboardType: TextInputType.number,
+                              prefixIcon: Icons.security,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'OTP is required';
+                                }
+                                if (value.length != 6) {
+                                  return 'OTP must be 6 digits';
+                                }
+                                return null;
+                              },
+                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                            const SizedBox(height: AppDesignSystem.mdSpacing),
+                            ElevatedButton(
+                              onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppDesignSystem.gold,
+                                minimumSize: const Size(double.infinity, 50),
+                              ),
+                              child: Text(
+                                _otpVerified ? 'Verified ✓' : 'Verify OTP',
+                                style: const TextStyle(color: Colors.black),
+                              ),
+                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                            const SizedBox(height: AppDesignSystem.mdSpacing),
                           ],
-                        ),
-                        border: Border.all(
-                          color: AppDesignSystem.gold.withOpacity(0.5),
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.lock_reset,
-                        size: 50,
-                        color: AppDesignSystem.gold,
-                      ),
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                    const SizedBox(height: AppDesignSystem.lgSpacing),
 
-                    // Title
-                    const Text(
-                      'Forgot Password',
-                      style: AppDesignSystem.largeBoldTitle,
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                    const SizedBox(height: AppDesignSystem.smSpacing),
+                          // New Password Field (show after OTP verified)
+                          if (_otpVerified) ...[
+                            PremiumTextField(
+                              label: 'New Password',
+                              hintText: 'Enter new password',
+                              controller: _newPasswordController,
+                              isPassword: _obscurePassword,
+                              prefixIcon: Icons.lock_outline,
+                              suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              onSuffixIconPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password is required';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
+                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                            const SizedBox(height: AppDesignSystem.lgSpacing),
+                          ],
 
-                    Text(
-                      'Enter your phone number to reset password',
-                      style: AppDesignSystem.readableBody,
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                    const SizedBox(height: AppDesignSystem.xlSpacing),
-
-                    // Phone Field with OTP
-                    Row(
-                      children: [
-                        Expanded(
-                          child: PremiumTextField(
-                            label: 'Phone Number',
-                            hintText: 'Enter your phone',
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: Icons.phone,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Phone number is required';
-                              }
-                              return null;
-                            },
+                          // Reset Password Button
+                          PremiumButton(
+                            text: 'Reset Password',
+                            onPressed: _getResetPasswordCallback(),
+                            isGold: true,
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
+                            begin: const Offset(0.95, 0.95),
+                            end: const Offset(1, 1),
+                            curve: AppDesignSystem.elasticCurve,
                           ),
-                        ),
-                        const SizedBox(width: AppDesignSystem.smSpacing),
-                        Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: AppDesignSystem.primaryGradient,
-                            borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _otpSent ? null : _sendOTP,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
+                          const SizedBox(height: AppDesignSystem.lgSpacing),
+
+                          // Back to Sign In Link
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Back to Sign In',
+                              style: TextStyle(
+                                color: AppDesignSystem.gold,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            child: Text(
-                              _otpSent ? 'Sent' : 'Send OTP',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
-                      begin: -0.3,
-                      end: 0,
-                      curve: AppDesignSystem.smoothCurve,
-                    ),
-                    const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                    // OTP Field (show after OTP sent)
-                    if (_otpSent) ...[
-                      PremiumTextField(
-                        label: 'OTP',
-                        hintText: 'Enter 6-digit OTP',
-                        controller: _otpController,
-                        keyboardType: TextInputType.number,
-                        prefixIcon: Icons.security,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'OTP is required';
-                          }
-                          if (value.length != 6) {
-                            return 'OTP must be 6 digits';
-                          }
-                          return null;
-                        },
-                      ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                      const SizedBox(height: AppDesignSystem.mdSpacing),
-                      ElevatedButton(
-                        onPressed: _otpVerified ? null : _verifyOTP,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppDesignSystem.gold,
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: Text(
-                          _otpVerified ? 'Verified ✓' : 'Verify OTP',
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                      const SizedBox(height: AppDesignSystem.mdSpacing),
-                    ],
-
-                    // New Password Field (show after OTP verified)
-                    if (_otpVerified) ...[
-                      PremiumTextField(
-                        label: 'New Password',
-                        hintText: 'Enter new password',
-                        controller: _newPasswordController,
-                        isPassword: _obscurePassword,
-                        prefixIcon: Icons.lock_outline,
-                        suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        onSuffixIconPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
-                      ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                      const SizedBox(height: AppDesignSystem.lgSpacing),
-                    ],
-
-                    // Reset Password Button
-                    PremiumButton(
-                      text: 'Reset Password',
-                      onPressed: _otpVerified ? () => _resetPassword() : null,
-                      isGold: true,
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
-                      begin: const Offset(0.95, 0.95),
-                      end: const Offset(1, 1),
-                      curve: AppDesignSystem.elasticCurve,
-                    ),
-                    const SizedBox(height: AppDesignSystem.lgSpacing),
-
-                    // Back to Sign In Link
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Back to Sign In',
-                        style: TextStyle(
-                          color: AppDesignSystem.gold,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                  ],
+                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

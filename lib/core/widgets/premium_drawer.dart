@@ -235,7 +235,7 @@ class PremiumDrawer extends StatelessWidget {
           // User Info
           if (user != null) ...[
             Text(
-              'Welcome, ${user.name}',
+              'Welcome, ${user.firstName}',
               style: AppDesignSystem.elegantSubtitle.copyWith(
                 color: isDarkMode ? Colors.white70 : Colors.black54,
               ),
@@ -248,7 +248,7 @@ class PremiumDrawer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                user.email,
+                user.mobile,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,

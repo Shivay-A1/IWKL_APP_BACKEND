@@ -38,6 +38,13 @@ class _PremiumSigninScreenState extends State<PremiumSigninScreen> {
     }
   }
 
+  VoidCallback _getSigninCallback(AuthState state) {
+    if (state is AuthLoading) {
+      return () {};
+    }
+    return _signin;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -195,7 +202,7 @@ class _PremiumSigninScreenState extends State<PremiumSigninScreen> {
                           // Sign In Button
                           PremiumButton(
                             text: state is AuthLoading ? 'Signing In...' : 'Sign In',
-                            onPressed: state is AuthLoading ? null : () => _signin(),
+                            onPressed: _getSigninCallback(state),
                             isGold: true,
                           ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
                             begin: const Offset(0.95, 0.95),

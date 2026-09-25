@@ -58,6 +58,13 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
     }
   }
 
+  VoidCallback _getSignupCallback(AuthState state) {
+    if (!_otpVerified || state is AuthLoading) {
+      return () {};
+    }
+    return _signup;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -291,7 +298,7 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
                           // Sign Up Button
                           PremiumButton(
                             text: state is AuthLoading ? 'Signing Up...' : 'Sign Up',
-                            onPressed: (_otpVerified && state is! AuthLoading) ? () => _signup() : null,
+                            onPressed: _getSignupCallback(state),
                             isGold: true,
                           ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
                             begin: const Offset(0.95, 0.95),

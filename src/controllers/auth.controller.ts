@@ -169,9 +169,11 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       },
     });
 
-    // Create user settings
-    await prisma.userSettings.create({
-      data: {
+    // Create user settings (if not exists)
+    await prisma.userSettings.upsert({
+      where: { userId: updatedUser.id },
+      update: {},
+      create: {
         userId: updatedUser.id,
       },
     });

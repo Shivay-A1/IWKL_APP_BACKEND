@@ -122,16 +122,13 @@ router.post('/upload', bannerUpload.single('image'), async (req, res) => {
     const mimeType = req.file.mimetype;
     const imageData = `data:${mimeType};base64,${base64Data}`;
     
-    // Use backend URL for imageUrl
-    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
-    const bannerId = `banner_${Date.now()}`;
-    const imageUrl = `${backendUrl}/api/homepage-banners/${bannerId}/image`;
+    // Use hardcoded backend URL
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
 
     const banner = await prisma.homepageBanner.create({
       data: {
-        id: bannerId,
         title: title || null,
-        imageUrl: imageUrl,
+        imageUrl: '', // Will be updated after creation
         imageData: imageData,
         subtitle: subtitle || null,
         ctaText: buttonText || null,
@@ -141,6 +138,16 @@ router.post('/upload', bannerUpload.single('image'), async (req, res) => {
         isActive: isActive !== undefined ? isActive === 'true' : true,
       },
     });
+
+    // Update imageUrl to use backend endpoint with actual ID
+    const imageUrl = `${backendUrl}/api/homepage-banners/${banner.id}/image`;
+    
+    await prisma.homepageBanner.update({
+      where: { id: banner.id },
+      data: { imageUrl },
+    });
+    
+    banner.imageUrl = imageUrl;
 
     res.status(201).json(banner);
   } catch (error) {

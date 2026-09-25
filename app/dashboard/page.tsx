@@ -127,7 +127,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickActions router={router} />
+          <QuickActions />
           <RecentActivity />
         </div>
 
@@ -220,7 +220,8 @@ function StatCard({ title, value, icon, color }: { title: string; value: number;
   );
 }
 
-function QuickActions({ router }: { router: any }) {
+function QuickActions() {
+  const router = useRouter();
   return (
     <div className="bg-card rounded-xl p-6 shadow-lg">
       <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>

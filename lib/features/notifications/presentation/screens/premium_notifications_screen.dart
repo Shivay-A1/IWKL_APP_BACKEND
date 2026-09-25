@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/network/api_client.dart';
+import '../../data/repositories/notification_repository_impl.dart';
 
 class PremiumNotificationsScreen extends StatefulWidget {
   const PremiumNotificationsScreen({super.key});
@@ -13,59 +15,44 @@ class PremiumNotificationsScreen extends StatefulWidget {
 }
 
 class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen> {
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'type': 'Registration Updates',
-      'title': 'Registration Approved',
-      'message': 'Your player registration has been approved',
-      'time': '2 hours ago',
-      'icon': Icons.verified,
-      'color': AppDesignSystem.primaryPurple,
-      'isRead': false,
-    },
-    {
-      'type': 'Admin Messages',
-      'title': 'Welcome to IWKL Season 2026',
-      'message': 'Get ready for an exciting season ahead',
-      'time': '1 day ago',
-      'icon': Icons.admin_panel_settings,
-      'color': AppDesignSystem.gradientPurple,
-      'isRead': false,
-    },
-    {
-      'type': 'Match Alerts',
-      'title': 'Match Reminder',
-      'message': 'Gujarat Gems vs Delhi Warriors starts in 1 hour',
-      'time': '3 hours ago',
-      'icon': Icons.sports_kabaddi,
-      'color': AppDesignSystem.darkPurple,
-      'isRead': true,
-    },
-    {
-      'type': 'Certificates',
-      'title': 'New Certificate Available',
-      'message': 'You have earned a new fan certificate',
-      'time': '2 days ago',
-      'icon': Icons.card_membership,
-      'color': AppDesignSystem.gold,
-      'isRead': true,
-    },
-    {
-      'type': 'Promotions',
-      'title': 'Special Offer',
-      'message': 'Get 20% off on fan club membership',
-      'time': '3 days ago',
-      'icon': Icons.local_offer,
-      'color': Colors.orange,
-      'isRead': true,
-    },
-  ];
+  final NotificationRepositoryImpl _notificationRepository = NotificationRepositoryImpl(ApiClient());
+  List<Map<String, dynamic>> _notifications = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    try {
+      final result = await _notificationRepository.getNotifications();
+      result.fold(
+        (failure) {
+          setState(() {
+            _loading = false;
+          });
+        },
+        (notifications) {
+          setState(() {
+            _notifications = notifications;
+            _loading = false;
+          });
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? AppDesignSystem.primaryBackground : Colors.grey[100],
       appBar: AppBar(
@@ -84,49 +71,85 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
           ),
         ),
         actions: [
-          TextButton.icon(
-            onPressed: () {
-              setState(() {
-                for (var notification in _notifications) {
-                  notification['isRead'] = true;
-                }
-              });
-            },
-            icon: const Icon(Icons.done_all, color: AppDesignSystem.gold, size: 18),
-            label: const Text(
-              'Mark all read',
-              style: TextStyle(
-                color: AppDesignSystem.gold,
-                fontSize: 12,
+          if (_notifications.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async {
+                await _notificationRepository.markAllAsRead();
+                setState(() {
+                  for (var notification in _notifications) {
+                    notification['isRead'] = true;
+                  }
+                });
+              },
+              icon: const Icon(Icons.done_all, color: AppDesignSystem.gold, size: 18),
+              label: const Text(
+                'Mark all read',
+                style: TextStyle(
+                  color: AppDesignSystem.gold,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
-        itemCount: _notifications.length,
-        itemBuilder: (context, index) {
-          final notification = _notifications[index];
-          return _buildNotificationCard(notification, index);
-        },
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _notifications.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_none,
+                        size: 64,
+                        color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No notifications yet',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadNotifications,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
+                    itemCount: _notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = _notifications[index];
+                      return _buildNotificationCard(notification, index);
+                    },
+                  ),
+                ),
     );
   }
 
   Widget _buildNotificationCard(Map<String, dynamic> notification, int index) {
+    final isRead = notification['isRead'] == true;
+    final title = notification['title'] as String? ?? 'Notification';
+    final message = notification['message'] as String? ?? '';
+    final createdAt = notification['createdAt'] as String?;
+    final time = createdAt != null
+        ? _formatTime(createdAt)
+        : 'Just now';
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppDesignSystem.mdSpacing),
       decoration: BoxDecoration(
-        gradient: notification['isRead']
+        gradient: isRead
             ? AppDesignSystem.glassGradient
             : AppDesignSystem.cardGradient,
         borderRadius: BorderRadius.circular(AppDesignSystem.xlRadius),
         border: Border.all(
-          color: notification['isRead']
+          color: isRead
               ? AppDesignSystem.divider
               : AppDesignSystem.primaryPurple.withOpacity(0.5),
-          width: notification['isRead'] ? 1 : 2,
+          width: isRead ? 1 : 2,
         ),
       ),
       child: Padding(
@@ -140,14 +163,14 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    notification['color'],
-                    notification['color'].withOpacity(0.7),
+                    AppDesignSystem.primaryPurple,
+                    AppDesignSystem.primaryPurple.withOpacity(0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
               ),
               child: Icon(
-                notification['icon'],
+                Icons.notifications,
                 color: Colors.white,
                 size: 24,
               ),
@@ -161,11 +184,11 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
                   Row(
                     children: [
                       Text(
-                        notification['type'],
+                        'Admin Notification',
                         style: AppDesignSystem.softGreyCaption,
                       ),
                       const SizedBox(width: AppDesignSystem.smSpacing),
-                      if (!notification['isRead'])
+                      if (!isRead)
                         Container(
                           width: 8,
                           height: 8,
@@ -178,21 +201,21 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notification['title'],
+                    title,
                     style: AppDesignSystem.readableBody,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    notification['message'],
+                    message,
                     style: AppDesignSystem.softGreyCaption,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notification['time'],
+                    time,
                     style: AppDesignSystem.softGreyCaption.copyWith(
                       fontSize: 11,
                     ),
@@ -215,5 +238,25 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
       curve: AppDesignSystem.smoothCurve,
       delay: Duration(milliseconds: index * 50),
     );
+  }
+
+  String _formatTime(String createdAt) {
+    try {
+      final dateTime = DateTime.parse(createdAt);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inMinutes < 1) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes} min ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours} hours ago';
+      } else {
+        return '${difference.inDays} days ago';
+      }
+    } catch (e) {
+      return 'Just now';
+    }
   }
 }

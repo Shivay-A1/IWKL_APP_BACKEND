@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
-import '../../../../core/network/api_client.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 
 class PremiumNotificationsScreen extends StatefulWidget {
@@ -15,7 +15,7 @@ class PremiumNotificationsScreen extends StatefulWidget {
 }
 
 class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen> {
-  final NotificationRepositoryImpl _notificationRepository = NotificationRepositoryImpl(ApiClient());
+  final NotificationRepositoryImpl _notificationRepository = NotificationRepositoryImpl(Dio());
   List<Map<String, dynamic>> _notifications = [];
   bool _loading = true;
 

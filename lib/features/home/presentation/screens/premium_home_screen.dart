@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/network/socket_client.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   late Timer _bannerAutoScrollTimer;
   int _unreadNotificationCount = 0;
   int _bannerCount = 0;
+  final SocketClient _socketClient = SocketClient();
 
   @override
   bool get wantKeepAlive => true;
@@ -42,13 +44,25 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     _bannerPageController = PageController();
     _startBannerAutoScroll();
     _loadUnreadNotifications();
+    _setupSocketListeners();
+    _socketClient.connect();
   }
 
   @override
   void dispose() {
     _bannerPageController.dispose();
     _bannerAutoScrollTimer.cancel();
+    _socketClient.offNewNotification();
     super.dispose();
+  }
+
+  void _setupSocketListeners() {
+    _socketClient.onNewNotification((data) {
+      print('New notification received: $data');
+      setState(() {
+        _unreadNotificationCount++;
+      });
+    });
   }
 
   void _startBannerAutoScroll() {

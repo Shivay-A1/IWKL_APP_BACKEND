@@ -9,8 +9,18 @@ class NotificationRepositoryImpl {
 
   Future<Either<Failure, List<Map<String, dynamic>>>> getNotifications() async {
     try {
-      final response = await _dio.get('https://iwklappbackend-production.up.railway.app/api/notifications');
-      final notifications = response.data as List<dynamic>? ?? [];
+      // Use public endpoint for testing (no auth required)
+      final response = await _dio.get('https://iwklappbackend-production.up.railway.app/api/notifications/public');
+      // Handle both array response and paginated response
+      final data = response.data;
+      List<dynamic> notifications = [];
+      
+      if (data is List) {
+        notifications = data;
+      } else if (data is Map && data['data'] is List) {
+        notifications = data['data'] as List<dynamic>;
+      }
+      
       return Right(notifications.map((n) => n as Map<String, dynamic>).toList());
     } catch (e) {
       return Left(ServerFailure('Failed to load notifications: ${e.toString()}'));

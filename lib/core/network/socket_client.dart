@@ -64,6 +64,15 @@ class SocketClient {
     _socket.on(event, (data) => callback(data));
   }
 
+  // Notification event handling
+  void onNewNotification(Function callback) {
+    _socket.on('new-notification', (data) => callback(data));
+  }
+
+  void offNewNotification() {
+    _socket.off('new-notification');
+  }
+
   void off(String event) {
     _socket.off(event);
   }

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/network/socket_client.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 
 class PremiumNotificationsScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class PremiumNotificationsScreen extends StatefulWidget {
 
 class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen> {
   final NotificationRepositoryImpl _notificationRepository = NotificationRepositoryImpl(Dio());
+  final SocketClient _socketClient = SocketClient();
   List<Map<String, dynamic>> _notifications = [];
   bool _loading = true;
 
@@ -23,6 +25,21 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
   void initState() {
     super.initState();
     _loadNotifications();
+    _setupSocketListeners();
+    _socketClient.connect();
+  }
+
+  @override
+  void dispose() {
+    _socketClient.offNewNotification();
+    super.dispose();
+  }
+
+  void _setupSocketListeners() {
+    _socketClient.onNewNotification((data) {
+      print('New notification received in screen: $data');
+      _loadNotifications();
+    });
   }
 
   Future<void> _loadNotifications() async {

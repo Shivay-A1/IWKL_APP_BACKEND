@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -24,11 +26,61 @@ class PremiumHomeScreen extends StatefulWidget {
   State<PremiumHomeScreen> createState() => _PremiumHomeScreenState();
 }
 
-class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKeepAliveClientMixin {
+class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   int _currentIndex = 0;
+  late PageController _bannerPageController;
+  late Timer _bannerAutoScrollTimer;
+  int _unreadNotificationCount = 0;
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerPageController = PageController();
+    _startBannerAutoScroll();
+    _loadUnreadNotifications();
+  }
+
+  @override
+  void dispose() {
+    _bannerPageController.dispose();
+    _bannerAutoScrollTimer.cancel();
+    super.dispose();
+  }
+
+  void _startBannerAutoScroll() {
+    _bannerAutoScrollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_bannerPageController.hasClients) {
+        final currentPage = _bannerPageController.page?.toInt() ?? 0;
+        final totalPages = 4; // You may want to make this dynamic based on banner count
+        final nextPage = (currentPage + 1) % totalPages;
+        _bannerPageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/notifications'),
+      );
+      if (response.statusCode == 200) {
+        final notifications = jsonDecode(response.body) as List<dynamic>;
+        final unreadCount = notifications.where((n) => n['isRead'] == false).length;
+        setState(() {
+          _unreadNotificationCount = unreadCount;
+        });
+      }
+    } catch (e) {
+      print('Error loading notifications: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,24 +303,32 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 icon: Icon(Icons.notifications_outlined, color: AppDesignSystem.getPrimaryText(context), size: 24),
                 onPressed: () => Navigator.pushNamed(context, '/notifications'),
               ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppDesignSystem.gold,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppDesignSystem.gold.withValues(alpha: 0.6),
-                        blurRadius: 6,
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppDesignSystem.gold,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppDesignSystem.gold.withValues(alpha: 0.6),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 9 ? '9+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           
@@ -355,7 +415,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
   Widget _buildBannersSection(List<dynamic> banners) {
     if (banners.isEmpty) return const SizedBox.shrink();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -373,24 +433,24 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         SizedBox(
-          height: 120,
-          child: ListView.builder(
+          height: 200,
+          child: PageView.builder(
+            controller: _bannerPageController,
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
             itemCount: banners.length,
             itemBuilder: (context, index) {
               final banner = banners[index];
               final bannerMap = banner is Map<String, dynamic> ? banner : {};
               final imageUrl = bannerMap['imageUrl'] as String? ?? '';
               final imageData = bannerMap['imageData'] as String?;
-              
+
               // Use base64 data if available, otherwise use URL
               final imageProvider = imageData != null && imageData.isNotEmpty
                   ? MemoryImage(base64Decode(imageData.contains(',') ? imageData.split(',')[1] : imageData)) as ImageProvider<Object>
                   : NetworkImage(imageUrl) as ImageProvider<Object>;
-              
+
               return Padding(
-                padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
+                padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
                 child: Container(
                   width: 300,
                   decoration: BoxDecoration(

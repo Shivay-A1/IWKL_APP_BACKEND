@@ -48,161 +48,164 @@ class _ProfileScreenState extends State<ProfileScreen> {
           phone = user.mobile;
 
           return Scaffold(
-      backgroundColor: isDarkMode ? AppDesignSystem.primaryBackground : Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: AppDesignSystem.gold,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppDesignSystem.gold),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: isDarkMode
-                  ? const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [AppDesignSystem.primaryBackground, Color(0xFF0A0510)],
-                    )
-                  : null,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppDesignSystem.xlSpacing),
-              child: Column(
-                children: [
-                  // Profile Avatar
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppDesignSystem.gold.withOpacity(0.3),
-                          AppDesignSystem.softGold.withOpacity(0.1),
-                          Colors.transparent,
-                        ],
-                      ),
-                      border: Border.all(
-                        color: AppDesignSystem.gold.withOpacity(0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 50,
-                      color: AppDesignSystem.gold,
-                    ),
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                  const SizedBox(height: AppDesignSystem.lgSpacing),
-
-                  // User Name
-                  Text(
-                    firstName,
-                    style: AppDesignSystem.largeBoldTitle,
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                  const SizedBox(height: AppDesignSystem.smSpacing),
-
-                  // Phone Number
-                  Text(
-                    phone,
-                    style: AppDesignSystem.readableBody,
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                  const SizedBox(height: AppDesignSystem.xlSpacing),
-
-                  // Profile Options
-                  _buildProfileOption(
-                    icon: Icons.edit,
-                    title: 'Edit Profile',
-                    onTap: () {
-                      // TODO: Navigate to edit profile
-                    },
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
-                    begin: -0.3,
-                    end: 0,
-                    curve: AppDesignSystem.smoothCurve,
-                  ),
-                  const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                  _buildProfileOption(
-                    icon: Icons.phone,
-                    title: 'Change Phone Number',
-                    onTap: () {
-                      // TODO: Navigate to change phone
-                    },
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
-                    begin: -0.3,
-                    end: 0,
-                    curve: AppDesignSystem.smoothCurve,
-                  ),
-                  const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                  _buildProfileOption(
-                    icon: Icons.lock,
-                    title: 'Change Password',
-                    onTap: () {
-                      // TODO: Navigate to change password
-                    },
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
-                    begin: -0.3,
-                    end: 0,
-                    curve: AppDesignSystem.smoothCurve,
-                  ),
-                  const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                  _buildProfileOption(
-                    icon: Icons.settings,
-                    title: 'Settings',
-                    onTap: () {
-                      Navigator.pushNamed(context, '/settings');
-                    },
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
-                    begin: -0.3,
-                    end: 0,
-                    curve: AppDesignSystem.smoothCurve,
-                  ),
-                  const SizedBox(height: AppDesignSystem.xlSpacing),
-
-                  // Logout Button
-                  PremiumButton(
-                    text: 'Logout',
-                    onPressed: () {
-                      // TODO: Implement logout
-                    },
-                    isGold: false,
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                  const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                  // Delete Account Button
-                  TextButton(
-                    onPressed: () {
-                      _showDeleteAccountDialog();
-                    },
-                    child: const Text(
-                      'Delete Account',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                ],
+            backgroundColor: isDarkMode ? AppDesignSystem.primaryBackground : Colors.grey[100],
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text(
+                'Profile',
+                style: TextStyle(
+                  color: AppDesignSystem.gold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppDesignSystem.gold),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
-          ),
-        ),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: isDarkMode
+                        ? const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [AppDesignSystem.primaryBackground, Color(0xFF0A0510)],
+                          )
+                        : null,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDesignSystem.xlSpacing),
+                    child: Column(
+                      children: [
+                        // Profile Avatar
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                AppDesignSystem.gold.withOpacity(0.3),
+                                AppDesignSystem.softGold.withOpacity(0.1),
+                                Colors.transparent,
+                              ],
+                            ),
+                            border: Border.all(
+                              color: AppDesignSystem.gold.withOpacity(0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: AppDesignSystem.gold,
+                          ),
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                        const SizedBox(height: AppDesignSystem.lgSpacing),
+
+                        // User Name
+                        Text(
+                          firstName,
+                          style: AppDesignSystem.largeBoldTitle,
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                        const SizedBox(height: AppDesignSystem.smSpacing),
+
+                        // Phone Number
+                        Text(
+                          phone,
+                          style: AppDesignSystem.readableBody,
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                        const SizedBox(height: AppDesignSystem.xlSpacing),
+
+                        // Profile Options
+                        _buildProfileOption(
+                          icon: Icons.edit,
+                          title: 'Edit Profile',
+                          onTap: () {
+                            // TODO: Navigate to edit profile
+                          },
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
+                          begin: -0.3,
+                          end: 0,
+                          curve: AppDesignSystem.smoothCurve,
+                        ),
+                        const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                        _buildProfileOption(
+                          icon: Icons.phone,
+                          title: 'Change Phone Number',
+                          onTap: () {
+                            // TODO: Navigate to change phone
+                          },
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
+                          begin: -0.3,
+                          end: 0,
+                          curve: AppDesignSystem.smoothCurve,
+                        ),
+                        const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                        _buildProfileOption(
+                          icon: Icons.lock,
+                          title: 'Change Password',
+                          onTap: () {
+                            // TODO: Navigate to change password
+                          },
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
+                          begin: -0.3,
+                          end: 0,
+                          curve: AppDesignSystem.smoothCurve,
+                        ),
+                        const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                        _buildProfileOption(
+                          icon: Icons.settings,
+                          title: 'Settings',
+                          onTap: () {
+                            Navigator.pushNamed(context, '/settings');
+                          },
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
+                          begin: -0.3,
+                          end: 0,
+                          curve: AppDesignSystem.smoothCurve,
+                        ),
+                        const SizedBox(height: AppDesignSystem.xlSpacing),
+
+                        // Logout Button
+                        PremiumButton(
+                          text: 'Logout',
+                          onPressed: () {
+                            // TODO: Implement logout
+                          },
+                          isGold: false,
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                        const SizedBox(height: AppDesignSystem.mdSpacing),
+
+                        // Delete Account Button
+                        TextButton(
+                          onPressed: () {
+                            _showDeleteAccountDialog();
+                          },
+                          child: const Text(
+                            'Delete Account',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -258,9 +261,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
-      ),
-    );
-        },
       ),
     );
   }

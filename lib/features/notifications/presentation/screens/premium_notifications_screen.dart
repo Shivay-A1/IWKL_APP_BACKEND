@@ -25,8 +25,9 @@ class _PremiumNotificationsScreenState extends State<PremiumNotificationsScreen>
   void initState() {
     super.initState();
     _loadNotifications();
-    _setupSocketListeners();
     _socketClient.connect();
+    // Setup socket listeners after connection
+    Future.delayed(const Duration(milliseconds: 500), _setupSocketListeners);
   }
 
   @override

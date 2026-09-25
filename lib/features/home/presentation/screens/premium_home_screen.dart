@@ -43,9 +43,10 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     super.initState();
     _bannerPageController = PageController();
     _startBannerAutoScroll();
-    _loadUnreadNotifications();
-    _setupSocketListeners();
     _socketClient.connect();
+    _loadUnreadNotifications();
+    // Setup socket listeners after connection
+    Future.delayed(const Duration(milliseconds: 500), _setupSocketListeners);
   }
 
   @override

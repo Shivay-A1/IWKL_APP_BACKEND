@@ -101,8 +101,24 @@ router.post('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), apiLimi
   body('title').trim().notEmpty().withMessage('Banner title is required'),
 ], validate, bannerController.createBanner);
 
+// Memory storage for upload route to access file.buffer for base64 conversion
+const memoryStorage = multer.memoryStorage();
+const memoryUpload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed'));
+  }
+});
+
 // POST /homepage-banners/upload - Upload banner with file (no auth for admin panel)
-router.post('/upload', bannerUpload.single('image'), async (req, res) => {
+router.post('/upload', memoryUpload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -117,7 +133,7 @@ router.post('/upload', bannerUpload.single('image'), async (req, res) => {
       isActive,
     } = req.body;
 
-    // Convert file to base64
+    // Convert file to base64 (requires memory storage)
     const base64Data = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
     const imageData = `data:${mimeType};base64,${base64Data}`;
@@ -133,7 +149,7 @@ router.post('/upload', bannerUpload.single('image'), async (req, res) => {
         subtitle: subtitle || null,
         ctaText: buttonText || null,
         ctaLink: buttonUrl || null,
-        filePath: req.file.filename,
+        filePath: null, // Not using file system anymore
         displayOrder: order ? parseInt(order) : 0,
         isActive: isActive !== undefined ? isActive === 'true' : true,
       },

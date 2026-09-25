@@ -125,8 +125,8 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
   try {
     const { phone, otp, firstName, password } = req.body;
 
-    if (!phone || !otp || !firstName || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!phone || !firstName || !password) {
+      return res.status(400).json({ error: 'Phone, firstName, and password are required' });
     }
 
     const formattedPhone = phone.replace(/\s/g, '');
@@ -140,15 +140,17 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       return res.status(404).json({ error: 'User not found. Please send OTP first.' });
     }
 
-    // Verify OTP
-    if (!user.phoneOtp || !user.phoneOtpExpiry) {
-      return res.status(400).json({ error: 'No OTP found. Please send OTP first.' });
-    }
+    // Only verify OTP if it's still in the database (not yet verified)
+    if (user.phoneOtp && user.phoneOtpExpiry) {
+      if (!otp) {
+        return res.status(400).json({ error: 'OTP is required' });
+      }
 
-    const isValid = SMSService.verifyOTP(user.phoneOtp, otp, user.phoneOtpExpiry);
+      const isValid = SMSService.verifyOTP(user.phoneOtp, otp, user.phoneOtpExpiry);
 
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
+      if (!isValid) {
+        return res.status(400).json({ error: 'Invalid or expired OTP' });
+      }
     }
 
     // Hash password

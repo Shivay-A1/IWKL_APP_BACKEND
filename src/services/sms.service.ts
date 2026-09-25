@@ -18,8 +18,8 @@ export class SMSService {
   }
 
   /**
-   * Send OTP to phone number using StartMessaging Auth API
-   * This API doesn't require template ID - simpler for OTP verification
+   * Send OTP to phone number using StartMessaging API
+   * Temporarily disabled - OTP logged to console
    */
   static async sendOTP(phone: string, otp: string): Promise<SendOTPResponse> {
     try {
@@ -30,37 +30,42 @@ export class SMSService {
       // Log OTP for testing
       console.log(`📱 OTP for ${formattedPhone}: ${otp}`);
 
-      const response = await axios.post(
-        `${STARTMESSAGING_API_URL}/v1/auth/send-otp`,
-        {
-          phone: countryCode,
-          channel: 'sms',
-          otp_length: 6,
-          expiry_seconds: 300
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${STARTMESSAGING_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // TODO: Uncomment when SMS is needed
+      // const response = await axios.post(
+      //   `${STARTMESSAGING_API_URL}/otp/send`,
+      //   {
+      //     phoneNumber: countryCode,
+      //     templateId: 'YOUR_TEMPLATE_ID',
+      //     variables: {
+      //       otp: otp,
+      //       appName: 'IWKL'
+      //     }
+      //   },
+      //   {
+      //     headers: {
+      //       'X-API-Key': STARTMESSAGING_API_KEY,
+      //       'Content-Type': 'application/json',
+      //     },
+      //   }
+      // );
 
-      if (response.data && response.data.success) {
-        return {
-          success: true,
-          message: 'OTP sent successfully',
-          requestId: response.data.request_id,
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'Failed to send OTP',
-        };
-      }
+      // if (response.data && response.data.success) {
+      //   return {
+      //     success: true,
+      //     message: 'OTP sent successfully',
+      //     requestId: response.data.requestId,
+      //   };
+      // }
+
+      // Temporarily return success without SMS
+      return {
+        success: true,
+        message: 'OTP sent successfully (check console logs)',
+        requestId: 'test-request-id',
+      };
     } catch (error: any) {
       console.error('SMS sending error:', error);
-      // If SMS fails, log it but return success for testing with our generated OTP
+      // If SMS fails, log it but return success for testing
       console.log(`⚠️ SMS API failed, but OTP was generated: ${otp}`);
       return {
         success: true,

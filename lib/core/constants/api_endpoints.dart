@@ -1,81 +1,81 @@
 class ApiEndpoints {
   // Auth
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String logout = '/auth/logout';
-  static const String refreshToken = '/auth/refresh';
-  static const String forgotPassword = '/auth/forgot-password';
-  static const String resetPassword = '/auth/reset-password';
-  static const String verifyOtp = '/auth/verify-otp';
-  
+  static const String login = '/api/auth/login';
+  static const String register = '/api/auth/register';
+  static const String logout = '/api/auth/logout';
+  static const String refreshToken = '/api/auth/refresh';
+  static const String forgotPassword = '/api/auth/forgot-password';
+  static const String resetPassword = '/api/auth/reset-password';
+  static const String verifyOtp = '/api/auth/verify-otp';
+
   // User
-  static const String userProfile = '/user/profile';
-  static const String updateProfile = '/user/update';
-  static const String changePassword = '/user/change-password';
-  static const String favoriteTeam = '/user/favorite-team';
-  static const String favoritePlayer = '/user/favorite-player';
+  static const String userProfile = '/api/user/profile';
+  static const String updateProfile = '/api/user/update';
+  static const String changePassword = '/api/user/change-password';
+  static const String favoriteTeam = '/api/user/favorite-team';
+  static const String favoritePlayer = '/api/user/favorite-player';
   
   // Matches
-  static const String matches = '/matches';
-  static const String liveMatches = '/matches/live';
-  static const String upcomingMatches = '/matches/upcoming';
-  static const String completedMatches = '/matches/completed';
-  static const String matchDetails = '/matches';
-  static const String matchScorecard = '/matches/scorecard';
-  static const String matchStatistics = '/matches/statistics';
-  static const String matchCommentary = '/matches/commentary';
-  static const String matchLineup = '/matches/lineup';
+  static const String matches = '/api/matches';
+  static const String liveMatches = '/api/matches/live';
+  static const String upcomingMatches = '/api/matches/upcoming';
+  static const String completedMatches = '/api/matches/completed';
+  static const String matchDetails = '/api/matches';
+  static const String matchScorecard = '/api/matches/scorecard';
+  static const String matchStatistics = '/api/matches/statistics';
+  static const String matchCommentary = '/api/matches/commentary';
+  static const String matchLineup = '/api/matches/lineup';
   
   // Teams
-  static const String teams = '/teams';
-  static const String teamDetails = '/teams';
-  static const String teamPlayers = '/teams/players';
-  static const String teamMatches = '/teams/matches';
-  
+  static const String teams = '/api/teams';
+  static const String teamDetails = '/api/teams';
+  static const String teamPlayers = '/api/teams/players';
+  static const String teamMatches = '/api/teams/matches';
+
   // Players
-  static const String players = '/players';
-  static const String playerDetails = '/players';
-  static const String playerStats = '/players/stats';
-  
+  static const String players = '/api/players';
+  static const String playerDetails = '/api/players';
+  static const String playerStats = '/api/players/stats';
+
   // Tournament
-  static const String tournament = '/tournament';
-  static const String pointsTable = '/tournament/points-table';
-  static const String tournamentStats = '/tournament/stats';
-  
+  static const String tournament = '/api/tournament';
+  static const String pointsTable = '/api/tournament/points-table';
+  static const String tournamentStats = '/api/tournament/stats';
+
   // OTT
-  static const String videos = '/ott/videos';
-  static const String videoDetails = '/ott/videos';
-  static const String liveStream = '/ott/live';
-  static const String categories = '/ott/categories';
-  static const String continueWatching = '/ott/continue-watching';
-  static const String watchHistory = '/ott/history';
-  
+  static const String videos = '/api/videos';
+  static const String videoDetails = '/api/videos';
+  static const String liveStream = '/api/ott/live';
+  static const String categories = '/api/ott/categories';
+  static const String continueWatching = '/api/ott/continue-watching';
+  static const String watchHistory = '/api/ott/history';
+
   // News
-  static const String news = '/news';
-  static const String newsDetails = '/news';
-  static const String newsCategories = '/news/categories';
-  
+  static const String news = '/api/news';
+  static const String newsDetails = '/api/news';
+  static const String newsCategories = '/api/news/categories';
+
   // Gallery
-  static const String gallery = '/gallery';
-  static const String galleryAlbums = '/gallery/albums';
-  static const String galleryImages = '/gallery/images';
-  
+  static const String gallery = '/api/gallery';
+  static const String galleryAlbums = '/api/gallery/albums';
+  static const String galleryImages = '/api/gallery/images';
+
   // Stories
-  static const String stories = '/stories';
-  
+  static const String stories = '/api/stories';
+
   // Notifications
-  static const String notifications = '/notifications';
-  static const String markRead = '/notifications/mark-read';
-  static const String notificationSettings = '/notifications/settings';
-  
+  static const String notifications = '/api/notifications';
+  static const String markRead = '/api/notifications/mark-read';
+  static const String notificationSettings = '/api/notifications/settings';
+
   // Search
-  static const String search = '/search';
-  
+  static const String search = '/api/search';
+
   // Feedback
-  static const String feedback = '/feedback';
-  
+  static const String feedback = '/api/feedback';
+
   // Sponsors
-  static const String sponsors = '/sponsors';
+  static const String sponsors = '/api/sponsors';
   
   // Admin
   static const String adminDashboard = '/admin/dashboard';

@@ -25,19 +25,19 @@ enum Role {
 
 model User {
   id                String    @id @default(cuid())
-  name              String
+  firstName         String
   email             String?   @unique
-  mobile            String?   @unique
+  mobile            String    @unique
   password          String
   role              Role      @default(USER)
   avatar            String?
   isVerified        Boolean   @default(false)
-  mobileVerified    Boolean   @default(false)
+  isPhoneVerified   Boolean   @default(false)
   verificationToken String?
   resetToken        String?
   resetTokenExpiry  DateTime?
-  otp               String?
-  otpExpiry         DateTime?
+  phoneOtp          String?
+  phoneOtpExpiry    DateTime?
   lastLogin         DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -51,10 +51,26 @@ model User {
   matchHistory      MatchHistory[] @relation("MatchHistoryAdmin")
   sentMessages      Message[]     @relation("MessageSender")
   receivedMessages  Message[]     @relation("MessageRecipient")
+  settings          UserSettings?
 
   @@index([email])
   @@index([mobile])
   @@index([role])
+}
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enableNotifications    Boolean  @default(true)
+  enableMatchAlerts     Boolean  @default(true)
+  enableNewsAlerts      Boolean  @default(true)
+  language              String   @default("en")
+  theme                 String   @default("light")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Activity {

@@ -33,6 +33,8 @@ import mobileBannerRoutes from './mobile-banner.routes';
 import storyRoutes from './story.routes';
 import appManagementRoutes from './app-management.routes';
 import otpRoutes from './otp.routes';
+import settingsRoutes from './settings.routes';
+import profileRoutes from './profile.routes';
 
 const router = Router();
 
@@ -112,6 +114,8 @@ router.get('/', (req, res) => {
       stories: '/api/stories',
       appManagement: '/api/app-management',
       otp: '/api/otp',
+      settings: '/api/settings',
+      profile: '/api/profile',
     },
   });
 });
@@ -150,6 +154,8 @@ router.use('/mobile-banners', mobileBannerRoutes);
 router.use('/stories', storyRoutes);
 router.use('/app-management', appManagementRoutes);
 router.use('/otp', otpRoutes);
+router.use('/settings', settingsRoutes);
+router.use('/profile', profileRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

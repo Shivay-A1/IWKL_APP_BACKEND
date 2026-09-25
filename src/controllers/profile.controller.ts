@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import prisma from '../config/prisma';
+import prisma from '../config/database';
 import SMSService from '../services/sms.service';
 
 interface AuthRequest extends Request {

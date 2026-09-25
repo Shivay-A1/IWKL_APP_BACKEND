@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/prisma';
+import prisma from '../config/database';
 import SMSService from '../services/sms.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';

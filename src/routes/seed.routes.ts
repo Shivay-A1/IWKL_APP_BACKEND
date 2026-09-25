@@ -64,7 +64,7 @@ router.post('/admin', async (req, res) => {
       data: {
         email,
         mobile: '9876543210', // Default mobile for admin
-        name,
+        firstName: name,
         password: hashedPassword,
         role: 'SUPER_ADMIN',
         isVerified: true,

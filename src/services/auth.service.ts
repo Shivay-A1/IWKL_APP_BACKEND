@@ -5,7 +5,7 @@ import { AppError } from '../middleware/error';
 import { authConfig } from '../config/auth';
 import { sendVerificationOTPEmail, sendPasswordResetOTPEmail, sendWelcomeEmail } from './email.service';
 
-export const register = async (name: string, mobile: string, password: string, mobileVerified: boolean = false) => {
+export const register = async (firstName: string, mobile: string, password: string, mobileVerified: boolean = false) => {
   const existingUser = await prisma.user.findUnique({ where: { mobile } });
   if (existingUser) {
     throw new AppError('This mobile number is already registered', 409);
@@ -16,14 +16,14 @@ export const register = async (name: string, mobile: string, password: string, m
   // Create user with mobile verification status
   const user = await prisma.user.create({
     data: {
-      name,
+      firstName,
       mobile,
       password: hashedPassword,
       isVerified: mobileVerified,
     },
     select: {
       id: true,
-      name: true,
+      firstName: true,
       mobile: true,
       role: true,
       avatar: true,
@@ -33,11 +33,11 @@ export const register = async (name: string, mobile: string, password: string, m
 
   console.log('=== USER REGISTERED ===');
   console.log('Mobile:', mobile);
-  console.log('Name:', name);
+  console.log('First Name:', firstName);
   console.log('Mobile Verified:', mobileVerified);
   console.log('=======================================');
 
-  return { 
+  return {
     user,
     message: 'Registration successful! You can now login.'
   };
@@ -103,7 +103,7 @@ export const login = async (mobile: string, password: string, res: Response) => 
   return {
     user: {
       id: user.id,
-      name: user.name,
+      firstName: user.firstName,
       mobile: user.mobile,
       role: user.role,
       avatar: user.avatar,
@@ -121,7 +121,7 @@ export const refreshToken = async (refreshToken: string, res: Response) => {
       where: { id: decoded.id },
       select: {
         id: true,
-        name: true,
+        firstName: true,
         mobile: true,
         role: true,
         avatar: true,
@@ -163,7 +163,7 @@ export const getProfile = async (userId: string) => {
     where: { id: userId },
     select: {
       id: true,
-      name: true,
+      firstName: true,
       email: true,
       role: true,
       avatar: true,
@@ -201,7 +201,7 @@ export const updateProfile = async (userId: string, data: any) => {
     data: updateData,
     select: {
       id: true,
-      name: true,
+      firstName: true,
       email: true,
       role: true,
       avatar: true,
@@ -236,8 +236,8 @@ export const forgotPassword = async (email: string) => {
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      otp,
-      otpExpiry,
+      phoneOtp: otp,
+      phoneOtpExpiry: otpExpiry,
     },
   });
 
@@ -248,22 +248,22 @@ export const forgotPassword = async (email: string) => {
   return { message: 'OTP sent successfully to your email (check backend console logs)' };
 };
 
-export const verifyOTP = async (email: string, otp: string, type: 'email' | 'password' = 'email') => {
-  const user = await prisma.user.findUnique({ where: { email } });
+export const verifyOTP = async (mobile: string, otp: string, type: 'email' | 'password' = 'email') => {
+  const user = await prisma.user.findUnique({ where: { mobile } });
 
   if (!user) {
     throw new AppError('User not found', 404);
   }
 
-  if (!user.otp || !user.otpExpiry) {
+  if (!user.phoneOtp || !user.phoneOtpExpiry) {
     throw new AppError('No OTP generated for this user', 400);
   }
 
-  if (user.otp !== otp) {
+  if (user.phoneOtp !== otp) {
     throw new AppError('Invalid OTP', 400);
   }
 
-  if (new Date() > user.otpExpiry) {
+  if (new Date() > user.phoneOtpExpiry) {
     throw new AppError('OTP has expired', 400);
   }
 
@@ -271,29 +271,29 @@ export const verifyOTP = async (email: string, otp: string, type: 'email' | 'pas
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      otp: null,
-      otpExpiry: null,
+      phoneOtp: null,
+      phoneOtpExpiry: null,
       ...(type === 'email' ? { isVerified: true } : {}),
     },
   });
 
   // Send welcome email if email verification
-  if (type === 'email') {
-    await sendWelcomeEmail(email, user.name);
+  if (type === 'email' && user.email) {
+    await sendWelcomeEmail(user.email, user.firstName);
   }
 
   return { message: type === 'email' ? 'Email verified successfully' : 'OTP verified successfully' };
 };
 
-export const resendOTP = async (email: string, type: 'email' | 'password' = 'email') => {
-  const user = await prisma.user.findUnique({ where: { email } });
+export const resendOTP = async (mobile: string, type: 'email' | 'password' = 'email') => {
+  const user = await prisma.user.findUnique({ where: { mobile } });
 
   if (!user) {
     throw new AppError('User not found', 404);
   }
 
   // Check if last OTP was sent less than 60 seconds ago
-  if (user.otpExpiry && new Date() > new Date(user.otpExpiry.getTime() - 9 * 60 * 1000)) {
+  if (user.phoneOtpExpiry && new Date() > new Date(user.phoneOtpExpiry.getTime() - 9 * 60 * 1000)) {
     throw new AppError('Please wait 60 seconds before requesting a new OTP', 429);
   }
 
@@ -304,19 +304,19 @@ export const resendOTP = async (email: string, type: 'email' | 'password' = 'ema
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      otp,
-      otpExpiry,
+      phoneOtp: otp,
+      phoneOtpExpiry: otpExpiry,
     },
   });
 
   // Send OTP via email
-  if (type === 'email') {
-    await sendVerificationOTPEmail(email, otp, user.name);
+  if (type === 'email' && user.email) {
+    await sendVerificationOTPEmail(user.email, otp, user.firstName);
   } else {
-    await sendPasswordResetOTPEmail(email, otp);
+    await sendPasswordResetOTPEmail(user.email || '', otp);
   }
 
-  return { message: 'New OTP sent successfully to your email' };
+  return { message: 'New OTP sent successfully' };
 };
 
 export const resetPassword = async (mobile: string, newPassword: string) => {

@@ -15,6 +15,8 @@ interface Banner {
   ctaLink?: string;
   isActive: boolean;
   displayOrder: number;
+  imageData?: string;
+  filePath?: string;
 }
 
 export default function BannersPage() {
@@ -172,9 +174,9 @@ export default function BannersPage() {
           {banners.map((banner) => (
             <div key={banner.id} className="bg-card rounded-xl overflow-hidden shadow-lg min-w-[300px] flex-shrink-0">
               <div className="relative h-48 bg-background">
-                {banner.imageUrl ? (
+                {banner.id ? (
                   <img
-                    src={banner.imageUrl}
+                    src={`https://iwklappbackend-production.up.railway.app/api/homepage-banners/${banner.id}/image`}
                     alt={banner.title}
                     className="w-full h-full object-cover"
                   />

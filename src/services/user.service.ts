@@ -10,7 +10,7 @@ export const getUsers = async (query: any) => {
   if (role) where.role = role;
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
+      { firstName: { contains: search, mode: 'insensitive' } },
       { email: { contains: search, mode: 'insensitive' } },
     ];
   }
@@ -24,7 +24,7 @@ export const getUsers = async (query: any) => {
       take: limit || 10,
       select: {
         id: true,
-        name: true,
+        firstName: true,
         email: true,
         role: true,
         avatar: true,
@@ -52,7 +52,7 @@ export const getUserById = async (id: string) => {
     where: { id },
     select: {
       id: true,
-      name: true,
+      firstName: true,
       email: true,
       role: true,
       avatar: true,
@@ -84,7 +84,7 @@ export const updateUser = async (id: string, data: any) => {
     data,
     select: {
       id: true,
-      name: true,
+      firstName: true,
       email: true,
       role: true,
       avatar: true,
@@ -112,7 +112,7 @@ export const updateUserRole = async (id: string, role: string) => {
     data: { role: role as any },
     select: {
       id: true,
-      name: true,
+      firstName: true,
       email: true,
       role: true,
     },

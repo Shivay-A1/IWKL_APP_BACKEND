@@ -233,7 +233,7 @@ export const registerSocialMediaPartner = async (data: {
           data: {
             email: normalizedEmail,
             mobile: normalizedMobile,
-            name: data.fullName,
+            firstName: data.fullName,
           },
         });
       }
@@ -247,7 +247,7 @@ export const registerSocialMediaPartner = async (data: {
         const newUser = await prisma.user.create({
           data: {
             id: data.userId, // Use Firebase UID as database ID
-            name: data.fullName,
+            firstName: data.fullName,
             email: normalizedEmail,
             mobile: normalizedMobile,
             password: 'FIREBASE_AUTH', // Placeholder for Firebase users

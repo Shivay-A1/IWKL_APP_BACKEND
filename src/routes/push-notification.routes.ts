@@ -101,7 +101,7 @@ router.get('/', authenticate, authorize('SUPER_ADMIN', 'LEAGUE_ADMIN'), async (r
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
             email: true,
           },
         },

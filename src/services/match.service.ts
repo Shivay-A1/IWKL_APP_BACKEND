@@ -994,7 +994,7 @@ export const getMatchHistory = async (matchId: string) => {
       admin: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
           email: true,
         },
       },

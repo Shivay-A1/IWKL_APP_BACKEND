@@ -14,6 +14,9 @@ router.post('/broadcast', apiLimiter, [
 // Public get notifications route for testing (no auth required)
 router.get('/public', notificationController.getNotifications);
 
+// Public delete notification route for admin panel (no auth required)
+router.delete('/:id', notificationController.deleteNotification);
+
 // Authenticated routes
 router.use(authenticate);
 

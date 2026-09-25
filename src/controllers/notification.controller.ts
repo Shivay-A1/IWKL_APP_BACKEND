@@ -53,13 +53,14 @@ export const markAllAsRead = async (req: AuthRequest, res: Response, next: any) 
 
 export const deleteNotification = async (req: AuthRequest, res: Response, next: any) => {
   try {
-    if (!req.user) {
-      throw new Error('User not authenticated');
-    }
-    await notificationService.deleteNotification(req.params.id, req.user.id);
+    // For public endpoint, delete directly without user check
+    await prisma.notification.delete({
+      where: { id: req.params.id }
+    });
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {
-    next(error);
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Failed to delete notification' });
   }
 };
 

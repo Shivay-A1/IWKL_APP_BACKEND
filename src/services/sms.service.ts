@@ -28,34 +28,32 @@ export class SMSService {
 
       const message = `Your IWKL verification code is: ${otp}. Valid for 5 minutes. Do not share this code with anyone.`;
 
-      const response = await axios.post(
-        `${STARTMESSAGING_API_URL}/send`,
-        {
-          route: 'q', // Quick SMS route
-          message: message,
-          numbers: formattedPhone,
-          flash: 0,
-        },
-        {
-          headers: {
-            'authorization': STARTMESSAGING_API_KEY,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // Log OTP for testing (in production, use actual SMS API)
+      console.log(`📱 OTP for ${formattedPhone}: ${otp}`);
 
-      if (response.data && response.data.return === true) {
-        return {
-          success: true,
-          message: 'OTP sent successfully',
-          requestId: response.data.request_id,
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'Failed to send OTP',
-        };
-      }
+      // TODO: Uncomment when SMS API is verified
+      // const response = await axios.post(
+      //   `${STARTMESSAGING_API_URL}/send`,
+      //   {
+      //     route: 'q',
+      //     message: message,
+      //     numbers: formattedPhone,
+      //     flash: 0,
+      //   },
+      //   {
+      //     headers: {
+      //       'authorization': STARTMESSAGING_API_KEY,
+      //       'Content-Type': 'application/json',
+      //     },
+      //   }
+      // );
+
+      // Temporarily return success without SMS for testing
+      return {
+        success: true,
+        message: 'OTP sent successfully (check console logs)',
+        requestId: 'test-request-id',
+      };
     } catch (error: any) {
       console.error('SMS sending error:', error);
       return {

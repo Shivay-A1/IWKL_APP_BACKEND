@@ -85,12 +85,13 @@ async function seedAdminUser() {
         update: {},
         create: {
           id: 'admin_001',
-          name: 'Super Admin',
+          firstName: 'Super Admin',
           email: 'admin@iwkl.com',
           password: hashedPassword,
           role: 'SUPER_ADMIN',
           isVerified: true,
-          mobileVerified: true
+          isPhoneVerified: true,
+          mobile: '+919876543210'
         }
       });
       console.log('✅ Admin user seeded successfully');

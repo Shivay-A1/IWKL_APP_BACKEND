@@ -16,9 +16,6 @@ COPY database_setup.sql ./
 # Generate Prisma client for production
 RUN npx prisma generate
 
-# Run database migrations
-RUN npx prisma migrate deploy
-
 # Build
 RUN npm run build
 

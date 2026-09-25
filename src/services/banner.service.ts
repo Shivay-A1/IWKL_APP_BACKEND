@@ -47,7 +47,7 @@ export const getBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://iwklappbackend-production.up.railway.app';
   
   // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({
@@ -116,7 +116,7 @@ export const getActiveBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://iwklappbackend-production.up.railway.app';
   
   // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({

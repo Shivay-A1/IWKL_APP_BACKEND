@@ -1,6 +1,9 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import * as notificationService from '../services/notification.service';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export const createNotification = async (req: AuthRequest, res: Response, next: any) => {
   try {
@@ -13,13 +16,14 @@ export const createNotification = async (req: AuthRequest, res: Response, next: 
 
 export const getNotifications = async (req: AuthRequest, res: Response, next: any) => {
   try {
-    if (!req.user) {
-      throw new Error('User not authenticated');
-    }
-    const notifications = await notificationService.getNotifications(req.user.id, req.query);
+    // Return all notifications for public endpoint (no user filter)
+    const notifications = await prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
     res.json(notifications);
   } catch (error) {
-    next(error);
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 };
 

@@ -28,7 +28,7 @@ export const createBanner = async (data: any, file?: Express.Multer.File) => {
 
   // Update imageUrl to use backend endpoint if file was uploaded
   if (file) {
-    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
     imageUrl = `${backendUrl}/api/homepage-banners/${banner.id}/image`;
     
     await prisma.homepageBanner.update({
@@ -47,7 +47,8 @@ export const getBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://iwklappbackend-production.up.railway.app';
+  // Always use production backend URL
+  const backendUrl = 'https://iwklappbackend-production.up.railway.app';
   
   // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({
@@ -77,7 +78,7 @@ export const updateBanner = async (id: string, data: any, file?: Express.Multer.
     const mimeType = file.mimetype;
     imageData = `data:${mimeType};base64,${base64Data}`;
     
-    const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
     imageUrl = `${backendUrl}/api/homepage-banners/${id}/image`;
   }
 
@@ -116,7 +117,8 @@ export const getActiveBanners = async () => {
     orderBy: { displayOrder: 'asc' },
   });
 
-  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://iwklappbackend-production.up.railway.app';
+  // Always use production backend URL
+  const backendUrl = 'https://iwklappbackend-production.up.railway.app';
   
   // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({

@@ -19,10 +19,13 @@ class NotificationRepositoryImpl {
         notifications = data;
       } else if (data is Map && data['data'] is List) {
         notifications = data['data'] as List<dynamic>;
+      } else if (data is Map && data['notifications'] is List) {
+        notifications = data['notifications'] as List<dynamic>;
       }
       
       return Right(notifications.map((n) => n as Map<String, dynamic>).toList());
     } catch (e) {
+      print('Error fetching notifications: $e');
       return Left(ServerFailure('Failed to load notifications: ${e.toString()}'));
     }
   }

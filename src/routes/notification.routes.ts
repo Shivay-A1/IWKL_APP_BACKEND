@@ -11,6 +11,9 @@ router.post('/broadcast', apiLimiter, [
   body('message').trim().notEmpty().withMessage('Message is required'),
 ], validate, notificationController.sendBroadcast);
 
+// Public get notifications route for testing (no auth required)
+router.get('/public', notificationController.getNotifications);
+
 // Authenticated routes
 router.use(authenticate);
 

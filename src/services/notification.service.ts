@@ -1,11 +1,20 @@
 import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 import { getPaginationParams, calculatePagination } from '../utils';
+import { getIO } from '../config/socket';
 
 export const createNotification = async (data: any) => {
   const notification = await prisma.notification.create({
     data,
   });
+
+  // Emit notification to user via Socket.io
+  try {
+    const io = getIO();
+    io.emit('new-notification', notification);
+  } catch (error) {
+    console.log('Socket.io not available for notification emission');
+  }
 
   return notification;
 };
@@ -75,10 +84,12 @@ export const deleteNotification = async (id: string, userId: string) => {
 export const sendBroadcast = async (data: any) => {
   const { title, message, type = 'ADMIN_BROADCAST' } = data;
 
+  // Get all users (not just verified ones for testing)
   const users = await prisma.user.findMany({
-    where: { isVerified: true },
     select: { id: true },
   });
+
+  console.log(`Sending broadcast to ${users.length} users`);
 
   const notifications = await prisma.notification.createMany({
     data: users.map((user) => ({
@@ -88,6 +99,20 @@ export const sendBroadcast = async (data: any) => {
       message,
     })),
   });
+
+  // Emit broadcast notification to all connected clients
+  try {
+    const io = getIO();
+    io.emit('new-notification', {
+      type,
+      title,
+      message,
+      count: notifications.count,
+    });
+    console.log('Broadcast notification emitted via Socket.io');
+  } catch (error) {
+    console.log('Socket.io not available for broadcast emission');
+  }
 
   return { message: 'Broadcast sent successfully', count: notifications.count };
 };

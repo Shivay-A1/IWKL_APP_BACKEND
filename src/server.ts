@@ -47,10 +47,10 @@ async function runPrismaMigrations() {
       
       // Use Prisma db push with accept-data-loss to recreate tables
       // This will drop incompatible tables and create proper Prisma schema
-      console.log('🗄️ Running Prisma database migrations with data-loss acceptance...');
+      console.log('🗄️ Running Prisma database migrations with force reset...');
       const { execSync } = require('child_process');
       try {
-        execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' });
+        execSync('npx prisma db push --skip-generate --force-reset', { stdio: 'inherit' });
         console.log('✅ Prisma migrations completed successfully');
       } catch (prismaError) {
         console.error('⚠️ Prisma migrations failed:', prismaError.message);

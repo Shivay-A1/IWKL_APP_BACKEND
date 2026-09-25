@@ -6,16 +6,15 @@ const prisma = new PrismaClient();
 export const uploadBanner = async (req: Request, res: Response) => {
   try {
     const { title, subtitle, ctaText, ctaLink } = req.body;
-    const imageUrl = req.file?.path;
 
-    if (!imageUrl) {
+    if (!req.file) {
       return res.status(400).json({ error: 'Image is required' });
     }
 
-    // Convert local path to accessible URL
-    // Replace local path with backend URL
-    const backendUrl = process.env.BACKEND_URL || 'https://iwkl-backend-lg6t-production.up.railway.app';
-    const accessibleImageUrl = imageUrl.replace('/app/backend', backendUrl);
+    // Convert file to base64
+    const base64Data = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype;
+    const imageData = `data:${mimeType};base64,${base64Data}`;
 
     // Get the highest display order
     const lastBanner = await prisma.homepageBanner.findFirst({
@@ -26,7 +25,8 @@ export const uploadBanner = async (req: Request, res: Response) => {
 
     const banner = await prisma.homepageBanner.create({
       data: {
-        imageUrl: accessibleImageUrl,
+        imageUrl: '', // Will be updated after creation
+        imageData,
         title: title || null,
         subtitle: subtitle || null,
         ctaText: ctaText || null,
@@ -35,6 +35,17 @@ export const uploadBanner = async (req: Request, res: Response) => {
         isActive: true
       }
     });
+
+    // Update imageUrl to use backend endpoint with actual ID
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
+    const imageUrl = `${backendUrl}/api/homepage-banners/${banner.id}/image`;
+
+    await prisma.homepageBanner.update({
+      where: { id: banner.id },
+      data: { imageUrl }
+    });
+
+    banner.imageUrl = imageUrl;
 
     res.status(201).json(banner);
   } catch (error) {
@@ -45,7 +56,7 @@ export const uploadBanner = async (req: Request, res: Response) => {
 
 export const uploadBannerLink = async (req: Request, res: Response) => {
   try {
-    const { imageUrl, ctaText, ctaLink } = req.body;
+    const { imageUrl, ctaText, ctaLink, title, subtitle, buttonText, buttonUrl, order, isActive } = req.body;
 
     if (!imageUrl) {
       return res.status(400).json({ error: 'Image URL is required' });
@@ -56,15 +67,17 @@ export const uploadBannerLink = async (req: Request, res: Response) => {
       orderBy: { displayOrder: 'desc' }
     });
 
-    const displayOrder = lastBanner ? lastBanner.displayOrder + 1 : 0;
+    const displayOrder = order ? parseInt(order) : (lastBanner ? lastBanner.displayOrder + 1 : 0);
 
     const banner = await prisma.homepageBanner.create({
       data: {
-        imageUrl,
-        ctaText: ctaText || null,
-        ctaLink: ctaLink || null,
+        imageUrl, // Store the provided URL as-is
+        title: title || null,
+        subtitle: subtitle || null,
+        ctaText: ctaText || buttonText || null,
+        ctaLink: ctaLink || buttonUrl || null,
         displayOrder,
-        isActive: true
+        isActive: isActive !== undefined ? isActive === 'true' : true
       }
     });
 
@@ -82,7 +95,14 @@ export const getActiveBanners = async (_req: Request, res: Response) => {
       orderBy: { displayOrder: 'asc' }
     });
 
-    res.json(banners);
+    // Normalize image URLs to use backend endpoint
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
+    const normalizedBanners = banners.map(banner => ({
+      ...banner,
+      imageUrl: `${backendUrl}/api/homepage-banners/${banner.id}/image`
+    }));
+
+    res.json(normalizedBanners);
   } catch (error) {
     console.error('Error fetching banners:', error);
     res.status(500).json({ error: 'Failed to fetch banners' });
@@ -95,7 +115,14 @@ export const getAllBanners = async (_req: Request, res: Response) => {
       orderBy: { displayOrder: 'asc' }
     });
 
-    res.json(banners);
+    // Normalize image URLs to use backend endpoint
+    const backendUrl = 'https://iwklappbackend-production.up.railway.app';
+    const normalizedBanners = banners.map(banner => ({
+      ...banner,
+      imageUrl: `${backendUrl}/api/homepage-banners/${banner.id}/image`
+    }));
+
+    res.json(normalizedBanners);
   } catch (error) {
     console.error('Error fetching all banners:', error);
     res.status(500).json({ error: 'Failed to fetch banners' });

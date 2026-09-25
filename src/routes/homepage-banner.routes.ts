@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import * as homepageBannerController from '../controllers/homepage-banner.controller';
-import { validate, uploadSingle, apiLimiter } from '../middleware';
+import { validate, uploadMemory, apiLimiter } from '../middleware';
 
 const router = Router();
 
@@ -9,7 +9,7 @@ const router = Router();
 router.get('/', homepageBannerController.getActiveBanners);
 
 // Admin routes - authentication removed for now
-router.post('/upload', uploadSingle('image'), apiLimiter, [
+router.post('/upload', uploadMemory.single('image'), apiLimiter, [
   body('title').optional().trim(),
   body('subtitle').optional().trim(),
   body('ctaText').optional().trim(),

@@ -13,6 +13,11 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/screens/premium_login_screen.dart';
 import 'features/auth/presentation/screens/premium_signup_screen.dart';
 import 'features/auth/presentation/screens/premium_forgot_password_screen.dart';
+import 'features/auth/presentation/screens/landing_screen.dart';
+import 'features/auth/presentation/screens/premium_signin_screen.dart';
+import 'features/auth/presentation/screens/welcome_screen.dart';
+import 'features/profile/presentation/screens/profile_screen.dart';
+import 'features/settings/presentation/screens/settings_screen.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/register_usecase.dart';
@@ -31,9 +36,7 @@ import 'features/notifications/presentation/screens/premium_notifications_screen
 import 'features/admin/presentation/screens/premium_admin_dashboard_screen.dart';
 import 'features/admin/presentation/screens/admin_login_screen.dart';
 import 'features/team/presentation/screens/team_profile_screen.dart';
-import 'features/profile/presentation/screens/premium_profile_screen.dart';
 import 'features/points_table/presentation/screens/points_table_screen.dart';
-import 'features/settings/presentation/screens/premium_settings_screen.dart';
 import 'features/fan_club/presentation/screens/fan_club_screen.dart';
 import 'features/fan_club/presentation/screens/fan_club_registration_screen.dart';
 import 'features/support/presentation/screens/support_screen.dart';
@@ -45,7 +48,6 @@ import 'features/schedule/presentation/screens/premium_matches_screen.dart';
 import 'features/ott/presentation/screens/premium_ott_screen.dart';
 import 'features/live_match/presentation/screens/live_match_screen.dart';
 import 'core/constants/app_constants.dart';
-import 'core/network/api_client.dart';
 import 'screens/premium_splash_screen.dart';
 
 void main() async {
@@ -100,9 +102,14 @@ class IWKLApp extends StatelessWidget {
             initialRoute: '/',
             routes: {
               '/': (context) => const PremiumSplashScreen(),
-              '/login': (context) => const PremiumLoginScreen(),
-              '/register': (context) => const PremiumSignupScreen(),
+              '/landing': (context) => const LandingScreen(),
+              '/signin': (context) => const PremiumSigninScreen(),
+              '/signup': (context) => const PremiumSignupScreen(),
               '/forgot-password': (context) => const PremiumForgotPasswordScreen(),
+              '/welcome': (context) {
+                final firstName = ModalRoute.of(context)?.settings.arguments as String? ?? 'User';
+                return WelcomeScreen(firstName: firstName);
+              },
               '/home': (context) => BlocProvider(
                 create: (context) => HomeBloc(
                   LoadHomeDataUseCase(HomeRepositoryImpl(ApiClient(preferences))),
@@ -114,7 +121,8 @@ class IWKLApp extends StatelessWidget {
               '/live-match': (context) => const LiveMatchScreen(),
               '/ott': (context) => const PremiumOTTScreen(),
               '/schedule': (context) => const PremiumMatchesScreen(),
-              '/profile': (context) => const PremiumProfileScreen(),
+              '/profile': (context) => const ProfileScreen(),
+              '/settings': (context) => const SettingsScreen(),
               '/teams': (context) => const TeamsScreen(),
               '/players': (context) => const PlayersScreen(),
               '/points-table': (context) => const PointsTableScreen(),
@@ -124,7 +132,6 @@ class IWKLApp extends StatelessWidget {
               '/fan-club-registration': (context) => const FanClubRegistrationScreen(),
               '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
               '/downloads': (context) => const PlaceholderScreen(title: 'Downloads'),
-              '/settings': (context) => const PremiumSettingsScreen(),
               '/support': (context) => const SupportScreen(),
               '/about': (context) => const PlaceholderScreen(title: 'About'),
               '/forgot-password': (context) => const PlaceholderScreen(title: 'Forgot Password'),

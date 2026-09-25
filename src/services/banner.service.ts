@@ -49,12 +49,10 @@ export const getBanners = async () => {
 
   const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
   
-  // Normalize image URLs - use backend endpoint for banners with imageData
+  // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({
     ...banner,
-    imageUrl: banner.imageData 
-      ? `${backendUrl}/api/homepage-banners/${banner.id}/image`
-      : banner.imageUrl
+    imageUrl: `${backendUrl}/api/homepage-banners/${banner.id}/image`
   }));
 };
 
@@ -120,11 +118,9 @@ export const getActiveBanners = async () => {
 
   const backendUrl = process.env.RAILWAY_PUBLIC_URL || 'https://iwklappbackend-production.up.railway.app';
   
-  // Normalize image URLs - use backend endpoint for banners with imageData
+  // Normalize image URLs - ALWAYS use backend endpoint
   return banners.map(banner => ({
     ...banner,
-    imageUrl: banner.imageData 
-      ? `${backendUrl}/api/homepage-banners/${banner.id}/image`
-      : banner.imageUrl
+    imageUrl: `${backendUrl}/api/homepage-banners/${banner.id}/image`
   }));
 };

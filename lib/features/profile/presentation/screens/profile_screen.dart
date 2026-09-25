@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +25,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is! AuthAuthenticated) {
+          Navigator.pushReplacementNamed(context, '/signin');
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is! AuthAuthenticated) {
+            // Redirect to signin if not authenticated
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacementNamed(context, '/signin');
+            });
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final user = state.user;
+          firstName = user.firstName;
+          phone = user.mobile;
+
+          return Scaffold(
       backgroundColor: isDarkMode ? AppDesignSystem.primaryBackground : Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -233,6 +258,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+        },
       ),
     );
   }

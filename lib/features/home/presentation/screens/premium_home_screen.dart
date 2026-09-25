@@ -18,6 +18,8 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../../domain/entities/match.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import 'video_player_screen.dart';
 
 class PremiumHomeScreen extends StatefulWidget {
@@ -348,27 +350,37 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           ),
           
           // Profile Icon
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/profile'),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: AppDesignSystem.primaryGradient,
-                border: Border.all(
-                  color: AppDesignSystem.gold.withValues(alpha: 0.7),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppDesignSystem.primaryPurple.withValues(alpha: 0.5),
-                    blurRadius: 10,
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              return GestureDetector(
+                onTap: () {
+                  if (authState is AuthAuthenticated) {
+                    Navigator.pushNamed(context, '/profile');
+                  } else {
+                    Navigator.pushNamed(context, '/signin');
+                  }
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppDesignSystem.primaryGradient,
+                    border: Border.all(
+                      color: AppDesignSystem.gold.withValues(alpha: 0.7),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppDesignSystem.primaryPurple.withValues(alpha: 0.5),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Icon(Icons.person, color: AppDesignSystem.getPrimaryText(context), size: 20),
-            ),
+                  child: Icon(Icons.person, color: AppDesignSystem.getPrimaryText(context), size: 20),
+                ),
+              );
+            },
           ),
         ],
       ),

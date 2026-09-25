@@ -20,7 +20,7 @@ class PremiumDrawer extends StatelessWidget {
     
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        final User? user = authState is AuthAuthenticated ? authState.user : null;
+                final User? user = authState is AuthAuthenticated ? authState.user : null;
         
         return Drawer(
           backgroundColor: isDarkMode ? AppDesignSystem.cardBackground : Colors.white,
@@ -163,7 +163,7 @@ class PremiumDrawer extends StatelessWidget {
                         text: 'Login',
                         onPressed: () {
                           Navigator.pop(context);
-                          Navigator.pushNamed(context, '/login');
+                          Navigator.pushNamed(context, '/signin');
                         },
                         isGold: true,
                       ),

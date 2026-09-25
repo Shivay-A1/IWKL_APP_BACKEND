@@ -45,7 +45,6 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _apiClient.post('/auth/signup', data: {
         'phone': phone,
-        'otp': otp,
         'firstName': firstName,
         'password': password,
       });

@@ -53,7 +53,7 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
         _phoneController.text,
         _passwordController.text,
         _firstNameController.text,
-        _otpController.text,
+        null, // OTP already verified
       ));
     }
   }

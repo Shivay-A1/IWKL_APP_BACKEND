@@ -17,7 +17,6 @@ router.post('/verify-otp', apiLimiter, [
 
 router.post('/signup', apiLimiter, [
   body('phone').trim().notEmpty().withMessage('Phone number is required'),
-  body('otp').trim().notEmpty().withMessage('OTP is required'),
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ], validate, authController.signup);

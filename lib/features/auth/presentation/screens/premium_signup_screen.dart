@@ -291,7 +291,7 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
                           // Sign Up Button
                           PremiumButton(
                             text: state is AuthLoading ? 'Signing Up...' : 'Sign Up',
-                            onPressed: (_otpVerified && state is! AuthLoading) ? _signup : null,
+                            onPressed: (_otpVerified && state is! AuthLoading) ? () => _signup() : null,
                             isGold: true,
                           ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
                             begin: const Offset(0.95, 0.95),

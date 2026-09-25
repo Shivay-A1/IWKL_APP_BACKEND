@@ -195,7 +195,7 @@ class _PremiumSigninScreenState extends State<PremiumSigninScreen> {
                           // Sign In Button
                           PremiumButton(
                             text: state is AuthLoading ? 'Signing In...' : 'Sign In',
-                            onPressed: state is AuthLoading ? null : _signin,
+                            onPressed: state is AuthLoading ? null : () => _signin(),
                             isGold: true,
                           ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
                             begin: const Offset(0.95, 0.95),

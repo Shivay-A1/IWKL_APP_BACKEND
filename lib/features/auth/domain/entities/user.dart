@@ -1,22 +1,22 @@
 class User {
   final String id;
-  final String email;
-  final String name;
-  final String? phone;
+  final String? email;
+  final String firstName;
+  final String mobile;
   final String? avatar;
   final String role;
-  final bool isVerified;
+  final bool isPhoneVerified;
   final String? favoriteTeamId;
   final String? favoritePlayerId;
 
   User({
     required this.id,
-    required this.email,
-    required this.name,
-    this.phone,
+    this.email,
+    required this.firstName,
+    required this.mobile,
     this.avatar,
     required this.role,
-    required this.isVerified,
+    required this.isPhoneVerified,
     this.favoriteTeamId,
     this.favoritePlayerId,
   });
@@ -24,12 +24,12 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as String,
-      email: json['email'] as String,
-      name: json['name'] as String,
-      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      firstName: json['firstName'] as String,
+      mobile: json['mobile'] as String,
       avatar: json['avatar'] as String?,
       role: json['role'] as String,
-      isVerified: json['isVerified'] as bool,
+      isPhoneVerified: json['isPhoneVerified'] as bool,
       favoriteTeamId: json['favoriteTeamId'] as String?,
       favoritePlayerId: json['favoritePlayerId'] as String?,
     );
@@ -39,11 +39,11 @@ class User {
     return {
       'id': id,
       'email': email,
-      'name': name,
-      'phone': phone,
+      'firstName': firstName,
+      'mobile': mobile,
       'avatar': avatar,
       'role': role,
-      'isVerified': isVerified,
+      'isPhoneVerified': isPhoneVerified,
       'favoriteTeamId': favoriteTeamId,
       'favoritePlayerId': favoritePlayerId,
     };

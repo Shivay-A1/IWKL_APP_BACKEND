@@ -157,33 +157,35 @@ class AppDesignSystem {
     );
   }
 
-  // Legacy text styles (dark mode only for backward compatibility)
+  // Static text styles (for dark mode)
   static const TextStyle largeBoldTitle = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    color: white,
+    color: Colors.white,
     letterSpacing: -0.5,
-  );
-
-  static const TextStyle mediumSectionTitle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    color: white,
-    letterSpacing: -0.3,
   );
 
   static const TextStyle elegantSubtitle = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w500,
-    color: secondaryText,
+    color: darkSecondaryText,
     letterSpacing: -0.2,
   );
 
   static const TextStyle readableBody = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: white,
+    color: Colors.white,
     letterSpacing: 0,
+    height: 1.5,
+  );
+
+  static const TextStyle mediumSectionTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+    letterSpacing: -0.3,
+  );,
     height: 1.5,
   );
 

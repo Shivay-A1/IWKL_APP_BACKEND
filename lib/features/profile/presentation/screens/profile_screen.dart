@@ -29,7 +29,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         title: const Text(
           'Profile',
-          style: AppDesignSystem.appBarTitle,
+          style: TextStyle(
+            color: AppDesignSystem.gold,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppDesignSystem.gold),
@@ -211,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         content: const Text(
           'Are you sure you want to delete your account? This action cannot be undone.',
-          style: TextStyle(color: AppDesignSystem.readableBody),
+          style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(

@@ -243,7 +243,7 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                     // Reset Password Button
                     PremiumButton(
                       text: 'Reset Password',
-                      onPressed: _otpVerified ? _resetPassword : null,
+                      onPressed: _otpVerified ? () => _resetPassword() : null,
                       isGold: true,
                     ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
                       begin: const Offset(0.95, 0.95),

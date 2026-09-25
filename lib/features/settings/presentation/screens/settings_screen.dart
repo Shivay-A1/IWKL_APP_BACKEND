@@ -32,7 +32,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         title: const Text(
           'Settings',
-          style: AppDesignSystem.appBarTitle,
+          style: TextStyle(
+            color: AppDesignSystem.gold,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppDesignSystem.gold),
@@ -174,7 +178,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: AppDesignSystem.sectionTitle,
+      style: const TextStyle(
+        color: AppDesignSystem.gold,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 

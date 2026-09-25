@@ -5,7 +5,7 @@ class User {
   final String mobile;
   final String? avatar;
   final String role;
-  final bool isPhoneVerified;
+  final bool? isPhoneVerified;
   final String? favoriteTeamId;
   final String? favoritePlayerId;
 
@@ -16,7 +16,7 @@ class User {
     required this.mobile,
     this.avatar,
     required this.role,
-    required this.isPhoneVerified,
+    this.isPhoneVerified,
     this.favoriteTeamId,
     this.favoritePlayerId,
   });
@@ -29,7 +29,7 @@ class User {
       mobile: json['mobile'] as String,
       avatar: json['avatar'] as String?,
       role: json['role'] as String,
-      isPhoneVerified: json['isPhoneVerified'] as bool,
+      isPhoneVerified: json['isPhoneVerified'] as bool?,
       favoriteTeamId: json['favoriteTeamId'] as String?,
       favoritePlayerId: json['favoritePlayerId'] as String?,
     );

@@ -19,7 +19,6 @@ export class SMSService {
 
   /**
    * Send OTP to phone number using StartMessaging API
-   * Temporarily disabled - OTP logged to console
    */
   static async sendOTP(phone: string, otp: string): Promise<SendOTPResponse> {
     try {
@@ -30,39 +29,35 @@ export class SMSService {
       // Log OTP for testing
       console.log(`📱 OTP for ${formattedPhone}: ${otp}`);
 
-      // TODO: Uncomment when SMS is needed
-      // const response = await axios.post(
-      //   `${STARTMESSAGING_API_URL}/otp/send`,
-      //   {
-      //     phoneNumber: countryCode,
-      //     templateId: 'YOUR_TEMPLATE_ID',
-      //     variables: {
-      //       otp: otp,
-      //       appName: 'IWKL'
-      //     }
-      //   },
-      //   {
-      //     headers: {
-      //       'X-API-Key': STARTMESSAGING_API_KEY,
-      //       'Content-Type': 'application/json',
-      //     },
-      //   }
-      // );
+      const response = await axios.post(
+        `${STARTMESSAGING_API_URL}/otp/send`,
+        {
+          phoneNumber: countryCode,
+          variables: {
+            otp: otp,
+            appName: 'IWKL'
+          }
+        },
+        {
+          headers: {
+            'X-API-Key': STARTMESSAGING_API_KEY,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      // if (response.data && response.data.success) {
-      //   return {
-      //     success: true,
-      //     message: 'OTP sent successfully',
-      //     requestId: response.data.requestId,
-      //   };
-      // }
-
-      // Temporarily return success without SMS
-      return {
-        success: true,
-        message: 'OTP sent successfully (check console logs)',
-        requestId: 'test-request-id',
-      };
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          message: 'OTP sent successfully',
+          requestId: response.data.requestId,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Failed to send OTP',
+        };
+      }
     } catch (error: any) {
       console.error('SMS sending error:', error);
       // If SMS fails, log it but return success for testing

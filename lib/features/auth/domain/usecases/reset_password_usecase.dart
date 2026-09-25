@@ -8,18 +8,18 @@ class ResetPasswordUseCase {
   ResetPasswordUseCase(this.repository);
 
   Future<Either<Failure, void>> call(ResetPasswordParams params) {
-    return repository.resetPassword(params.email, params.password, params.otp);
+    return repository.resetPassword(params.phone, params.newPassword, params.otp);
   }
 }
 
 class ResetPasswordParams {
-  final String email;
-  final String password;
+  final String phone;
+  final String newPassword;
   final String otp;
 
   ResetPasswordParams({
-    required this.email,
-    required this.password,
+    required this.phone,
+    required this.newPassword,
     required this.otp,
   });
 }

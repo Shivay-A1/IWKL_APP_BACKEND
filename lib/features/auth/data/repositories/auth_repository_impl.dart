@@ -14,10 +14,10 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._apiClient, this._preferences);
 
   @override
-  Future<Either<Failure, User>> login(String email, String password) async {
+  Future<Either<Failure, User>> login(String phone, String password) async {
     try {
-      final response = await _apiClient.post('/auth/login', data: {
-        'mobile': email, // Changed from 'email' to 'mobile' to match backend expectation
+      final response = await _apiClient.post('/auth/signin', data: {
+        'phone': phone,
         'password': password,
       });
 
@@ -25,11 +25,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final user = User.fromJson(response.data['user']);
         await _preferences.setString(
           AppConstants.accessTokenKey,
-          response.data['accessToken'],
-        );
-        await _preferences.setString(
-          AppConstants.refreshTokenKey,
-          response.data['refreshToken'],
+          response.data['token'],
         );
         await _preferences.setString(
           AppConstants.userDataKey,
@@ -45,24 +41,24 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> register(String email, String password, String name, String? phone) async {
+  Future<Either<Failure, User>> register(String phone, String password, String firstName, String? otp) async {
     try {
-      final response = await _apiClient.post('/auth/register', data: {
-        'name': name,
-        'mobile': phone, // Changed from 'phone' to 'mobile' to match backend expectation
+      final response = await _apiClient.post('/auth/signup', data: {
+        'phone': phone,
+        'otp': otp,
+        'firstName': firstName,
         'password': password,
-        'mobileVerified': false, // Add mobileVerified field
       });
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final user = User.fromJson(response.data['user']);
         await _preferences.setString(
           AppConstants.accessTokenKey,
-          response.data['accessToken'],
+          response.data['token'],
         );
         await _preferences.setString(
-          AppConstants.refreshTokenKey,
-          response.data['refreshToken'],
+          AppConstants.userDataKey,
+          response.data['user'].toString(),
         );
         return Right(user);
       } else {
@@ -76,14 +72,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      await _apiClient.post('/auth/logout');
       await _preferences.remove(AppConstants.accessTokenKey);
-      await _preferences.remove(AppConstants.refreshTokenKey);
       await _preferences.remove(AppConstants.userDataKey);
       return const Right(null);
     } catch (e) {
       await _preferences.remove(AppConstants.accessTokenKey);
-      await _preferences.remove(AppConstants.refreshTokenKey);
       await _preferences.remove(AppConstants.userDataKey);
       return const Right(null);
     }
@@ -103,9 +96,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> forgotPassword(String email) async {
+  Future<Either<Failure, void>> forgotPassword(String phone) async {
     try {
-      final response = await _apiClient.post('/auth/forgot-password', data: {'email': email});
+      final response = await _apiClient.post('/auth/forgot-password', data: {'phone': phone});
       if (response.statusCode == 200) {
         return const Right(null);
       }
@@ -116,11 +109,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> resetPassword(String email, String password, String otp) async {
+  Future<Either<Failure, void>> resetPassword(String phone, String newPassword, String otp) async {
     try {
       final response = await _apiClient.post('/auth/reset-password', data: {
-        'email': email,
-        'password': password,
+        'phone': phone,
+        'newPassword': newPassword,
         'otp': otp,
       });
       if (response.statusCode == 200) {
@@ -133,10 +126,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> verifyOtp(String email, String otp) async {
+  Future<Either<Failure, void>> verifyOtp(String phone, String otp) async {
     try {
       final response = await _apiClient.post('/auth/verify-otp', data: {
-        'email': email,
+        'phone': phone,
         'otp': otp,
       });
       if (response.statusCode == 200) {
@@ -145,6 +138,19 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(response.data['error'] ?? 'Failed to verify OTP'));
     } catch (e) {
       return Left(AuthFailure('Failed to verify OTP: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendOtp(String phone) async {
+    try {
+      final response = await _apiClient.post('/auth/send-otp', data: {'phone': phone});
+      if (response.statusCode == 200) {
+        return const Right(null);
+      }
+      return Left(AuthFailure(response.data['error'] ?? 'Failed to send OTP'));
+    } catch (e) {
+      return Left(AuthFailure('Failed to send OTP: ${e.toString()}'));
     }
   }
 }

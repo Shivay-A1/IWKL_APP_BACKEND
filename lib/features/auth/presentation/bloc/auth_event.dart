@@ -1,19 +1,19 @@
 abstract class AuthEvent {}
 
 class LoginEvent extends AuthEvent {
-  final String email;
+  final String phone;
   final String password;
 
-  LoginEvent(this.email, this.password);
+  LoginEvent(this.phone, this.password);
 }
 
 class RegisterEvent extends AuthEvent {
-  final String email;
+  final String phone;
   final String password;
-  final String name;
-  final String? phone;
+  final String firstName;
+  final String? otp;
 
-  RegisterEvent(this.email, this.password, this.name, this.phone);
+  RegisterEvent(this.phone, this.password, this.firstName, this.otp);
 }
 
 class LogoutEvent extends AuthEvent {}
@@ -21,24 +21,24 @@ class LogoutEvent extends AuthEvent {}
 class CheckAuthEvent extends AuthEvent {}
 
 class ForgotPasswordEvent extends AuthEvent {
-  final String email;
+  final String phone;
 
-  ForgotPasswordEvent(this.email);
+  ForgotPasswordEvent(this.phone);
 }
 
 class ResetPasswordEvent extends AuthEvent {
-  final String email;
-  final String password;
+  final String phone;
+  final String newPassword;
   final String otp;
 
-  ResetPasswordEvent(this.email, this.password, this.otp);
+  ResetPasswordEvent(this.phone, this.newPassword, this.otp);
 }
 
 class VerifyOtpEvent extends AuthEvent {
-  final String email;
+  final String phone;
   final String otp;
 
-  VerifyOtpEvent(this.email, this.otp);
+  VerifyOtpEvent(this.phone, this.otp);
 }
 
 class PhoneLoginEvent extends AuthEvent {

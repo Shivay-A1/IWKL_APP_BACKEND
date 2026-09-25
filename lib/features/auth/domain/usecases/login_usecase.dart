@@ -9,13 +9,13 @@ class LoginUseCase {
   LoginUseCase(this.repository);
 
   Future<Either<Failure, User>> call(LoginParams params) {
-    return repository.login(params.email, params.password);
+    return repository.login(params.phone, params.password);
   }
 }
 
 class LoginParams {
-  final String email;
+  final String phone;
   final String password;
 
-  LoginParams({required this.email, required this.password});
+  LoginParams({required this.phone, required this.password});
 }

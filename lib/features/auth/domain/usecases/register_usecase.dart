@@ -9,20 +9,20 @@ class RegisterUseCase {
   RegisterUseCase(this.repository);
 
   Future<Either<Failure, User>> call(RegisterParams params) {
-    return repository.register(params.email, params.password, params.name, params.phone);
+    return repository.register(params.phone, params.password, params.firstName, params.otp);
   }
 }
 
 class RegisterParams {
-  final String email;
+  final String phone;
   final String password;
-  final String name;
-  final String? phone;
+  final String firstName;
+  final String? otp;
 
   RegisterParams({
-    required this.email,
+    required this.phone,
     required this.password,
-    required this.name,
-    this.phone,
+    required this.firstName,
+    this.otp,
   });
 }

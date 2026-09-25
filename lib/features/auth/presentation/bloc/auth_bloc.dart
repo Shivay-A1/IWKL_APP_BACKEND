@@ -8,6 +8,7 @@ import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/forgot_password_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/verify_otp_usecase.dart';
+import '../../domain/usecases/send_otp_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -19,6 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ForgotPasswordUseCase _forgotPasswordUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
   final VerifyOtpUseCase _verifyOtpUseCase;
+  final SendOtpUseCase _sendOtpUseCase;
 
   AuthBloc({
     required LoginUseCase loginUseCase,
@@ -28,6 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required ForgotPasswordUseCase forgotPasswordUseCase,
     required ResetPasswordUseCase resetPasswordUseCase,
     required VerifyOtpUseCase verifyOtpUseCase,
+    required SendOtpUseCase sendOtpUseCase,
   })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _logoutUseCase = logoutUseCase,
@@ -35,6 +38,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _forgotPasswordUseCase = forgotPasswordUseCase,
         _resetPasswordUseCase = resetPasswordUseCase,
         _verifyOtpUseCase = verifyOtpUseCase,
+        _sendOtpUseCase = sendOtpUseCase,
         super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
@@ -51,7 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     final result = await _loginUseCase(LoginParams(
-      email: event.email,
+      phone: event.phone,
       password: event.password,
     ));
     result.fold(
@@ -63,10 +67,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     final result = await _registerUseCase(RegisterParams(
-      email: event.email,
-      password: event.password,
-      name: event.name,
       phone: event.phone,
+      password: event.password,
+      firstName: event.firstName,
+      otp: event.otp,
     ));
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
@@ -91,7 +95,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onForgotPassword(ForgotPasswordEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    final result = await _forgotPasswordUseCase(event.email);
+    final result = await _forgotPasswordUseCase(event.phone);
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
       (_) => emit(AuthSuccess('OTP sent successfully')),
@@ -101,8 +105,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onResetPassword(ResetPasswordEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     final result = await _resetPasswordUseCase(ResetPasswordParams(
-      email: event.email,
-      password: event.password,
+      phone: event.phone,
+      newPassword: event.newPassword,
       otp: event.otp,
     ));
     result.fold(
@@ -114,7 +118,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onVerifyOtp(VerifyOtpEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     final result = await _verifyOtpUseCase(VerifyOtpParams(
-      email: event.email,
+      phone: event.phone,
       otp: event.otp,
     ));
     result.fold(
@@ -125,9 +129,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onPhoneLogin(PhoneLoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    // Phone login logic - similar to email login but with phone
     final result = await _loginUseCase(LoginParams(
-      email: event.phone, // Using phone as identifier
+      phone: event.phone,
       password: event.password,
     ));
     result.fold(
@@ -138,18 +141,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSendOTP(SendOTPEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    // Send OTP logic
-    final result = await _forgotPasswordUseCase(event.contact);
+    final result = await _sendOtpUseCase(event.contact);
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
-      (_) => emit(AuthSuccess('OTP sent successfully to ${event.type}')),
+      (_) => emit(AuthSuccess('OTP sent successfully')),
     );
   }
 
   Future<void> _onGoogleLogin(GoogleLoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    // Google login logic - placeholder for now
-    // This would typically integrate with firebase_auth or google_sign_in
     emit(AuthError('Google login not yet implemented'));
   }
 }

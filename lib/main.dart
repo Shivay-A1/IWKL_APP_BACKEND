@@ -26,6 +26,7 @@ import 'features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'features/auth/domain/usecases/reset_password_usecase.dart';
 import 'features/auth/domain/usecases/verify_otp_usecase.dart';
+import 'features/auth/domain/usecases/send_otp_usecase.dart';
 import 'features/home/presentation/screens/premium_home_screen.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/home/presentation/bloc/home_event.dart';
@@ -84,6 +85,7 @@ class IWKLApp extends StatelessWidget {
       forgotPasswordUseCase: ForgotPasswordUseCase(authRepository),
       resetPasswordUseCase: ResetPasswordUseCase(authRepository),
       verifyOtpUseCase: VerifyOtpUseCase(authRepository),
+      sendOtpUseCase: SendOtpUseCase(authRepository),
     );
 
     return MultiProvider(

@@ -8,16 +8,16 @@ class VerifyOtpUseCase {
   VerifyOtpUseCase(this.repository);
 
   Future<Either<Failure, void>> call(VerifyOtpParams params) {
-    return repository.verifyOtp(params.email, params.otp);
+    return repository.verifyOtp(params.phone, params.otp);
   }
 }
 
 class VerifyOtpParams {
-  final String email;
+  final String phone;
   final String otp;
 
   VerifyOtpParams({
-    required this.email,
+    required this.phone,
     required this.otp,
   });
 }

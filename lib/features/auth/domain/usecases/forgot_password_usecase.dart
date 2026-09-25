@@ -7,7 +7,7 @@ class ForgotPasswordUseCase {
 
   ForgotPasswordUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String email) {
-    return repository.forgotPassword(email);
+  Future<Either<Failure, void>> call(String phone) {
+    return repository.forgotPassword(phone);
   }
 }

@@ -31,6 +31,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   late PageController _bannerPageController;
   late Timer _bannerAutoScrollTimer;
   int _unreadNotificationCount = 0;
+  int _bannerCount = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -52,10 +53,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
   void _startBannerAutoScroll() {
     _bannerAutoScrollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_bannerPageController.hasClients) {
+      if (_bannerPageController.hasClients && _bannerCount > 0) {
         final currentPage = _bannerPageController.page?.toInt() ?? 0;
-        final totalPages = 4; // You may want to make this dynamic based on banner count
-        final nextPage = (currentPage + 1) % totalPages;
+        final nextPage = (currentPage + 1) % _bannerCount;
         _bannerPageController.animateToPage(
           nextPage,
           duration: const Duration(milliseconds: 500),
@@ -415,6 +415,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
   Widget _buildBannersSection(List<dynamic> banners) {
     if (banners.isEmpty) return const SizedBox.shrink();
+
+    // Update banner count for auto-scroll
+    _bannerCount = banners.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

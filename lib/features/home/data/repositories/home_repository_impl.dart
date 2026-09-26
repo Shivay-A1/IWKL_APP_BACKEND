@@ -21,14 +21,14 @@ class HomeRepositoryImpl implements HomeRepository {
       final matchesData = matchesResponse.data['data'] as List<dynamic>? ?? [];
       
       // Fetch stories from Railway backend
-      final storiesResponse = await _apiClient.get('/api/stories');
+      final storiesResponse = await _apiClient.get(ApiEndpoints.stories);
       final storiesData = storiesResponse.data as List<dynamic>? ?? [];
       final stories = storiesData
           .map((s) => Story.fromJson(s as Map<String, dynamic>))
           .toList();
       
       // Fetch banners from Railway backend
-      final bannersResponse = await _apiClient.get('/api/homepage-banners');
+      final bannersResponse = await _apiClient.get('/homepage-banners');
       final bannersData = bannersResponse.data as List<dynamic>? ?? [];
       
       // Extract image URLs from banners for slider

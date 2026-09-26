@@ -40,6 +40,10 @@ export const sendOTP = async (req: Request, res: Response, next: NextFunction) =
 
     // Store OTP in database (create or update user)
     if (existingUser) {
+      // Check if user already has a password (already signed up)
+      if (existingUser.password) {
+        return res.status(400).json({ error: 'This phone number is already registered. Please login instead.' });
+      }
       await prisma.user.update({
         where: { id: existingUser.id },
         data: {

@@ -136,7 +136,6 @@ class IWKLApp extends StatelessWidget {
               '/downloads': (context) => const PlaceholderScreen(title: 'Downloads'),
               '/support': (context) => const SupportScreen(),
               '/about': (context) => const PlaceholderScreen(title: 'About'),
-              '/forgot-password': (context) => const PlaceholderScreen(title: 'Forgot Password'),
               '/admin-login': (context) => const AdminLoginScreen(),
               '/admin': (context) => const PremiumAdminDashboardScreen(),
               '/team-profile': (context) {

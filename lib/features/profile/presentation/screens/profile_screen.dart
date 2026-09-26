@@ -6,6 +6,7 @@ import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
 class ProfileScreen extends StatefulWidget {

@@ -125,7 +125,7 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                 child: BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is AuthSuccess) {
-                      if (state.message.contains('OTP sent')) {
+                      if (state.message.contains('OTP sent') || state.message.contains('password reset')) {
                         setState(() {
                           _otpSent = true;
                         });

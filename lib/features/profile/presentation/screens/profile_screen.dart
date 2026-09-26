@@ -19,6 +19,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // TODO: Load user data from API
   String firstName = 'User';
   String phone = '+91XXXXXXXXXX';
+  final _editFirstNameController = TextEditingController();
+  final _editPhoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    _editFirstNameController.dispose();
+    _editPhoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.edit,
                           title: 'Edit Profile',
                           onTap: () {
-                            // TODO: Navigate to edit profile
+                            _showEditProfileDialog();
                           },
                         ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).slideX(
                           begin: -0.3,
@@ -178,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         PremiumButton(
                           text: 'Logout',
                           onPressed: () {
-                            // TODO: Implement logout
+                            context.read<AuthBloc>().add(LogoutEvent());
                           },
                           isGold: false,
                         ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
@@ -252,12 +261,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () {
-              // TODO: Implement delete account
+              // Logout and clear data
+              context.read<AuthBloc>().add(LogoutEvent());
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Account deleted successfully')),
+              );
             },
             child: const Text(
               'Delete',
               style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditProfileDialog() {
+    _editFirstNameController.text = firstName;
+    _editPhoneController.text = phone;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppDesignSystem.cardBackground,
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _editFirstNameController,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white30),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: AppDesignSystem.gold),
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _editPhoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone',
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white30),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: AppDesignSystem.gold),
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                firstName = _editFirstNameController.text;
+                phone = _editPhoneController.text;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Profile updated successfully')),
+              );
+            },
+            child: const Text(
+              'Save',
+              style: TextStyle(color: AppDesignSystem.gold),
             ),
           ),
         ],

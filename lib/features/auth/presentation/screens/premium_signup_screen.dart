@@ -36,26 +36,80 @@ class _PremiumSignupScreenState extends State<PremiumSignupScreen> {
   }
 
   void _sendOTP() {
-    if (_phoneController.text.isNotEmpty) {
-      context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
+    if (_phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter phone number')),
+      );
+      return;
     }
+    if (_phoneController.text.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 10-digit phone number')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
   }
 
   void _verifyOTP() {
-    if (_otpController.text.isNotEmpty) {
-      context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter OTP')),
+      );
+      return;
     }
+    if (_otpController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 6-digit OTP')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
   }
 
   void _signup() {
-    if (_formKey.currentState!.validate() && _otpVerified) {
-      context.read<AuthBloc>().add(RegisterEvent(
-        _phoneController.text,
-        _passwordController.text,
-        _firstNameController.text,
-        null, // OTP already verified
-      ));
+    if (_firstNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your name')),
+      );
+      return;
     }
+    if (_phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter phone number')),
+      );
+      return;
+    }
+    if (_phoneController.text.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 10-digit phone number')),
+      );
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter password')),
+      );
+      return;
+    }
+    if (_passwordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
+    if (!_otpVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please verify OTP first')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(RegisterEvent(
+      _phoneController.text,
+      _passwordController.text,
+      _firstNameController.text,
+      null, // OTP already verified
+    ));
   }
 
   VoidCallback _getSignupCallback(AuthState state) {

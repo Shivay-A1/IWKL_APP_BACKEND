@@ -140,6 +140,11 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       return res.status(404).json({ error: 'User not found. Please send OTP first.' });
     }
 
+    // Check if user already has a password (already signed up)
+    if (user.password) {
+      return res.status(400).json({ error: 'This phone number is already registered. Please login instead.' });
+    }
+
     // Only verify OTP if it's still in the database (not yet verified)
     if (user.phoneOtp && user.phoneOtpExpiry) {
       if (!otp) {
@@ -218,7 +223,7 @@ export const signin = async (req: Request, res: Response, next: NextFunction) =>
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Phone number not registered. Please signup first.' });
     }
 
     // Check if password is set (user completed signup)
@@ -230,7 +235,7 @@ export const signin = async (req: Request, res: Response, next: NextFunction) =>
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Wrong password. Please try again.' });
     }
 
     // Update last login

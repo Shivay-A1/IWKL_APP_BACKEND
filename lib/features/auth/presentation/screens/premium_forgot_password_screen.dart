@@ -34,25 +34,61 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
   }
 
   void _sendOTP() {
-    if (_phoneController.text.isNotEmpty) {
-      context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
+    if (_phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter phone number')),
+      );
+      return;
     }
+    if (_phoneController.text.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 10-digit phone number')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
   }
 
   void _verifyOTP() {
-    if (_otpController.text.isNotEmpty) {
-      context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter OTP')),
+      );
+      return;
     }
+    if (_otpController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 6-digit OTP')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
   }
 
   void _resetPassword() {
-    if (_formKey.currentState!.validate() && _otpVerified) {
-      context.read<AuthBloc>().add(ResetPasswordEvent(
-        _phoneController.text,
-        _newPasswordController.text,
-        _otpController.text,
-      ));
+    if (_newPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter new password')),
+      );
+      return;
     }
+    if (_newPasswordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
+    if (!_otpVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please verify OTP first')),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(ResetPasswordEvent(
+      _phoneController.text,
+      _newPasswordController.text,
+      _otpController.text,
+    ));
   }
 
   VoidCallback _getResetPasswordCallback() {
@@ -117,8 +153,26 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                         Navigator.pop(context);
                       }
                     } else if (state is AuthError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message)),
+                      // Show error as dialog/alert on screen
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: AppDesignSystem.cardBackground,
+                          title: const Text(
+                            'Error',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     }
                   },

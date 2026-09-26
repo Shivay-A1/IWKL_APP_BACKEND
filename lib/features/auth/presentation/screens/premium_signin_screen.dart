@@ -85,8 +85,26 @@ class _PremiumSigninScreenState extends State<PremiumSigninScreen> {
                         arguments: state.user.firstName,
                       );
                     } else if (state is AuthError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message)),
+                      // Show error as dialog/alert on screen
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: AppDesignSystem.cardBackground,
+                          title: const Text(
+                            'Error',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     }
                   },

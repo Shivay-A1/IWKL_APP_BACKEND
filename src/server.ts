@@ -45,15 +45,22 @@ async function runPrismaMigrations() {
     if (databaseUrl) {
       console.log('🗄️ Setting up Railway database with Prisma...');
       
-      // Use Prisma db push with accept-data-loss to recreate tables
-      // This will drop incompatible tables and create proper Prisma schema
-      console.log('🗄️ Running Prisma database migrations with force reset...');
+      // Use Prisma migrate deploy for production (non-destructive)
+      console.log('🗄️ Running Prisma database migrations...');
       const { execSync } = require('child_process');
       try {
-        execSync('npx prisma db push --skip-generate --force-reset', { stdio: 'inherit' });
+        execSync('npx prisma migrate deploy', { stdio: 'inherit' });
         console.log('✅ Prisma migrations completed successfully');
       } catch (prismaError) {
         console.error('⚠️ Prisma migrations failed:', prismaError.message);
+        // Fallback to db push if migrate deploy fails
+        console.log('🗄️ Falling back to db push...');
+        try {
+          execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+          console.log('✅ Prisma db push completed successfully');
+        } catch (pushError) {
+          console.error('⚠️ Prisma db push failed:', pushError.message);
+        }
       }
       
       console.log('🎉 Database setup completed!');

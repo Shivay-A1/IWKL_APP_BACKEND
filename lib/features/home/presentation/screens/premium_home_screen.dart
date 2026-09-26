@@ -128,28 +128,25 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                         children: [
                           const SizedBox(height: AppDesignSystem.mdSpacing),
 
-                          // Stories Section - Only show if available
-                          if (state.stories.isNotEmpty) ...[
-                            _buildStoriesSection(state.stories),
-                            const SizedBox(height: AppDesignSystem.lgSpacing),
-                          ],
-                          
-                          // Banners Section (Below stories)
-                          if (state.banners.isNotEmpty) ...[
-                            _buildBannersSection(state.banners),
-                            const SizedBox(height: AppDesignSystem.lgSpacing),
-                          ],
-                          
+                          // Stories Section - Always show with placeholder if empty
+                          _buildStoriesSection(state.stories),
+                          const SizedBox(height: AppDesignSystem.lgSpacing),
+
+                          // Banners Section (Below stories) - Always show with placeholder if empty
+                          _buildBannersSection(state.banners),
+                          const SizedBox(height: AppDesignSystem.lgSpacing),
+
                           // Hero Banner (Immediately after banners)
                           _buildHeroBanner(state.sliders),
                           const SizedBox(height: AppDesignSystem.lgSpacing),
-                          
-                          // Live Match Card with Real Team Logos and Names from Railway
-                          if (state.liveMatch != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-                              child: _buildLiveMatchCardFromEntity(state.liveMatch!),
-                            ),
+
+                          // Live Match Card - Always show with placeholder if empty
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+                            child: state.liveMatch != null
+                                ? _buildLiveMatchCardFromEntity(state.liveMatch!)
+                                : _buildPlaceholderLiveMatch(),
+                          ),
                           const SizedBox(height: AppDesignSystem.lgSpacing),
                           
                           // Quick Actions with Logo Icons (Horizontal Scroll)
@@ -388,18 +385,24 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildStoriesSection(List<dynamic> stories) {
-    // Only show stories from admin panel, no fallback
-    final displayStories = stories.map((story) {
-      if (story is Map<String, dynamic>) {
-        return story;
-      }
-      // Convert Story entity to map if needed
-      return {
-        'title': (story as dynamic).title ?? 'Story',
-        'imageUrl': (story as dynamic).imageUrl ?? (story as dynamic).thumbnail ?? '',
-      };
-    }).toList();
-    
+    // Show placeholder stories if empty
+    final displayStories = stories.isEmpty
+        ? [
+            {'title': 'Story 1', 'imageUrl': 'assets/stories/story_placeholder_1.png'},
+            {'title': 'Story 2', 'imageUrl': 'assets/stories/story_placeholder_2.png'},
+            {'title': 'Story 3', 'imageUrl': 'assets/stories/story_placeholder_3.png'},
+          ]
+        : stories.map((story) {
+            if (story is Map<String, dynamic>) {
+              return story;
+            }
+            // Convert Story entity to map if needed
+            return {
+              'title': (story as dynamic).title ?? 'Story',
+              'imageUrl': (story as dynamic).imageUrl ?? (story as dynamic).thumbnail ?? '',
+            };
+          }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -441,10 +444,16 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildBannersSection(List<dynamic> banners) {
-    if (banners.isEmpty) return const SizedBox.shrink();
+    // Show placeholder banners if empty
+    final displayBanners = banners.isEmpty
+        ? [
+            {'title': 'Banner 1', 'imageUrl': 'assets/banners/banner_placeholder_1.png'},
+            {'title': 'Banner 2', 'imageUrl': 'assets/banners/banner_placeholder_2.png'},
+          ]
+        : banners;
 
     // Update banner count for auto-scroll
-    _bannerCount = banners.length;
+    _bannerCount = displayBanners.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,9 +476,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           child: PageView.builder(
             controller: _bannerPageController,
             scrollDirection: Axis.horizontal,
-            itemCount: banners.length,
+            itemCount: displayBanners.length,
             itemBuilder: (context, index) {
-              final banner = banners[index];
+              final banner = displayBanners[index];
               final bannerMap = banner is Map<String, dynamic> ? banner : {};
               final imageUrl = bannerMap['imageUrl'] as String? ?? '';
               final imageData = bannerMap['imageData'] as String?;
@@ -3019,5 +3028,246 @@ class _StoryViewerScreenState extends State<_StoryViewerScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildPlaceholderLiveMatch() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF4C085D),
+            const Color(0xFF6F1AB6),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF9333EA).withOpacity(0.3),
+            blurRadius: 30,
+            spreadRadius: 5,
+          ),
+          BoxShadow(
+            color: const Color(0xFF9333EA).withOpacity(0.2),
+            blurRadius: 20,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Background Pattern
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF4C085D).withOpacity(0.9),
+                    const Color(0xFF6F1AB6).withOpacity(0.7),
+                  ],
+                ),
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Live Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFEC4899),
+                              Color(0xFF9333EA),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(25),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEC4899).withOpacity(0.5),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ).animate().scale(duration: 800.ms, curve: Curves.easeInOut).then().scale(duration: 800.ms, curve: Curves.easeInOut),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'LIVE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().shimmer(duration: 2000.ms),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                  // Teams and Score
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Team 1
+                      Column(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFF9333EA).withOpacity(0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(Icons.sports_cricket, size: 35, color: Colors.white70),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Team 1',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Score
+                      Column(
+                        children: [
+                          const Text(
+                            '0 - 0',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: const Text(
+                              'No Live Match',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Team 2
+                      Column(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFF9333EA).withOpacity(0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(Icons.sports_cricket, size: 35, color: Colors.white70),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Team 2',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Watch Live Button
+                  Container(
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF9333EA),
+                          Color(0xFFEC4899),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF9333EA).withOpacity(0.5),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_arrow, color: Color(0xFF13051E)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Watch Live',
+                            style: TextStyle(
+                              color: Color(0xFF13051E),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 600.ms, delay: 200.ms).scale();
   }
 }

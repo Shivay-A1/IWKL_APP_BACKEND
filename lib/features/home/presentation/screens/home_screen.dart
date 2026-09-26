@@ -281,14 +281,14 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stories - Only show if available
-            if (state.stories.isNotEmpty) ...[
-              StoryBar(stories: state.stories),
-              const SizedBox(height: 16),
-            ],
+            // Stories - Always show with placeholder if empty
+            state.stories.isNotEmpty
+                ? StoryBar(stories: state.stories)
+                : _buildPlaceholderStories(),
+            const SizedBox(height: 16),
 
             // Hero Slider - Always show with placeholder if empty
-            state.sliders.isNotEmpty 
+            state.sliders.isNotEmpty
                 ? _buildHeroSlider(state.sliders)
                 : _buildPlaceholderHeroSlider(),
             const SizedBox(height: 24),
@@ -2149,6 +2149,31 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             ),
             child: const Center(
               child: Icon(Icons.business, size: 30, color: Colors.white30),
+            ),
+          ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms);
+        },
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderStories() {
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 70,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: const Center(
+              child: Icon(Icons.person, size: 30, color: Colors.white30),
             ),
           ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms);
         },

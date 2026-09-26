@@ -31,6 +31,12 @@ class HomeRepositoryImpl implements HomeRepository {
       final bannersResponse = await _apiClient.get('/api/homepage-banners');
       final bannersData = bannersResponse.data as List<dynamic>? ?? [];
       
+      // Extract image URLs from banners for slider
+      final sliderImages = bannersData
+          .map((b) => b['imageUrl'] as String? ?? b['image'] as String? ?? '')
+          .where((url) => url.isNotEmpty)
+          .toList();
+      
       // Separate live and upcoming matches
       final liveMatches = matchesData.where((m) => m['status'] == 'LIVE').toList();
       final upcomingMatches = matchesData.where((m) => m['status'] == 'SCHEDULED').toList();
@@ -45,7 +51,7 @@ class HomeRepositoryImpl implements HomeRepository {
       
       return Right({
         'stories': stories,
-        'sliders': <String>[],
+        'sliders': sliderImages,
         'banners': bannersData,
         'liveMatch': liveMatch,
         'upcomingMatches': upcomingMatchEntities,

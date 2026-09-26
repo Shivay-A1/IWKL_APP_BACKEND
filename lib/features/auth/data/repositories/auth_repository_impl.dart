@@ -117,6 +117,13 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Right(null);
       }
       return Left(AuthFailure(response.data['error'] ?? 'Failed to send OTP'));
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Failed to send OTP';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Failed to send OTP: ${e.toString()}'));
     }
@@ -134,6 +141,13 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Right(null);
       }
       return Left(AuthFailure(response.data['error'] ?? 'Failed to reset password'));
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Failed to reset password';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Failed to reset password: ${e.toString()}'));
     }
@@ -150,6 +164,13 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Right(null);
       }
       return Left(AuthFailure(response.data['error'] ?? 'Failed to verify OTP'));
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Failed to verify OTP';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Failed to verify OTP: ${e.toString()}'));
     }
@@ -163,6 +184,13 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Right(null);
       }
       return Left(AuthFailure(response.data['error'] ?? 'Failed to send OTP'));
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Failed to send OTP';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Failed to send OTP: ${e.toString()}'));
     }

@@ -46,7 +46,7 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
       );
       return;
     }
-    context.read<AuthBloc>().add(SendOTPEvent(_phoneController.text, 'phone'));
+    context.read<AuthBloc>().add(ForgotPasswordEvent(_phoneController.text));
   }
 
   void _verifyOTP() {

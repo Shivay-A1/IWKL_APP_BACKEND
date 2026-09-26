@@ -12,9 +12,9 @@ router.post('/', async (req, res) => {
   try {
     console.log('Starting database seed...');
     
-    // Run seed script
+    // Run seed script with correct path for Railway
     const { stdout, stderr } = await execAsync('RUN_SEED=true npx ts-node prisma/seed.ts', {
-      cwd: '/app/backend'
+      cwd: process.cwd()
     });
     
     console.log('Seed output:', stdout);

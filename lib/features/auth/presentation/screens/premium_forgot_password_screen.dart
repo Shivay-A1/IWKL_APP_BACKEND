@@ -22,7 +22,6 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
   final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   bool _otpSent = false;
-  bool _otpVerified = false;
   bool _obscurePassword = true;
 
   @override
@@ -49,22 +48,6 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
     context.read<AuthBloc>().add(ForgotPasswordEvent(_phoneController.text));
   }
 
-  void _verifyOTP() {
-    if (_otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter OTP')),
-      );
-      return;
-    }
-    if (_otpController.text.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid 6-digit OTP')),
-      );
-      return;
-    }
-    context.read<AuthBloc>().add(VerifyOtpEvent(_phoneController.text, _otpController.text));
-  }
-
   void _resetPassword() {
     if (_newPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,9 +61,21 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
       );
       return;
     }
-    if (!_otpVerified) {
+    if (!_otpSent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please verify OTP first')),
+        const SnackBar(content: Text('Please request OTP first')),
+      );
+      return;
+    }
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter OTP')),
+      );
+      return;
+    }
+    if (_otpController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid 6-digit OTP')),
       );
       return;
     }
@@ -128,13 +123,6 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                       if (state.message.contains('OTP sent') || state.message.contains('password reset')) {
                         setState(() {
                           _otpSent = true;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(state.message)),
-                        );
-                      } else if (state.message.contains('verified')) {
-                        setState(() {
-                          _otpVerified = true;
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(state.message)),
@@ -281,21 +269,10 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                               },
                             ),
                             const SizedBox(height: AppDesignSystem.mdSpacing),
-
-                            // Verify OTP Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: PremiumButton(
-                                text: 'Verify OTP',
-                                onPressed: _otpVerified || state is AuthLoading ? () {} : _verifyOTP,
-                                isGold: false,
-                              ),
-                            ),
-                            const SizedBox(height: AppDesignSystem.mdSpacing),
                           ],
 
-                          // New Password Field (show after OTP verified)
-                          if (_otpVerified) ...[
+                          // New Password Field (show after OTP sent)
+                          if (_otpSent) ...[
                             PremiumTextField(
                               label: 'New Password',
                               hintText: 'Enter new password (min 6 characters)',

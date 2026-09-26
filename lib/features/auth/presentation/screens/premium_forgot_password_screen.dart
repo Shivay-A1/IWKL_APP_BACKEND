@@ -91,13 +91,6 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
     ));
   }
 
-  VoidCallback _getResetPasswordCallback() {
-    if (!_otpVerified) {
-      return () {};
-    }
-    return _resetPassword;
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -294,7 +287,7 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                               width: double.infinity,
                               child: PremiumButton(
                                 text: 'Verify OTP',
-                                onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
+                                onPressed: _otpVerified || state is AuthLoading ? () {} : _verifyOTP,
                                 isGold: false,
                               ),
                             ),
@@ -307,19 +300,14 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                               label: 'New Password',
                               hintText: 'Enter new password (min 6 characters)',
                               controller: _newPasswordController,
-                              obscureText: _obscurePassword,
+                              isPassword: true,
                               prefixIcon: Icons.lock,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                  color: AppDesignSystem.gold,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
+                              suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              onSuffixIconPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Password is required';
@@ -337,19 +325,21 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                               width: double.infinity,
                               child: PremiumButton(
                                 text: 'Reset Password',
-                                onPressed: state is AuthLoading ? null : _resetPassword,
+                                onPressed: state is AuthLoading ? () {} : _resetPassword,
                                 isGold: true,
                               ),
                             ),
                           ],
                         ],
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
             ),
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
 }

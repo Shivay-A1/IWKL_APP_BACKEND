@@ -227,13 +227,16 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                               Expanded(
                                 child: PremiumTextField(
                                   label: 'Phone Number',
-                                  hintText: 'Enter your phone',
+                                  hintText: 'Enter 10-digit phone number',
                                   controller: _phoneController,
                                   keyboardType: TextInputType.phone,
                                   prefixIcon: Icons.phone,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Phone number is required';
+                                    }
+                                    if (value.length != 10) {
+                                      return 'Please enter 10-digit phone number';
                                     }
                                     return null;
                                   },
@@ -270,7 +273,7 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                           if (_otpSent) ...[
                             PremiumTextField(
                               label: 'OTP',
-                              hintText: 'Enter 6-digit OTP',
+                              hintText: 'Enter 6-digit OTP sent to your phone',
                               controller: _otpController,
                               keyboardType: TextInputType.number,
                               prefixIcon: Icons.security,
@@ -279,23 +282,22 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                                   return 'OTP is required';
                                 }
                                 if (value.length != 6) {
-                                  return 'OTP must be 6 digits';
+                                  return 'Please enter 6-digit OTP';
                                 }
                                 return null;
                               },
-                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                            ),
                             const SizedBox(height: AppDesignSystem.mdSpacing),
-                            ElevatedButton(
-                              onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppDesignSystem.gold,
-                                minimumSize: const Size(double.infinity, 50),
+
+                            // Verify OTP Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: PremiumButton(
+                                text: 'Verify OTP',
+                                onPressed: _otpVerified || state is AuthLoading ? null : _verifyOTP,
+                                isGold: false,
                               ),
-                              child: Text(
-                                _otpVerified ? 'Verified ✓' : 'Verify OTP',
-                                style: const TextStyle(color: Colors.black),
-                              ),
-                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                            ),
                             const SizedBox(height: AppDesignSystem.mdSpacing),
                           ],
 
@@ -303,16 +305,21 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                           if (_otpVerified) ...[
                             PremiumTextField(
                               label: 'New Password',
-                              hintText: 'Enter new password',
+                              hintText: 'Enter new password (min 6 characters)',
                               controller: _newPasswordController,
-                              isPassword: _obscurePassword,
-                              prefixIcon: Icons.lock_outline,
-                              suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              onSuffixIconPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                              obscureText: _obscurePassword,
+                              prefixIcon: Icons.lock,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  color: AppDesignSystem.gold,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Password is required';
@@ -322,44 +329,27 @@ class _PremiumForgotPasswordScreenState extends State<PremiumForgotPasswordScree
                                 }
                                 return null;
                               },
-                            ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
-                            const SizedBox(height: AppDesignSystem.lgSpacing),
-                          ],
+                            ),
+                            const SizedBox(height: AppDesignSystem.xlSpacing),
 
-                          // Reset Password Button
-                          PremiumButton(
-                            text: 'Reset Password',
-                            onPressed: _getResetPasswordCallback(),
-                            isGold: true,
-                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation).scale(
-                            begin: const Offset(0.95, 0.95),
-                            end: const Offset(1, 1),
-                            curve: AppDesignSystem.elasticCurve,
-                          ),
-                          const SizedBox(height: AppDesignSystem.lgSpacing),
-
-                          // Back to Sign In Link
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Back to Sign In',
-                              style: TextStyle(
-                                color: AppDesignSystem.gold,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            // Reset Password Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: PremiumButton(
+                                text: 'Reset Password',
+                                onPressed: state is AuthLoading ? null : _resetPassword,
+                                isGold: true,
                               ),
                             ),
-                          ).animate().fadeIn(duration: AppDesignSystem.normalAnimation),
+                          ],
                         ],
-                      );
-                    },
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
+        );
+      }
 }

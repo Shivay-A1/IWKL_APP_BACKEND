@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/api_client.dart';
@@ -35,6 +36,13 @@ class AuthRepositoryImpl implements AuthRepository {
       } else {
         return Left(AuthFailure(response.data['error'] ?? 'Login failed'));
       }
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Login failed';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Login failed: ${e.toString()}'));
     }
@@ -63,6 +71,13 @@ class AuthRepositoryImpl implements AuthRepository {
       } else {
         return Left(AuthFailure(response.data['error'] ?? 'Registration failed'));
       }
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data != null) {
+        // Extract error message from backend response
+        final errorMessage = e.response!.data['error'] ?? 'Registration failed';
+        return Left(AuthFailure(errorMessage));
+      }
+      return Left(AuthFailure('Network error. Please check your connection.'));
     } catch (e) {
       return Left(AuthFailure('Registration failed: ${e.toString()}'));
     }

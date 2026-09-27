@@ -89,4 +89,94 @@ router.post('/admin', async (req, res) => {
   }
 });
 
+// POST /api/seed/teams - Create sample teams
+router.post('/teams', async (req, res) => {
+  try {
+    console.log('Creating sample teams...');
+    
+    // First create a season if it doesn't exist
+    const season = await prisma.season.upsert({
+      where: { name: 'IWKL 2026' },
+      update: {},
+      create: {
+        name: 'IWKL 2026',
+        year: 2026,
+        startDate: new Date('2026-07-01'),
+        endDate: new Date('2026-12-31'),
+        isActive: true,
+        isCompleted: false,
+        description: 'Indian Women Kabaddi League 2026 Season',
+      },
+    });
+    
+    console.log('Season processed:', season.name);
+    
+    // Create 10 Official Teams
+    const teamsData = [
+      { name: 'Ayodhya Shakti', shortName: 'AYO', city: 'Ayodhya', logo: '/team-logos/Ayodhya_shakti.jpeg' },
+      { name: 'Delhi Warriors', shortName: 'DEL', city: 'Delhi', logo: '/team-logos/Delhi_warriors.jpeg' },
+      { name: 'Garvi Gujarat', shortName: 'GGU', city: 'Gujarat', logo: '/team-logos/Garvi_Gujarat.jpeg' },
+      { name: 'Haryanvi Fighters', shortName: 'HAR', city: 'Haryana', logo: '/team-logos/Haryanvi_fighters.jpeg' },
+      { name: 'Kashmiri Queens', shortName: 'KAS', city: 'Kashmir', logo: '/team-logos/Kashmiri_Queens.jpeg' },
+      { name: 'Kolkata Rangers', shortName: 'KOL', city: 'Kolkata', logo: '/team-logos/Kolkata_rengers.jpeg' },
+      { name: 'Mumbai Strikers', shortName: 'MUM', city: 'Mumbai', logo: '/team-logos/mumbai_strkerrs.jpeg' },
+      { name: 'Namma Bengaluru', shortName: 'BEN', city: 'Bengaluru', logo: '/team-logos/Namma_Bengaluru.jpeg' },
+      { name: 'Odisha Kalingas', shortName: 'OKL', city: 'Odisha', logo: '/teams/odisha-kalingas-logo.jpeg' },
+      { name: 'Punjab Wings', shortName: 'PUN', city: 'Punjab', logo: '/team-logos/Punjab_wiings.jpeg' },
+    ];
+    
+    const createdTeams = [];
+    for (const teamData of teamsData) {
+      const existingTeam = await prisma.team.findUnique({
+        where: { 
+          name_seasonId: {
+            name: teamData.name,
+            seasonId: season.id,
+          }
+        }
+      });
+      
+      if (!existingTeam) {
+        const team = await prisma.team.create({
+          data: {
+            name: teamData.name,
+            shortName: teamData.shortName,
+            seasonId: season.id,
+            logo: teamData.logo,
+            city: teamData.city,
+            jerseyColor: '#FF0000',
+            foundedYear: 2024,
+            coach: 'TBA',
+            description: `${teamData.name} - Indian Women Kabaddi League Team`,
+            socialMedia: {
+              twitter: `https://twitter.com/${teamData.shortName.toLowerCase()}kabaddi`,
+              instagram: `https://instagram.com/${teamData.shortName.toLowerCase()}kabaddi`,
+              facebook: `https://facebook.com/${teamData.shortName.toLowerCase()}kabaddi`,
+            },
+            isActive: true,
+          },
+        });
+        createdTeams.push(team);
+        console.log('Created team:', team.name);
+      } else {
+        createdTeams.push(existingTeam);
+        console.log('Team already exists:', existingTeam.name);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Teams created successfully',
+      teams: createdTeams.map(t => ({ id: t.id, name: t.name, shortName: t.shortName, logo: t.logo }))
+    });
+  } catch (error: any) {
+    console.error('Teams creation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create teams',
+      error: error.message
+    });
+  }
+});
+
 export default router;

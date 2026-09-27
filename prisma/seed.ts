@@ -23,10 +23,12 @@ async function main() {
     admin = await prisma.user.create({
       data: {
         email: 'admin@iwkl.com',
-        name: 'Super Admin',
+        firstName: 'Super Admin',
+        mobile: '9876543210',
         password: hashedPassword,
         role: 'SUPER_ADMIN',
         isVerified: true,
+        isPhoneVerified: true,
       },
     })
     console.log('Created admin user:', admin.email)

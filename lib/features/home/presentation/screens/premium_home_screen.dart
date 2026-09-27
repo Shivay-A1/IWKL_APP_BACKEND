@@ -651,23 +651,15 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildLiveMatchCardFromEntity(Match match) {
-    final backendUrl = 'https://iwklappbackend-production.up.railway.app';
-    
-    // Convert relative logo paths to full backend URLs
-    final team1Logo = match.homeTeamLogo != null 
-        ? (match.homeTeamLogo!.startsWith('http') 
-            ? match.homeTeamLogo! 
-            : '$backendUrl${match.homeTeamLogo}')
-        : '';
-    final team2Logo = match.awayTeamLogo != null 
-        ? (match.awayTeamLogo!.startsWith('http') 
-            ? match.awayTeamLogo! 
-            : '$backendUrl${match.awayTeamLogo}')
-        : '';
+    // Use local assets for team logos
+    final team1Name = match.homeTeamName ?? match.team1;
+    final team2Name = match.awayTeamName ?? match.team2;
+    final team1Logo = AppConstants.teamLogos[team1Name] ?? '';
+    final team2Logo = AppConstants.teamLogos[team2Name] ?? '';
     
     return PremiumLiveMatchCard(
-      team1Name: match.homeTeamName ?? match.team1,
-      team2Name: match.awayTeamName ?? match.team2,
+      team1Name: team1Name,
+      team2Name: team2Name,
       team1Logo: team1Logo,
       team2Logo: team2Logo,
       team1Score: match.homeScore,

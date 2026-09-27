@@ -651,11 +651,25 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildLiveMatchCardFromEntity(Match match) {
+    final backendUrl = 'https://iwklappbackend-production.up.railway.app';
+    
+    // Convert relative logo paths to full backend URLs
+    final team1Logo = match.homeTeamLogo != null 
+        ? (match.homeTeamLogo!.startsWith('http') 
+            ? match.homeTeamLogo! 
+            : '$backendUrl${match.homeTeamLogo}')
+        : '';
+    final team2Logo = match.awayTeamLogo != null 
+        ? (match.awayTeamLogo!.startsWith('http') 
+            ? match.awayTeamLogo! 
+            : '$backendUrl${match.awayTeamLogo}')
+        : '';
+    
     return PremiumLiveMatchCard(
       team1Name: match.homeTeamName ?? match.team1,
       team2Name: match.awayTeamName ?? match.team2,
-      team1Logo: match.homeTeamLogo ?? match.team1Logo ?? '',
-      team2Logo: match.awayTeamLogo ?? match.team2Logo ?? '',
+      team1Logo: team1Logo,
+      team2Logo: team2Logo,
       team1Score: match.homeScore,
       team2Score: match.awayScore,
       venue: match.venue,
@@ -2869,166 +2883,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
       ),
     );
   }
-}
-
-class _StoryViewerScreen extends StatefulWidget {
-  final List<dynamic> stories;
-  final int initialIndex;
-
-  const _StoryViewerScreen({
-    required this.stories,
-    required this.initialIndex,
-  });
-
-  @override
-  State<_StoryViewerScreen> createState() => _StoryViewerScreenState();
-}
-
-class _StoryViewerScreenState extends State<_StoryViewerScreen> {
-  late PageController _pageController;
-  int _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() => _currentIndex = index);
-            },
-            scrollDirection: Axis.horizontal,
-            itemCount: widget.stories.length,
-            itemBuilder: (context, index) {
-              final story = widget.stories[index];
-              final imageUrl = story['imageUrl'] ?? story['image'] ?? story['mediaUrl'] ?? '';
-              return GestureDetector(
-                onHorizontalDragEnd: (details) {
-                  if (details.primaryVelocity != null) {
-                    if (details.primaryVelocity! > 0) {
-                      // Swipe right - go to previous
-                      if (_currentIndex > 0) {
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    } else {
-                      // Swipe left - go to next
-                      if (_currentIndex < widget.stories.length - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    }
-                  }
-                },
-                child: Container(
-                  color: Colors.black,
-                  child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppDesignSystem.cardBackground,
-                              child: const Center(
-                                child: Icon(
-                                  Icons.image,
-                                  size: 80,
-                                  color: AppDesignSystem.secondaryText,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: AppDesignSystem.cardBackground,
-                          child: const Center(
-                            child: Icon(
-                              Icons.image,
-                              size: 80,
-                              color: AppDesignSystem.secondaryText,
-                            ),
-                          ),
-                        ),
-                ),
-              );
-            },
-          ),
-          Positioned(
-            top: 50,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-              child: Row(
-                children: List.generate(
-                  widget.stories.length,
-                  (index) => Expanded(
-                    child: Container(
-                      margin: EdgeInsets.only(right: index < widget.stories.length - 1 ? 4 : 0),
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: index <= _currentIndex 
-                            ? Colors.white 
-                            : Colors.white.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 50,
-            right: 16,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Positioned(
-            bottom: 50,
-            left: 16,
-            right: 16,
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.stories[_currentIndex]['title'] ?? 'Story',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPlaceholderLiveMatch() {
     return Container(
@@ -3270,4 +3124,165 @@ class _StoryViewerScreenState extends State<_StoryViewerScreen> {
       ),
     ).animate().fadeIn(duration: 600.ms, delay: 200.ms).scale();
   }
+}
+
+class _StoryViewerScreen extends StatefulWidget {
+  final List<dynamic> stories;
+  final int initialIndex;
+
+  const _StoryViewerScreen({
+    required this.stories,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_StoryViewerScreen> createState() => _StoryViewerScreenState();
+}
+
+class _StoryViewerScreenState extends State<_StoryViewerScreen> {
+  late PageController _pageController;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() => _currentIndex = index);
+            },
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.stories.length,
+            itemBuilder: (context, index) {
+              final story = widget.stories[index];
+              final imageUrl = story['imageUrl'] ?? story['image'] ?? story['mediaUrl'] ?? '';
+              return GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity != null) {
+                    if (details.primaryVelocity! > 0) {
+                      // Swipe right - go to previous
+                      if (_currentIndex > 0) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    } else {
+                      // Swipe left - go to next
+                      if (_currentIndex < widget.stories.length - 1) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    }
+                  }
+                },
+                child: Container(
+                  color: Colors.black,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppDesignSystem.cardBackground,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image,
+                                  size: 80,
+                                  color: AppDesignSystem.secondaryText,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: AppDesignSystem.cardBackground,
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 80,
+                              color: AppDesignSystem.secondaryText,
+                            ),
+                          ),
+                        ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: 50,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+              child: Row(
+                children: List.generate(
+                  widget.stories.length,
+                  (index) => Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(right: index < widget.stories.length - 1 ? 4 : 0),
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: index <= _currentIndex 
+                            ? Colors.white 
+                            : Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          Positioned(
+            bottom: 50,
+            left: 16,
+            right: 16,
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.stories[_currentIndex]['title'] ?? 'Story',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

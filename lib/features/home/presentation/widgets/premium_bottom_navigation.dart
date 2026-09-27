@@ -15,8 +15,8 @@ class PremiumBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         gradient: AppDesignSystem.cardGradient,
         borderRadius: BorderRadius.circular(30),
@@ -27,7 +27,7 @@ class PremiumBottomNavigation extends StatelessWidget {
         boxShadow: AppDesignSystem.premiumShadow,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildNavItem(
             icon: Icons.home,

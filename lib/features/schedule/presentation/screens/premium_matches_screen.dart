@@ -217,8 +217,11 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
   Widget _buildMatchCardFromApi(dynamic match, bool isLive, [bool isCompleted = false]) {
     final homeTeam = match['homeTeam']?['name'] ?? match['homeTeamName'] ?? 'Home Team';
     final awayTeam = match['awayTeam']?['name'] ?? match['awayTeamName'] ?? 'Away Team';
-    final homeTeamLogo = match['homeTeam']?['logo'] ?? match['homeTeam']?['logoUrl'] ?? '';
-    final awayTeamLogo = match['awayTeam']?['logo'] ?? match['awayTeam']?['logoUrl'] ?? '';
+    
+    // Use local assets for team logos
+    final homeTeamLogo = AppConstants.teamLogos[homeTeam] ?? '';
+    final awayTeamLogo = AppConstants.teamLogos[awayTeam] ?? '';
+    
     final homeScore = match['homeScore']?.toString() ?? '-';
     final awayScore = match['awayScore']?.toString() ?? '-';
     final venue = match['venue'] ?? 'Unknown Venue';
@@ -349,7 +352,7 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
                         ),
                         child: team1Logo.isNotEmpty
                             ? ClipOval(
-                                child: Image.network(
+                                child: Image.asset(
                                   team1Logo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
@@ -457,7 +460,7 @@ class _PremiumMatchesScreenState extends State<PremiumMatchesScreen> with Single
                         ),
                         child: team2Logo.isNotEmpty
                             ? ClipOval(
-                                child: Image.network(
+                                child: Image.asset(
                                   team2Logo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {

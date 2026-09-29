@@ -480,8 +480,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             itemBuilder: (context, index) {
               final banner = displayBanners[index];
               final bannerMap = banner is Map<String, dynamic> ? banner : {};
-              final imageUrl = bannerMap['imageUrl'] as String? ?? '';
+              var imageUrl = bannerMap['imageUrl'] as String? ?? '';
               final imageData = bannerMap['imageData'] as String?;
+
+              // Convert relative banner URLs to full backend URLs
+              if (imageUrl.startsWith('/uploads/')) {
+                imageUrl = 'https://iwklappbackend-production.up.railway.app$imageUrl';
+              }
 
               // Use base64 data if available, otherwise use URL
               final imageProvider = imageData != null && imageData.isNotEmpty

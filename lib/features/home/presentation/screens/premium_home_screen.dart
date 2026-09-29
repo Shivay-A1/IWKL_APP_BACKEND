@@ -2164,7 +2164,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   Widget _buildGalleryPreview(List<dynamic> gallery) {
     // Get gallery from parameter or use empty list
     final galleryImages = gallery.isNotEmpty
-        ? (gallery as List).map((item) => item['mediaUrl'] as String).toList()
+        ? (gallery as List).map((item) {
+            String mediaUrl = item['mediaUrl'] as String;
+            // Convert relative path to full URL
+            if (mediaUrl.startsWith('/uploads/')) {
+              mediaUrl = 'https://iwklappbackend-production.up.railway.app$mediaUrl';
+            }
+            return mediaUrl;
+          }).toList()
         : <String>[];
     
     if (galleryImages.isEmpty) {

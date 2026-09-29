@@ -33,7 +33,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
         if (data['success'] == true && data['data'] != null) {
           setState(() {
             _galleryImages = (data['data'] as List)
-                .map((item) => item['mediaUrl'] as String)
+                .map((item) {
+                  String mediaUrl = item['mediaUrl'] as String;
+                  // Convert relative path to full URL
+                  if (mediaUrl.startsWith('/uploads/')) {
+                    mediaUrl = 'https://iwklappbackend-production.up.railway.app$mediaUrl';
+                  }
+                  return mediaUrl;
+                })
                 .toList();
             _isLoading = false;
           });

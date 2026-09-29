@@ -1,11 +1,29 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../admin/data/models/admin_fan_club_model.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class FanClubService {
   static const String _fanClubMembersKey = 'fan_club_members';
+  static const String _baseUrl = AppConstants.apiBaseUrl;
   
   static Future<List<AdminFanClubModel>> getAllMembers() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/fan-club'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return (data['data'] as List)
+              .map((json) => AdminFanClubModel.fromJson(json))
+              .toList();
+        }
+      }
+    } catch (e) {
+      print('Error fetching from backend: $e');
+    }
+    
+    // Fallback to local storage
     final prefs = await SharedPreferences.getInstance();
     final membersJson = prefs.getString(_fanClubMembersKey);
     
@@ -22,6 +40,22 @@ class FanClubService {
   }
   
   static Future<bool> addMember(AdminFanClubModel member) async {
+    try {
+      // Try to send to backend first
+      final response = await http.post(
+        Uri.parse('$_baseUrl/fan-club'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(member.toJson()),
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      }
+    } catch (e) {
+      print('Error sending to backend: $e');
+    }
+    
+    // Fallback to local storage
     final prefs = await SharedPreferences.getInstance();
     final members = await getAllMembers();
     
@@ -36,6 +70,16 @@ class FanClubService {
   }
   
   static Future<bool> deleteMember(String memberId) async {
+    try {
+      final response = await http.delete(Uri.parse('$_baseUrl/fan-club/$memberId'));
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+    } catch (e) {
+      print('Error deleting from backend: $e');
+    }
+    
+    // Fallback to local storage
     final prefs = await SharedPreferences.getInstance();
     final members = await getAllMembers();
     

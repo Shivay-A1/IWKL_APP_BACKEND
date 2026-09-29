@@ -7,26 +7,26 @@ export const registerFanClub = async (req: AuthRequest, res: Response, next: any
     // Handle both field names (mobileNumber from admin, mobile from Flutter)
     const { fullName, mobileNumber, mobile, email, city, state, gender, age, favoriteTeamId, supportedTeam, supportedTeamId } = req.body;
     const documentFile = req.file as Express.Multer.File;
-    
+
     // Map Flutter field names to backend field names
     const mobileFinal = mobile || mobileNumber;
     const favoriteTeamIdFinal = supportedTeamId || favoriteTeamId;
-    
+
     let documentSignature: string | undefined;
     if (documentFile) {
       const { uploadToS3, generateS3Key } = await import('../utils');
       const key = generateS3Key('fan-club-documents', documentFile.originalname);
       documentSignature = await uploadToS3(documentFile.buffer, key, documentFile.mimetype);
     }
-    
+
     const registration = await fanClubService.registerFanClub({
       fullName,
       mobileNumber: mobileFinal,
-      email,
+      email: email || undefined,
       city,
       state,
-      gender,
-      age,
+      gender: gender || 'Other',
+      age: age ? parseInt(age) : 18,
       favoriteTeamId: favoriteTeamIdFinal,
       documentSignature,
     });

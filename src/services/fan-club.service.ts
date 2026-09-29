@@ -4,19 +4,29 @@ import { AppError } from '../middleware/error';
 export const registerFanClub = async (data: {
   fullName: string;
   mobileNumber: string;
-  email: string;
+  email?: string;
   city: string;
   state: string;
-  gender: string;
-  age: number;
-  favoriteTeamId: string;
+  gender?: string;
+  age?: number;
+  favoriteTeamId?: string;
   documentSignature?: string;
 }) => {
   if (!prisma) {
     throw new AppError('Database not available', 503);
   }
   return await prisma.fanClubRegistration.create({
-    data,
+    data: {
+      fullName: data.fullName,
+      mobileNumber: data.mobileNumber,
+      email: data.email || null,
+      city: data.city,
+      state: data.state,
+      gender: data.gender || 'Other',
+      age: data.age || 18,
+      favoriteTeamId: data.favoriteTeamId || null,
+      documentSignature: data.documentSignature,
+    },
   });
 };
 

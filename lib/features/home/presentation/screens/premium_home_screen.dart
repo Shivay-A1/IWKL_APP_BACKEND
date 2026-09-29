@@ -2164,7 +2164,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   Widget _buildGalleryPreview(List<dynamic> gallery) {
     // Get gallery from parameter or use empty list
     final galleryImages = gallery.isNotEmpty
-        ? (gallery as List).map((item) => item['imageUrl'] as String).toList()
+        ? (gallery as List).map((item) => item['mediaUrl'] as String).toList()
         : <String>[];
     
     if (galleryImages.isEmpty) {

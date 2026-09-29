@@ -33,7 +33,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         if (data['success'] == true && data['data'] != null) {
           setState(() {
             _galleryImages = (data['data'] as List)
-                .map((item) => item['imageUrl'] as String)
+                .map((item) => item['mediaUrl'] as String)
                 .toList();
             _isLoading = false;
           });

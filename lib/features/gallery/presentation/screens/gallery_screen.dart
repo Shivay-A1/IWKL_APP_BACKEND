@@ -1,18 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class GalleryScreen extends StatelessWidget {
+class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
 
-  static final List<String> _galleryImages = [
-    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400',
-    'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=400',
-    'https://images.unsplash.com/photo-1522778119026-d647f0565c6a?w=400',
-    'https://images.unsplash.com/photo-1596554206586-8b89673e073e?w=400',
-    'https://images.unsplash.com/photo-1552674605-46d536000ef6?w=400',
-    'https://images.unsplash.com/photo-1579952363873-27f3bde9be76?w=400',
-  ];
+  @override
+  State<GalleryScreen> createState() => _GalleryScreenState();
+}
+
+class _GalleryScreenState extends State<GalleryScreen> {
+  List<String> _galleryImages = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGalleryImages();
+  }
+
+  Future<void> _loadGalleryImages() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/gallery'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          setState(() {
+            _galleryImages = (data['data'] as List)
+                .map((item) => item['imageUrl'] as String)
+                .toList();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _galleryImages = [];
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _error = 'Failed to load gallery';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading gallery: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,19 +76,62 @@ class GalleryScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: _galleryImages.length,
-        itemBuilder: (context, index) {
-          return _buildGalleryItem(_galleryImages[index], index);
-        },
-      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF9333EA),
+              ),
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 50, color: Colors.white30),
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadGalleryImages,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF9333EA),
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _galleryImages.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.photo_library, size: 50, color: Colors.white30),
+                          SizedBox(height: 16),
+                          Text(
+                            'No images in gallery',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 1,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: _galleryImages.length,
+                      itemBuilder: (context, index) {
+                        return _buildGalleryItem(_galleryImages[index], index);
+                      },
+                    ),
     );
   }
 

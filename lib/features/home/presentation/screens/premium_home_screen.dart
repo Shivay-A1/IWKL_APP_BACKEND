@@ -2162,11 +2162,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildGalleryPreview() {
-    final galleryImages = [
-      'assets/gallery/gallery_1.png',
-      'assets/gallery/gallery_2.png',
-      'assets/gallery/gallery_3.jpg',
-    ];
+    // Get gallery from state or use empty list
+    final galleryImages = state.gallery.isNotEmpty
+        ? (state.gallery as List).map((item) => item['imageUrl'] as String).toList()
+        : <String>[];
+    
+    if (galleryImages.isEmpty) {
+      return const SizedBox.shrink(); // Hide gallery section if no images
+    }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2205,11 +2208,11 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-            itemCount: galleryImages.length,
+            itemCount: galleryImages.length > 5 ? 5 : galleryImages.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
-                child: _buildGalleryPhoto(index, galleryImages),
+                child: _buildGalleryPhoto(galleryImages[index], index),
               );
             },
           ),
@@ -2218,8 +2221,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     );
   }
 
-  Widget _buildGalleryPhoto(int index, List<String> galleryImages) {
-    
+  Widget _buildGalleryPhoto(String imageUrl, int index) {
     return Container(
       width: 300,
       decoration: BoxDecoration(
@@ -2238,77 +2240,44 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-        child: index < galleryImages.length
-            ? Image.asset(
-                galleryImages[index],
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppDesignSystem.cardBackground,
-                          AppDesignSystem.secondaryCard,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.photo_library,
-                            size: 48,
-                            color: AppDesignSystem.primaryPurple,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Photo ${index + 1}',
-                            style: TextStyle(
-                              color: AppDesignSystem.getPrimaryText(context),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              )
-            : Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppDesignSystem.cardBackground,
-                      AppDesignSystem.secondaryCard,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppDesignSystem.cardBackground,
+                    AppDesignSystem.secondaryCard,
+                  ],
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.photo_library,
-                        size: 48,
-                        color: AppDesignSystem.primaryPurple,
+                borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.photo_library,
+                      size: 48,
+                      color: AppDesignSystem.primaryPurple,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Photo ${index + 1}',
+                      style: TextStyle(
+                        color: AppDesignSystem.getPrimaryText(context),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Photo ${index + 1}',
-                        style: TextStyle(
-                          color: AppDesignSystem.getPrimaryText(context),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            );
+          },
+        ),
       ),
     );
   }

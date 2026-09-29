@@ -388,9 +388,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     // Show placeholder stories if empty
     final displayStories = stories.isEmpty
         ? [
-            {'title': 'Story 1', 'imageUrl': 'assets/stories/story_placeholder_1.png'},
-            {'title': 'Story 2', 'imageUrl': 'assets/stories/story_placeholder_2.png'},
-            {'title': 'Story 3', 'imageUrl': 'assets/stories/story_placeholder_3.png'},
+            {'title': 'Coming Soon', 'imageUrl': ''},
+            {'title': 'Coming Soon', 'imageUrl': ''},
+            {'title': 'Coming Soon', 'imageUrl': ''},
           ]
         : stories.map((story) {
             if (story is Map<String, dynamic>) {
@@ -447,8 +447,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     // Show placeholder banners if empty
     final displayBanners = banners.isEmpty
         ? [
-            {'title': 'Banner 1', 'imageUrl': 'assets/banners/banner_placeholder_1.png'},
-            {'title': 'Banner 2', 'imageUrl': 'assets/banners/banner_placeholder_2.png'},
+            {'title': 'Coming Soon', 'imageUrl': ''},
+            {'title': 'Coming Soon', 'imageUrl': ''},
           ]
         : banners;
 
@@ -651,30 +651,12 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildLiveMatchCardFromEntity(Match match) {
-    final backendUrl = 'https://iwklappbackend-production.up.railway.app';
     final team1Name = match.homeTeamName ?? match.team1;
     final team2Name = match.awayTeamName ?? match.team2;
     
-    // Try backend URL first, fallback to local asset
-    String team1Logo = '';
-    if (match.homeTeamLogo != null && match.homeTeamLogo!.isNotEmpty) {
-      team1Logo = match.homeTeamLogo!.startsWith('http') 
-          ? match.homeTeamLogo! 
-          : '$backendUrl${match.homeTeamLogo}';
-    }
-    if (team1Logo.isEmpty) {
-      team1Logo = AppConstants.teamLogos[team1Name] ?? '';
-    }
-    
-    String team2Logo = '';
-    if (match.awayTeamLogo != null && match.awayTeamLogo!.isNotEmpty) {
-      team2Logo = match.awayTeamLogo!.startsWith('http') 
-          ? match.awayTeamLogo! 
-          : '$backendUrl${match.awayTeamLogo}';
-    }
-    if (team2Logo.isEmpty) {
-      team2Logo = AppConstants.teamLogos[team2Name] ?? '';
-    }
+    // Use only local assets for reliability
+    final team1Logo = AppConstants.teamLogos[team1Name] ?? '';
+    final team2Logo = AppConstants.teamLogos[team2Name] ?? '';
     
     return PremiumLiveMatchCard(
       team1Name: team1Name,

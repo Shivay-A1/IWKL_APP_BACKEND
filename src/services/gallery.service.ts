@@ -37,7 +37,7 @@ export const createGalleryItem = async (data: any, files?: Express.Multer.File[]
       category: data.category,
       album: data.album,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
-      order: data.order || 0,
+      order: parseInt(data.order) || 0,
     },
   });
 

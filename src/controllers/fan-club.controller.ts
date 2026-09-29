@@ -4,8 +4,13 @@ import * as fanClubService from '../services/fan-club.service';
 
 export const registerFanClub = async (req: AuthRequest, res: Response, next: any) => {
   try {
-    const { fullName, mobileNumber, email, city, state, gender, age, favoriteTeamId } = req.body;
+    // Handle both field names (mobileNumber from admin, mobile from Flutter)
+    const { fullName, mobileNumber, mobile, email, city, state, gender, age, favoriteTeamId, supportedTeam, supportedTeamId } = req.body;
     const documentFile = req.file as Express.Multer.File;
+    
+    // Map Flutter field names to backend field names
+    const mobileFinal = mobile || mobileNumber;
+    const favoriteTeamIdFinal = supportedTeamId || favoriteTeamId;
     
     let documentSignature: string | undefined;
     if (documentFile) {
@@ -16,13 +21,13 @@ export const registerFanClub = async (req: AuthRequest, res: Response, next: any
     
     const registration = await fanClubService.registerFanClub({
       fullName,
-      mobileNumber,
+      mobileNumber: mobileFinal,
       email,
       city,
       state,
       gender,
       age,
-      favoriteTeamId,
+      favoriteTeamId: favoriteTeamIdFinal,
       documentSignature,
     });
     res.status(201).json(registration);
@@ -57,6 +62,16 @@ export const exportRegistrations = async (_req: AuthRequest, res: Response, next
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=fan-club-registrations.csv');
     res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteRegistration = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const { id } = req.params;
+    await fanClubService.deleteRegistration(id);
+    res.json({ message: 'Registration deleted successfully' });
   } catch (error) {
     next(error);
   }

@@ -16,7 +16,18 @@ router.post('/register', upload.single('documentSignature'), [
   body('favoriteTeamId').trim().notEmpty().withMessage('Favorite team is required'),
 ], validate, fanClubController.registerFanClub);
 
+// Add simple fan-club registration endpoint for Flutter app
+router.post('/', [
+  body('fullName').trim().notEmpty().withMessage('Full name is required'),
+  body('mobile').trim().notEmpty().withMessage('Mobile number is required'),
+  body('email').optional().isEmail().withMessage('Valid email is required'),
+  body('state').trim().notEmpty().withMessage('State is required'),
+  body('city').trim().notEmpty().withMessage('City is required'),
+  body('supportedTeam').trim().notEmpty().withMessage('Supported team is required'),
+], validate, fanClubController.registerFanClub);
+
 router.get('/', fanClubController.getAllRegistrations);
 router.get('/export/csv', fanClubController.exportRegistrations);
+router.delete('/:id', fanClubController.deleteRegistration);
 
 export default router;

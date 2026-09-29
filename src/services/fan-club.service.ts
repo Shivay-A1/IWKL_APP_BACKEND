@@ -107,3 +107,21 @@ export const exportRegistrations = async () => {
   const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
   return csv;
 };
+
+export const deleteRegistration = async (id: string) => {
+  if (!prisma) {
+    throw new AppError('Database not available', 503);
+  }
+  
+  const registration = await prisma.fanClubRegistration.findUnique({
+    where: { id },
+  });
+  
+  if (!registration) {
+    throw new AppError('Registration not found', 404);
+  }
+  
+  return await prisma.fanClubRegistration.delete({
+    where: { id },
+  });
+};

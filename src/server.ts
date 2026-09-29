@@ -153,7 +153,8 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow all origins in production for Railway deployment
+    // Allow all origins in production and development
+    // This allows Railway deployment and local development
     callback(null, true);
   },
   credentials: true,
@@ -164,6 +165,14 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 204,
 }));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.status(204).send();
+});
 
 // Serve static files from uploads directory
 // Ensure uploads directories exist

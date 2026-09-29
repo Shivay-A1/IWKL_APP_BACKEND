@@ -1048,6 +1048,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildUpcomingMatchCardFromEntity(Match match) {
+    final team1Name = match.homeTeamName ?? match.team1;
+    final team2Name = match.awayTeamName ?? match.team2;
+    
+    // Use local assets for team logos
+    final team1Logo = AppConstants.teamLogos[team1Name] ?? '';
+    final team2Logo = AppConstants.teamLogos[team2Name] ?? '';
+    
     return Container(
       width: 320,
       height: 200,
@@ -1130,9 +1137,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           ),
                         ),
                         child: ClipOval(
-                          child: match.homeTeamLogo != null && match.homeTeamLogo!.isNotEmpty
-                              ? Image.network(
-                                  match.homeTeamLogo!,
+                          child: team1Logo.isNotEmpty
+                              ? Image.asset(
+                                  team1Logo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Icon(Icons.sports_kabaddi, color: AppDesignSystem.getPrimaryText(context), size: 30);
@@ -1143,7 +1150,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        match.homeTeamName ?? match.team1,
+                        team1Name,
                         style: TextStyle(
                           color: AppDesignSystem.getPrimaryText(context),
                           fontSize: 14,
@@ -1182,20 +1189,20 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           ),
                         ),
                         child: ClipOval(
-                          child: match.awayTeamLogo != null && match.awayTeamLogo!.isNotEmpty
-                              ? Image.network(
-                                  match.awayTeamLogo!,
+                          child: team2Logo.isNotEmpty
+                              ? Image.asset(
+                                  team2Logo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Icon(Icons.sports_kabaddi, color: AppDesignSystem.getPrimaryText(context), size: 30);
                                   },
                                 )
-                              : Icon(Icons.sports_kabaddi, color: AppDesignSystem.getPrimaryText(context), size: 18),
+                              : Icon(Icons.sports_kabaddi, color: AppDesignSystem.getPrimaryText(context), size: 30),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        match.awayTeamName ?? match.team2,
+                        team2Name,
                         style: TextStyle(
                           color: AppDesignSystem.getPrimaryText(context),
                           fontSize: 14,

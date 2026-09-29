@@ -20,7 +20,7 @@ router.post('/register', upload.single('documentSignature'), [
 router.post('/', [
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
   body('mobile').trim().notEmpty().withMessage('Mobile number is required'),
-  body('email').optional().isEmail().withMessage('Valid email is required'),
+  body('email').optional({ checkFalsy: true }).isEmail().withMessage('Valid email is required'),
   body('state').trim().notEmpty().withMessage('State is required'),
   body('city').trim().notEmpty().withMessage('City is required'),
   body('supportedTeam').trim().notEmpty().withMessage('Supported team is required'),

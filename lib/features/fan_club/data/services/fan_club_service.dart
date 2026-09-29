@@ -13,8 +13,10 @@ class FanClubService {
       final response = await http.get(Uri.parse('$_baseUrl/fan-club'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          return (data['data'] as List)
+        // Handle both response formats: {success: true, data: [...]} and {data: [...]}
+        final membersData = data['data'] ?? data;
+        if (membersData is List) {
+          return membersData
               .map((json) => AdminFanClubModel.fromJson(json))
               .toList();
         }
@@ -45,7 +47,6 @@ class FanClubService {
       final backendData = {
         'fullName': member.fullName,
         'mobileNumber': member.mobile, // Map mobile to mobileNumber
-        'email': member.email,
         'state': member.state,
         'city': member.city,
         'favoriteTeamId': member.supportedTeamId,
@@ -53,14 +54,19 @@ class FanClubService {
         'gender': 'Other', // Default value since Flutter form doesn't have gender
         'age': 18, // Default value since Flutter form doesn't have age
       };
-      
+
+      // Only include email if it's not empty
+      if (member.email != null && member.email!.trim().isNotEmpty) {
+        backendData['email'] = member.email;
+      }
+
       // Try to send to backend first
       final response = await http.post(
         Uri.parse('$_baseUrl/fan-club'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(backendData),
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         return true;
       }

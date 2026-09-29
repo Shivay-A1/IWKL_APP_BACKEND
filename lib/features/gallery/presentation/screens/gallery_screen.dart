@@ -30,9 +30,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success'] == true && data['data'] != null) {
+        // Handle both response formats: {success: true, data: [...]} and {data: [...]}
+        final galleryData = data['data'] ?? data;
+        if (galleryData is List) {
           setState(() {
-            _galleryImages = (data['data'] as List)
+            _galleryImages = galleryData
                 .map((item) {
                   String mediaUrl = item['mediaUrl'] as String;
                   // Convert relative path to full URL

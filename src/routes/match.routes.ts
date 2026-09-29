@@ -33,6 +33,12 @@ router.put('/:id', [
   body('matchType').optional().trim().notEmpty(),
 ], validate, matchController.updateMatch);
 
+router.patch('/:id', [
+  body('matchDate').optional().isISO8601(),
+  body('stadiumId').optional().notEmpty(),
+  body('matchType').optional().trim().notEmpty(),
+], validate, matchController.updateMatch);
+
 router.delete('/:id', matchController.deleteMatch);
 
 router.post('/:id/duplicate', matchController.duplicateMatch);

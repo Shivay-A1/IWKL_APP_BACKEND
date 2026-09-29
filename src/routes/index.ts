@@ -35,6 +35,7 @@ import appManagementRoutes from './app-management.routes';
 import otpRoutes from './otp.routes';
 import settingsRoutes from './settings.routes';
 import profileRoutes from './profile.routes';
+import fanClubRoutes from './fan-club.routes';
 
 const router = Router();
 
@@ -116,6 +117,7 @@ router.get('/', (req, res) => {
       otp: '/api/otp',
       settings: '/api/settings',
       profile: '/api/profile',
+      fanClub: '/api/fan-club',
     },
   });
 });
@@ -138,7 +140,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/users', userRoutes);
 router.use('/champions', championRoutes);
 router.use('/leadership', leadershipRoutes);
-// router.use('/fan-club', fanClubRoutes); // Disabled - using SQL fallback in server.ts
+router.use('/fan-club', fanClubRoutes);
 router.use('/footer', footerRoutes);
 router.use('/site-settings', siteSettingsRoutes);
 router.use('/unplugged', unpluggedRoutes);

@@ -6,7 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 
 class FanClubService {
   static const String _fanClubMembersKey = 'fan_club_members';
-  static const String _baseUrl = AppConstants.apiBaseUrl;
+  static const String _baseUrl = AppConstants.baseUrl;
   
   static Future<List<AdminFanClubModel>> getAllMembers() async {
     try {
@@ -41,11 +41,24 @@ class FanClubService {
   
   static Future<bool> addMember(AdminFanClubModel member) async {
     try {
+      // Map Flutter model fields to backend field names
+      final backendData = {
+        'fullName': member.fullName,
+        'mobileNumber': member.mobile, // Map mobile to mobileNumber
+        'email': member.email,
+        'state': member.state,
+        'city': member.city,
+        'favoriteTeamId': member.supportedTeamId,
+        'supportedTeam': member.supportedTeam,
+        'gender': 'Other', // Default value since Flutter form doesn't have gender
+        'age': 18, // Default value since Flutter form doesn't have age
+      };
+      
       // Try to send to backend first
       final response = await http.post(
         Uri.parse('$_baseUrl/fan-club'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode(member.toJson()),
+        body: json.encode(backendData),
       );
       
       if (response.statusCode == 201 || response.statusCode == 200) {

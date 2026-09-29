@@ -174,7 +174,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           const SizedBox(height: AppDesignSystem.lgSpacing),
                           
                           // Gallery Preview
-                          _buildGalleryPreview(),
+                          _buildGalleryPreview(state.gallery),
                           const SizedBox(height: AppDesignSystem.lgSpacing),
                           
                           // Fan Club Banner (at the very end)
@@ -2161,10 +2161,10 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     );
   }
 
-  Widget _buildGalleryPreview() {
-    // Get gallery from state or use empty list
-    final galleryImages = state.gallery.isNotEmpty
-        ? (state.gallery as List).map((item) => item['imageUrl'] as String).toList()
+  Widget _buildGalleryPreview(List<dynamic> gallery) {
+    // Get gallery from parameter or use empty list
+    final galleryImages = gallery.isNotEmpty
+        ? (gallery as List).map((item) => item['imageUrl'] as String).toList()
         : <String>[];
     
     if (galleryImages.isEmpty) {

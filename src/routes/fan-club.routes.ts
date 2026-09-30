@@ -23,8 +23,6 @@ router.post('/', [
   body('email').optional({ checkFalsy: true }).isEmail().withMessage('Valid email is required'),
   body('state').trim().notEmpty().withMessage('State is required'),
   body('city').trim().notEmpty().withMessage('City is required'),
-  body('supportedTeamId').optional({ checkFalsy: true }),
-  body('supportedTeam').optional({ checkFalsy: true }),
 ], validate, fanClubController.registerFanClub);
 
 router.get('/', fanClubController.getAllRegistrations);

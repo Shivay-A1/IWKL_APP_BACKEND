@@ -4,6 +4,8 @@ import * as fanClubService from '../services/fan-club.service';
 
 export const registerFanClub = async (req: AuthRequest, res: Response, next: any) => {
   try {
+    console.log('Fan club registration request body:', req.body);
+    
     // Handle both field names (mobileNumber from admin, mobile from Flutter)
     const { fullName, mobileNumber, mobile, email, city, state, gender, age, favoriteTeamId, supportedTeam, supportedTeamId } = req.body;
     const documentFile = req.file as Express.Multer.File;
@@ -11,6 +13,15 @@ export const registerFanClub = async (req: AuthRequest, res: Response, next: any
     // Map Flutter field names to backend field names
     const mobileFinal = mobile || mobileNumber;
     const favoriteTeamIdFinal = supportedTeamId || favoriteTeamId;
+
+    console.log('Processed data:', {
+      fullName,
+      mobileFinal,
+      email,
+      city,
+      state,
+      favoriteTeamIdFinal
+    });
 
     let documentSignature: string | undefined;
     if (documentFile) {
@@ -30,8 +41,11 @@ export const registerFanClub = async (req: AuthRequest, res: Response, next: any
       favoriteTeamId: favoriteTeamIdFinal,
       documentSignature,
     });
+    
+    console.log('Fan club registration successful:', registration.id);
     res.status(201).json(registration);
   } catch (error) {
+    console.error('Fan club registration error:', error);
     next(error);
   }
 };

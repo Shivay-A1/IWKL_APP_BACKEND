@@ -46,19 +46,18 @@ class FanClubService {
       // Map Flutter model fields to backend field names
       final backendData = {
         'fullName': member.fullName,
-        'mobileNumber': member.mobile, // Map mobile to mobileNumber
+        'mobile': member.mobile, // Send mobile field for Flutter endpoint
         'state': member.state,
         'city': member.city,
-        'favoriteTeamId': member.supportedTeamId,
-        'supportedTeam': member.supportedTeam,
-        'gender': 'Other', // Default value since Flutter form doesn't have gender
-        'age': 18, // Default value since Flutter form doesn't have age
+        'supportedTeam': member.supportedTeam, // Send team name instead of ID
       };
 
       // Only include email if it's not empty
       if (member.email != null && member.email!.trim().isNotEmpty) {
         backendData['email'] = member.email;
       }
+
+      print('Sending fan club data to backend: $backendData');
 
       // Try to send to backend first
       final response = await http.post(
@@ -67,11 +66,19 @@ class FanClubService {
         body: json.encode(backendData),
       );
 
+      print('Fan club submission response: ${response.statusCode}');
+      print('Fan club submission body: ${response.body}');
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         return true;
+      } else {
+        print('Fan club submission failed with status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return false;
       }
     } catch (e) {
       print('Error sending to backend: $e');
+      return false;
     }
     
     // Fallback to local storage

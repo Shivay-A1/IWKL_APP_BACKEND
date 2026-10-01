@@ -128,7 +128,7 @@ class _FanClubRegistrationScreenState extends State<FanClubRegistrationScreen> {
         state: _stateController.text.trim(),
         city: _cityController.text.trim(),
         supportedTeam: _selectedTeam!,
-        supportedTeamId: AppConstants.allTeams.indexOf(_selectedTeam!).toString(),
+        supportedTeamId: '', // Don't send team ID - backend will handle it
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -150,7 +150,7 @@ class _FanClubRegistrationScreenState extends State<FanClubRegistrationScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('This mobile number is already registered'),
+            content: Text('Registration failed. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );

@@ -84,6 +84,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           videos: [],
           pointsTable: [],
           sponsors: [],
+          gallery: [],
           unreadCount: 0,
         )),
         (data) => emit(HomeLoaded(
@@ -92,10 +93,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           banners: data['banners'] ?? [],
           liveMatch: data['liveMatch'] as Match?,
           upcomingMatches: data['upcomingMatches'] ?? [],
-          news: data['news'] ?? [],
+          news: (data['news'] as List<dynamic>?)?.cast<News>() ?? [],
           videos: data['videos'] ?? [],
           pointsTable: data['pointsTable'] ?? [],
           sponsors: data['sponsors'] ?? [],
+          gallery: data['gallery'] ?? [],
           unreadCount: data['unreadCount'] ?? 0,
         )),
       );
@@ -110,6 +112,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         videos: [],
         pointsTable: [],
         sponsors: [],
+        gallery: [],
         unreadCount: 0,
       ));
     }

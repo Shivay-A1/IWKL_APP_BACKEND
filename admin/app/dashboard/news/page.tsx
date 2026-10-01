@@ -40,7 +40,9 @@ export default function NewsPage() {
     try {
       const response = await api.get('/news');
       console.log('News response:', response.data);
-      setNews(response.data || []);
+      // Handle both direct array and wrapped response
+      const newsData = response.data?.data || response.data || [];
+      setNews(Array.isArray(newsData) ? newsData : []);
     } catch (error) {
       console.error('Failed to fetch news:', error);
       toast.error('Failed to load news');

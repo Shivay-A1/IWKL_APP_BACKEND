@@ -5,6 +5,7 @@ class News {
   final String? thumbnail;
   final DateTime publishedAt;
   final String? category;
+  final String? link;
 
   News({
     required this.id,
@@ -13,6 +14,7 @@ class News {
     this.thumbnail,
     required this.publishedAt,
     this.category,
+    this.link,
   });
 
   String get date => _formatDate(publishedAt);
@@ -45,6 +47,7 @@ class News {
       thumbnail: json['thumbnail'] as String?,
       publishedAt: DateTime.parse(json['publishedAt'] as String),
       category: json['category'] as String?,
+      link: json['link'] as String?,
     );
   }
 }

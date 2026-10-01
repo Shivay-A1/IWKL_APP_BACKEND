@@ -73,7 +73,12 @@ class _NewsScreenState extends State<NewsScreen> {
 
         List<dynamic> newsList;
         if (data is Map && data.containsKey('data')) {
-          newsList = data['data'];
+          final dataContent = data['data'];
+          if (dataContent is List) {
+            newsList = dataContent;
+          } else {
+            newsList = [];
+          }
         } else if (data is List) {
           newsList = data;
         } else {

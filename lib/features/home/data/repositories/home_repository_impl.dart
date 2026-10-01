@@ -31,6 +31,17 @@ class HomeRepositoryImpl implements HomeRepository {
       final bannersResponse = await _apiClient.get('/homepage-banners');
       final bannersData = bannersResponse.data as List<dynamic>? ?? [];
       
+      // Fetch gallery from Railway backend
+      final galleryResponse = await _apiClient.get('/gallery');
+      final galleryData = galleryResponse.data['data'] as List<dynamic>? ?? [];
+
+      // Fetch news from Railway backend
+      final newsResponse = await _apiClient.get('/news');
+      final newsData = newsResponse.data['data'] as List<dynamic>? ?? [];
+      final news = newsData
+          .map((n) => News.fromJson(n as Map<String, dynamic>))
+          .toList();
+      
       // Extract image URLs from banners for slider
       final sliderImages = bannersData
           .map((b) => b['imageUrl'] as String? ?? b['image'] as String? ?? '')
@@ -55,7 +66,7 @@ class HomeRepositoryImpl implements HomeRepository {
         'banners': bannersData,
         'liveMatch': liveMatch,
         'upcomingMatches': upcomingMatchEntities,
-        'news': <News>[],
+        'news': news,
         'videos': [
           Video(
             id: '1',
@@ -90,6 +101,7 @@ class HomeRepositoryImpl implements HomeRepository {
         ],
         'pointsTable': <Map<String, dynamic>>[],
         'sponsors': <String>[],
+        'gallery': galleryData,
         'unreadCount': 0,
       });
     } catch (e) {

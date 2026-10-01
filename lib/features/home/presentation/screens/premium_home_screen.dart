@@ -18,6 +18,7 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../../domain/entities/match.dart';
+import '../../domain/entities/news.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import 'video_player_screen.dart';
@@ -1991,7 +1992,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
   Widget _buildLatestNews(List<dynamic> news) {
     // Use data from admin panel, fallback to generated news if empty
-    final displayNews = news.isEmpty 
+    final displayNews = news.isEmpty
         ? List.generate(5, (index) => {
             'title': 'News ${index + 1}',
             'imageUrl': '',
@@ -2053,6 +2054,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildNewsCard(dynamic newsItem) {
+    // Handle both Map (fallback) and News entity formats
+    final isNewsEntity = newsItem is News;
+    final title = isNewsEntity ? newsItem.title : (newsItem['title'] ?? '');
+    final imageUrl = isNewsEntity ? newsItem.thumbnail : (newsItem['imageUrl'] ?? '');
+    final category = isNewsEntity ? newsItem.category : (newsItem['category'] ?? 'NEWS');
+    final date = isNewsEntity ? newsItem.date : (newsItem['date'] ?? '');
+
     return Container(
       width: 260,
       decoration: BoxDecoration(
@@ -2087,11 +2095,23 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 Container(
                   height: 120,
                   color: AppDesignSystem.cardBackground,
-                  child: const Icon(
-                    Icons.article,
-                    size: 50,
-                    color: AppDesignSystem.secondaryText,
-                  ),
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.article,
+                              size: 50,
+                              color: AppDesignSystem.secondaryText,
+                            );
+                          },
+                        )
+                      : const Icon(
+                          Icons.article,
+                          size: 50,
+                          color: AppDesignSystem.secondaryText,
+                        ),
                 ),
                 Positioned(
                   top: 8,
@@ -2103,7 +2123,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      newsItem['category'] ?? 'NEWS',
+                      category ?? 'NEWS',
                       style: TextStyle(
                         color: AppDesignSystem.getPrimaryText(context),
                         fontSize: 10,
@@ -2122,7 +2142,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      newsItem['time'] ?? '2h ago',
+                      date,
                       style: TextStyle(
                         color: AppDesignSystem.getPrimaryText(context),
                         fontSize: 10,
@@ -2140,7 +2160,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  newsItem['title'],
+                  title,
                   style: TextStyle(
                     color: AppDesignSystem.getPrimaryText(context),
                     fontSize: 14,
@@ -2151,7 +2171,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  newsItem['date'],
+                  date,
                   style: TextStyle(
                     color: AppDesignSystem.getSecondaryText(context),
                     fontSize: 12,
@@ -2234,61 +2254,108 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildGalleryPhoto(String imageUrl, int index) {
-    return Container(
-      width: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-        border: Border.all(
-          color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+    return GestureDetector(
+      onTap: () {
+        _showFullScreenImage(imageUrl);
+      },
+      child: Container(
+        width: 300,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+          border: Border.all(
+            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+            width: 1.5,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppDesignSystem.cardBackground,
-                    AppDesignSystem.secondaryCard,
-                  ],
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppDesignSystem.cardBackground,
+                      AppDesignSystem.secondaryCard,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
                 ),
-                borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.photo_library,
-                      size: 48,
-                      color: AppDesignSystem.primaryPurple,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Photo ${index + 1}',
-                      style: TextStyle(
-                        color: AppDesignSystem.getPrimaryText(context),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.photo_library,
+                        size: 48,
+                        color: AppDesignSystem.primaryPurple,
                       ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Photo ${index + 1}',
+                        style: TextStyle(
+                          color: AppDesignSystem.getPrimaryText(context),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                color: Colors.black,
+                child: Center(
+                  child: InteractiveViewer(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.error,
+                          color: Colors.white,
+                          size: 50,
+                        );
+                      },
                     ),
-                  ],
+                  ),
                 ),
               ),
-            );
-          },
+            ),
+            Positioned(
+              top: 16,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
         ),
       ),
     );

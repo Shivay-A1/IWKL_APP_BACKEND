@@ -12,7 +12,25 @@ export const registerFanClub = async (req: AuthRequest, res: Response, next: any
 
     // Map Flutter field names to backend field names
     const mobileFinal = mobile || mobileNumber;
-    const favoriteTeamIdFinal = supportedTeamId || favoriteTeamId;
+    let favoriteTeamIdFinal = supportedTeamId || favoriteTeamId;
+
+    // If supportedTeam name is provided instead of ID, look up the team
+    if (supportedTeam && !favoriteTeamIdFinal) {
+      try {
+        const { prisma } = await import('../config');
+        const team = await prisma.team.findFirst({
+          where: {
+            name: supportedTeam
+          }
+        });
+        if (team) {
+          favoriteTeamIdFinal = team.id;
+          console.log('Found team by name:', supportedTeam, '->', team.id);
+        }
+      } catch (error) {
+        console.log('Error looking up team by name:', error);
+      }
+    }
 
     console.log('Processed data:', {
       fullName,

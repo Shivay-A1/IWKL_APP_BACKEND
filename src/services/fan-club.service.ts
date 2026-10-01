@@ -27,13 +27,26 @@ export const registerFanClub = async (data: {
     documentSignature: data.documentSignature,
   };
 
-  // Handle favoriteTeam relation if favoriteTeamId is provided
-  if (data.favoriteTeamId) {
-    createData.favoriteTeam = {
-      connect: {
-        id: data.favoriteTeamId
+  // Handle favoriteTeam relation only if favoriteTeamId is provided and valid
+  // Don't try to connect if it's just an index or invalid ID
+  if (data.favoriteTeamId && data.favoriteTeamId.length > 10) {
+    try {
+      // Check if team exists before connecting
+      const team = await prisma.team.findUnique({
+        where: { id: data.favoriteTeamId }
+      });
+      
+      if (team) {
+        createData.favoriteTeam = {
+          connect: {
+            id: data.favoriteTeamId
+          }
+        };
       }
-    };
+    } catch (error) {
+      // If team doesn't exist, just skip the relation
+      console.log('Team not found, skipping relation:', data.favoriteTeamId);
+    }
   }
 
   return await prisma.fanClubRegistration.create({

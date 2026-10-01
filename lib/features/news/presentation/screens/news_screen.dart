@@ -64,7 +64,7 @@ class _NewsScreenState extends State<NewsScreen> {
   Future<void> _fetchNews() async {
     try {
       final response = await http.get(
-        Uri.parse('https://iwklappbackend-production.up.railway.app/api/news'),
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/news?limit=100'),
       );
 
       if (response.statusCode == 200) {

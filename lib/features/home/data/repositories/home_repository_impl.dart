@@ -37,8 +37,13 @@ class HomeRepositoryImpl implements HomeRepository {
 
       // Fetch news from Railway backend
       final newsResponse = await _apiClient.get('/news');
-      final newsData = newsResponse.data['data'] as List<dynamic>? ?? [];
-      final news = newsData
+      List<dynamic> newsDataList = [];
+      if (newsResponse.data is Map && newsResponse.data['data'] is List) {
+        newsDataList = newsResponse.data['data'] as List<dynamic>;
+      } else if (newsResponse.data is List) {
+        newsDataList = newsResponse.data as List<dynamic>;
+      }
+      final news = newsDataList
           .map((n) => News.fromJson(n as Map<String, dynamic>))
           .toList();
       

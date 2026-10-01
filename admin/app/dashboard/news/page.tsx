@@ -10,7 +10,7 @@ interface News {
   id: string;
   title: string;
   content: string;
-  imageUrl?: string;
+  featuredImage?: string;
   link?: string;
   category?: string;
   isPublished: boolean;
@@ -30,7 +30,7 @@ export default function NewsPage() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    imageUrl: '',
+    featuredImage: '',
     link: '',
     category: '',
     isPublished: true,
@@ -94,11 +94,11 @@ export default function NewsPage() {
     setUploading(true);
     
     try {
-      let imageUrl = formData.imageUrl;
+      let featuredImage = formData.featuredImage;
       
       if (useFileUpload && imageFile) {
         try {
-          imageUrl = await handleImageUpload();
+          featuredImage = await handleImageUpload();
         } catch (error) {
           toast.error('Failed to upload image');
           setUploading(false);
@@ -106,13 +106,13 @@ export default function NewsPage() {
         }
       }
       
-      await api.post('/news', { ...formData, imageUrl });
+      await api.post('/news', { ...formData, featuredImage });
       toast.success('News created successfully');
       setShowCreateModal(false);
       setFormData({
         title: '',
         content: '',
-        imageUrl: '',
+        featuredImage: '',
         link: '',
         category: '',
         isPublished: true,
@@ -189,9 +189,9 @@ export default function NewsPage() {
           {news.map((item) => (
             <div key={item.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-48 bg-background">
-                {item.imageUrl ? (
+                {item.featuredImage ? (
                   <img
-                    src={item.imageUrl}
+                    src={item.featuredImage}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
@@ -305,8 +305,8 @@ export default function NewsPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
                     <input
                       type="url"
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      value={formData.featuredImage}
+                      onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
                       className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                       placeholder="https://example.com/image.jpg"
                     />
@@ -398,6 +398,14 @@ export default function NewsPage() {
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
+                    setFormData({
+                      title: '',
+                      content: '',
+                      featuredImage: '',
+                      link: '',
+                      category: '',
+                      isPublished: true,
+                    });
                     setImageFile(null);
                     setImagePreview('');
                     setUseFileUpload(false);

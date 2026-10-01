@@ -558,6 +558,7 @@ model News {
   excerpt     String
   content     String   @db.Text
   featuredImage String
+  link        String?
   category    String?
   tags        String[] // Array of tags
   author      String?

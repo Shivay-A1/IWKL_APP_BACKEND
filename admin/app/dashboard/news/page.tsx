@@ -11,6 +11,7 @@ interface News {
   title: string;
   content: string;
   imageUrl?: string;
+  link?: string;
   category?: string;
   isPublished: boolean;
   publishedAt?: string;
@@ -26,6 +27,7 @@ export default function NewsPage() {
     title: '',
     content: '',
     imageUrl: '',
+    link: '',
     category: '',
     isPublished: true,
   });
@@ -58,6 +60,7 @@ export default function NewsPage() {
         title: '',
         content: '',
         imageUrl: '',
+        link: '',
         category: '',
         isPublished: true,
       });
@@ -151,16 +154,26 @@ export default function NewsPage() {
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+                <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
                 {item.category && (
                   <p className="text-gray-400 text-sm mb-2">{item.category}</p>
                 )}
-                <p className="text-gray-300 text-sm mb-4 line-clamp-3">{item.content}</p>
+                <div className="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                  <Calendar className="w-4 h-4" />
+                  <span>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : new Date(item.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-gray-300 text-sm mb-4 line-clamp-2">{item.content}</p>
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                  </div>
+                  {item.link && (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/90 text-sm font-medium"
+                    >
+                      Read More →
+                    </a>
+                  )}
                   <button
                     onClick={() => handleDeleteNews(item.id)}
                     className="text-red-500 hover:text-red-400"
@@ -206,6 +219,17 @@ export default function NewsPage() {
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Link (Optional)</label>
+                <input
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  placeholder="https://example.com/news-article"
                 />
               </div>
               <div>

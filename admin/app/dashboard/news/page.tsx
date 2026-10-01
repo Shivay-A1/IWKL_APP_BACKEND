@@ -76,7 +76,7 @@ export default function NewsPage() {
     formData.append('fileType', 'news-image');
     
     try {
-      const response = await api.post('/upload', formData, {
+      const response = await api.post('/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

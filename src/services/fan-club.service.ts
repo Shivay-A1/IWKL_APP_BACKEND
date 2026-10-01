@@ -15,18 +15,29 @@ export const registerFanClub = async (data: {
   if (!prisma) {
     throw new AppError('Database not available', 503);
   }
+  
+  const createData: any = {
+    fullName: data.fullName,
+    mobileNumber: data.mobileNumber,
+    email: data.email || null,
+    city: data.city,
+    state: data.state,
+    gender: data.gender || 'Other',
+    age: data.age || 18,
+    documentSignature: data.documentSignature,
+  };
+
+  // Handle favoriteTeam relation if favoriteTeamId is provided
+  if (data.favoriteTeamId) {
+    createData.favoriteTeam = {
+      connect: {
+        id: data.favoriteTeamId
+      }
+    };
+  }
+
   return await prisma.fanClubRegistration.create({
-    data: {
-      fullName: data.fullName,
-      mobileNumber: data.mobileNumber,
-      email: data.email || null,
-      city: data.city,
-      state: data.state,
-      gender: data.gender || 'Other',
-      age: data.age || 18,
-      favoriteTeamId: data.favoriteTeamId || null,
-      documentSignature: data.documentSignature,
-    },
+    data: createData,
   });
 };
 

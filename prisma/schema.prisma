@@ -789,13 +789,13 @@ model FanClubRegistration {
   id          String   @id @default(cuid())
   fullName    String
   mobileNumber String
-  email       String
+  email       String?
   city        String
   state       String
   gender      String
   age         Int
-  favoriteTeamId String
-  favoriteTeam Team     @relation(fields: [favoriteTeamId], references: [id], onDelete: Cascade)
+  favoriteTeamId String?
+  favoriteTeam Team?     @relation(fields: [favoriteTeamId], references: [id], onDelete: Cascade)
   documentSignature String?
   createdAt   DateTime @default(now())
 

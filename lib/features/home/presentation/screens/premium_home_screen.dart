@@ -2093,7 +2093,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             child: Stack(
               children: [
                 Container(
-                  height: 180,
+                  height: 140,
                   color: AppDesignSystem.cardBackground,
                   child: imageUrl.isNotEmpty
                       ? Image.network(
@@ -2136,7 +2136,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(AppDesignSystem.mdSpacing),
+            padding: const EdgeInsets.all(AppDesignSystem.smSpacing),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2144,25 +2144,25 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                   title,
                   style: TextStyle(
                     color: AppDesignSystem.getPrimaryText(context),
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   date,
                   style: TextStyle(
                     color: AppDesignSystem.getSecondaryText(context),
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -2170,14 +2170,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                         AppDesignSystem.primaryPurple.withValues(alpha: 0.8),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
                     child: Text(
                       'Read News',
                       style: TextStyle(
                         color: AppDesignSystem.getPrimaryText(context),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

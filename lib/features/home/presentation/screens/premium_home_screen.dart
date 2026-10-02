@@ -2093,7 +2093,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             child: Stack(
               children: [
                 Container(
-                  height: 140,
+                  height: 130,
                   color: AppDesignSystem.cardBackground,
                   child: imageUrl.isNotEmpty
                       ? Image.network(
@@ -2135,55 +2135,57 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppDesignSystem.smSpacing),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: AppDesignSystem.getPrimaryText(context),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  date,
-                  style: TextStyle(
-                    color: AppDesignSystem.getSecondaryText(context),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppDesignSystem.primaryPurple,
-                        AppDesignSystem.primaryPurple.withValues(alpha: 0.8),
-                      ],
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: AppDesignSystem.getPrimaryText(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
                     ),
-                    borderRadius: BorderRadius.circular(6),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  child: Center(
-                    child: Text(
-                      'Read News',
-                      style: TextStyle(
-                        color: AppDesignSystem.getPrimaryText(context),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                  const SizedBox(height: 4),
+                  Text(
+                    date,
+                    style: TextStyle(
+                      color: AppDesignSystem.getSecondaryText(context),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppDesignSystem.primaryPurple,
+                          AppDesignSystem.primaryPurple.withValues(alpha: 0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Read News',
+                        style: TextStyle(
+                          color: AppDesignSystem.getPrimaryText(context),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

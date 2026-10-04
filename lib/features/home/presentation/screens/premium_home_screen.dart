@@ -2151,19 +2151,19 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     date,
                     style: TextStyle(
                       color: AppDesignSystem.getSecondaryText(context),
-                      fontSize: 9,
+                      fontSize: 8,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    padding: const EdgeInsets.symmetric(vertical: 3),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [

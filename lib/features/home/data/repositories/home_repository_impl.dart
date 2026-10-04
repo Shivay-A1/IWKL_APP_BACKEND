@@ -35,18 +35,17 @@ class HomeRepositoryImpl implements HomeRepository {
       final galleryResponse = await _apiClient.get('/gallery');
       final galleryData = galleryResponse.data['data'] as List<dynamic>? ?? [];
 
-      // Temporarily disable news fetching to fix map error
-      // final newsResponse = await _apiClient.get('/news');
-      // List<dynamic> newsDataList = [];
-      // if (newsResponse.data is Map && newsResponse.data['data'] is List) {
-      //   newsDataList = newsResponse.data['data'] as List<dynamic>;
-      // } else if (newsResponse.data is List) {
-      //   newsDataList = newsResponse.data as List<dynamic>;
-      // }
-      // final news = newsDataList
-      //     .map((n) => News.fromJson(n as Map<String, dynamic>))
-      //     .toList();
-      final news = <News>[];
+      // Fetch news from Railway backend
+      final newsResponse = await _apiClient.get('/news?limit=100');
+      List<dynamic> newsDataList = [];
+      if (newsResponse.data is Map && newsResponse.data['data'] is List) {
+        newsDataList = newsResponse.data['data'] as List<dynamic>;
+      } else if (newsResponse.data is List) {
+        newsDataList = newsResponse.data as List<dynamic>;
+      }
+      final news = newsDataList
+          .map((n) => News.fromJson(n as Map<String, dynamic>))
+          .toList();
       
       // Extract image URLs from banners for slider
       final sliderImages = bannersData

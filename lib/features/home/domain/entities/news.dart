@@ -45,7 +45,11 @@ class News {
       title: json['title'] as String,
       excerpt: json['excerpt'] ?? '',
       thumbnail: (json['thumbnail'] as String?) ?? (json['featuredImage'] as String?),
-      publishedAt: DateTime.parse(json['publishedAt'] as String),
+      publishedAt: json['publishedAt'] != null
+          ? DateTime.parse(json['publishedAt'] as String)
+          : (json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'] as String)
+              : DateTime.now()),
       category: json['category'] as String?,
       link: json['link'] as String?,
     );

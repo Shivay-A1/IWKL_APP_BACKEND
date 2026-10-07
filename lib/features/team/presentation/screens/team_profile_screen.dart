@@ -100,13 +100,22 @@ class TeamProfileScreen extends StatelessWidget {
                           ),
                           child: ClipOval(
                             child: team.logo != null
-                                ? Image.asset(
-                                    team.logo!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.sports_cricket, color: Colors.white, size: 60);
-                                    },
-                                  )
+                                ? (team.logo!.startsWith('http')
+                                    ? CachedNetworkImage(
+                                        imageUrl: team.logo!,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => const CircularProgressIndicator(),
+                                        errorWidget: (context, url, error) {
+                                          return const Icon(Icons.sports_cricket, color: Colors.white, size: 60);
+                                        },
+                                      )
+                                    : Image.asset(
+                                        team.logo!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(Icons.sports_cricket, color: Colors.white, size: 60);
+                                        },
+                                      ))
                                 : const Icon(Icons.sports_cricket, color: Colors.white, size: 60),
                           ),
                         ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
@@ -603,7 +612,16 @@ class TeamProfileScreen extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: team.logo != null
-                          ? Image.asset(team.logo!, fit: BoxFit.cover)
+                          ? (team.logo!.startsWith('http')
+                              ? CachedNetworkImage(
+                                  imageUrl: team.logo!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) {
+                                    return const Icon(Icons.sports_cricket, color: Colors.white);
+                                  },
+                                )
+                              : Image.asset(team.logo!, fit: BoxFit.cover))
                           : const Icon(Icons.sports_cricket, color: Colors.white),
                     ),
                   ),

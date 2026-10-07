@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import 'package:iwkl_app/core/constants/app_constants.dart';
+import 'package:iwkl_app/features/team/presentation/screens/team_profile_screen_api.dart';
 
 class TeamsScreen extends StatefulWidget {
   const TeamsScreen({super.key});
@@ -146,35 +147,16 @@ class _TeamsScreenState extends State<TeamsScreen> {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to team detail - for now show alert
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF13051E),
-            title: Text(
-              teamName,
-              style: const TextStyle(color: Colors.white),
+        // Navigate to team detail with real backend data
+        final teamId = team['id'];
+        if (teamId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeamProfileScreenApi(teamId: teamId),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (teamShortName.isNotEmpty)
-                  Text('Short Name: $teamShortName', style: const TextStyle(color: Colors.white70)),
-                if (teamCity.isNotEmpty)
-                  Text('City: $teamCity', style: const TextStyle(color: Colors.white70)),
-                const SizedBox(height: 8),
-                Text('Status: ${isActive ? "Active" : "Inactive"}', style: const TextStyle(color: Colors.white70)),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close', style: TextStyle(color: Color(0xFF9333EA))),
-              ),
-            ],
-          ),
-        );
+          );
+        }
       },
       child: Container(
         decoration: BoxDecoration(

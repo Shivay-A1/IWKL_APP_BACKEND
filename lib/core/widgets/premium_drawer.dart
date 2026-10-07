@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_design_system.dart';
 import '../widgets/premium_widgets.dart';
 import '../theme/theme_provider.dart';
@@ -140,6 +141,31 @@ class PremiumDrawer extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/support');
+                      },
+                      isDarkMode: isDarkMode,
+                    ),
+                    const Divider(color: AppDesignSystem.divider),
+                    _buildMenuItem(
+                      icon: Icons.person_add,
+                      title: 'Player Registration',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final Uri url = Uri.parse('https://iwkl.org/player-registration');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.business_center,
+                      title: 'Social Media Partner',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final Uri url = Uri.parse('https://iwkl.org/social-media-partner-registration');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        }
                       },
                       isDarkMode: isDarkMode,
                     ),

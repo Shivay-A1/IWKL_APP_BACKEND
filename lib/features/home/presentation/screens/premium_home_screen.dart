@@ -2745,9 +2745,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppDesignSystem.mdSpacing),
+                      const SizedBox(height: AppDesignSystem.smSpacing),
                       Container(
-                        padding: const EdgeInsets.all(AppDesignSystem.mdSpacing),
+                        padding: const EdgeInsets.all(AppDesignSystem.smSpacing),
                         decoration: BoxDecoration(
                           color: AppDesignSystem.getCardBackground(context).withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(AppDesignSystem.mdRadius),
@@ -2758,16 +2758,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             _buildDetailRow('Played', team['played']?.toString() ?? '0'),
                             _buildDetailRow('Won', team['won']?.toString() ?? '0'),
                             _buildDetailRow('Lost', team['lost']?.toString() ?? '0'),
                             _buildDetailRow('Points', team['points']?.toString() ?? '0'),
                             _buildDetailRow('NRR', team['nrr']?.toString() ?? '0.00'),
-                            _buildDetailRow('Coach', 'TBD'),
-                            _buildDetailRow('Captain', 'TBD'),
-                            _buildDetailRow('Home Ground', 'TBD'),
-                            _buildDetailRow('Recent Form', 'WWLWW'),
                           ],
                         ),
                       ),

@@ -126,7 +126,6 @@ class IWKLApp extends StatelessWidget {
               '/profile': (context) => const ProfileScreen(),
               '/settings': (context) => const SettingsScreen(),
               '/teams': (context) => const TeamsScreen(),
-              '/players': (context) => const PlayersScreen(),
               '/points-table': (context) => const PointsTableScreen(),
               '/gallery': (context) => const GalleryScreen(),
               '/news': (context) => const NewsScreen(),

@@ -135,6 +135,13 @@ export default function DashboardPage() {
           <h3 className="text-2xl font-bold text-white mb-6">Management Modules</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ManagementModule
+              title="Team Profiles"
+              description="Edit all team profiles"
+              icon={<Users className="w-6 h-6" />}
+              path="/dashboard/team-profiles"
+              color="bg-pink-600"
+            />
+            <ManagementModule
               title="Teams"
               description="Manage league teams"
               icon={<Users className="w-6 h-6" />}

@@ -38,7 +38,9 @@ export default function GalleryPage() {
     try {
       const response = await api.get('/gallery');
       console.log('Gallery response:', response.data);
-      setGallery(response.data || []);
+      // Handle both direct array and paginated response
+      const galleryData = response.data?.data || response.data || [];
+      setGallery(Array.isArray(galleryData) ? galleryData : []);
     } catch (error) {
       console.error('Failed to fetch gallery:', error);
       toast.error('Failed to load gallery');

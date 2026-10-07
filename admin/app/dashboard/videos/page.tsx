@@ -40,7 +40,9 @@ export default function VideosPage() {
     try {
       const response = await api.get('/videos');
       console.log('Videos response:', response.data);
-      setVideos(response.data || []);
+      // Handle both direct array and paginated response
+      const videosData = response.data?.data || response.data || [];
+      setVideos(Array.isArray(videosData) ? videosData : []);
     } catch (error) {
       console.error('Failed to fetch videos:', error);
       toast.error('Failed to load videos');

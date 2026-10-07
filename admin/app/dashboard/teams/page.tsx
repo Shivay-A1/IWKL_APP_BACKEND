@@ -138,7 +138,9 @@ export default function TeamsPage() {
               <div className="relative h-48 bg-background">
                 {team.logo || team.logoUrl ? (
                   <img
-                    src={team.logo || team.logoUrl}
+                    src={(team.logo || team.logoUrl).startsWith('http') 
+                      ? (team.logo || team.logoUrl) 
+                      : `https://iwklappbackend-production.up.railway.app${team.logo || team.logoUrl}`}
                     alt={team.name}
                     className="w-full h-full object-contain p-4"
                   />

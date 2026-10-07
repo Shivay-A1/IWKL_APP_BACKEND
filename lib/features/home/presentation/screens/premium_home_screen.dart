@@ -89,7 +89,10 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         Uri.parse('https://iwklappbackend-production.up.railway.app/api/notifications'),
       );
       if (response.statusCode == 200) {
-        final notifications = jsonDecode(response.body) as List<dynamic>;
+        final data = jsonDecode(response.body);
+        final notifications = data is Map && data['data'] is List
+            ? data['data'] as List<dynamic>
+            : data as List<dynamic>;
         final unreadCount = notifications.where((n) => n['isRead'] == false).length;
         setState(() {
           _unreadNotificationCount = unreadCount;

@@ -18,8 +18,14 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       // Fetch matches from Railway backend
       final matchesResponse = await _apiClient.get(ApiEndpoints.matches);
-      final matchesData = matchesResponse.data['data'] as List<dynamic>? ?? [];
-      
+      List<dynamic> matchesDataList = [];
+      if (matchesResponse.data is Map && matchesResponse.data['data'] is List) {
+        matchesDataList = matchesResponse.data['data'] as List<dynamic>;
+      } else if (matchesResponse.data is List) {
+        matchesDataList = matchesResponse.data as List<dynamic>;
+      }
+      final matchesData = matchesDataList;
+
       // Fetch stories from Railway backend
       final storiesResponse = await _apiClient.get(ApiEndpoints.stories);
       List<dynamic> storiesDataList = [];
@@ -31,7 +37,7 @@ class HomeRepositoryImpl implements HomeRepository {
       final stories = storiesDataList
           .map((s) => Story.fromJson(s as Map<String, dynamic>))
           .toList();
-      
+
       // Fetch banners from Railway backend
       final bannersResponse = await _apiClient.get('/homepage-banners');
       List<dynamic> bannersDataList = [];
@@ -41,7 +47,7 @@ class HomeRepositoryImpl implements HomeRepository {
         bannersDataList = bannersResponse.data as List<dynamic>;
       }
       final bannersData = bannersDataList;
-      
+
       // Fetch gallery from Railway backend
       final galleryResponse = await _apiClient.get('/gallery');
       List<dynamic> galleryDataList = [];

@@ -179,6 +179,8 @@ app.options('*', (req, res) => {
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 const storiesDir = path.join(uploadsDir, 'stories');
 const bannersDir = path.join(uploadsDir, 'banners');
+const teamLogosDir = path.join(uploadsDir, 'team-logos');
+const teamsDir = path.join(uploadsDir, 'teams');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -187,6 +189,12 @@ if (!fs.existsSync(storiesDir)) {
 }
 if (!fs.existsSync(bannersDir)) {
   fs.mkdirSync(bannersDir, { recursive: true });
+}
+if (!fs.existsSync(teamLogosDir)) {
+  fs.mkdirSync(teamLogosDir, { recursive: true });
+}
+if (!fs.existsSync(teamsDir)) {
+  fs.mkdirSync(teamsDir, { recursive: true });
 }
 
 app.use('/uploads', express.static(uploadsDir, {

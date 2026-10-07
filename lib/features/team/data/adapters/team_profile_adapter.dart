@@ -31,7 +31,9 @@ class TeamProfileAdapter {
       gallery: [], // Will need separate API call
       videos: [], // Will need separate API call
       sponsors: [], // Will need separate API call
-      socialMedia: team.socialMedia ?? {},
+      socialMedia: team.socialMedia != null 
+          ? Map<String, String>.from(team.socialMedia!) 
+          : {},
     );
   }
 }

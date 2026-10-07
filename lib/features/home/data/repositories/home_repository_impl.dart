@@ -22,18 +22,35 @@ class HomeRepositoryImpl implements HomeRepository {
       
       // Fetch stories from Railway backend
       final storiesResponse = await _apiClient.get(ApiEndpoints.stories);
-      final storiesData = storiesResponse.data as List<dynamic>? ?? [];
-      final stories = storiesData
+      List<dynamic> storiesDataList = [];
+      if (storiesResponse.data is Map && storiesResponse.data['data'] is List) {
+        storiesDataList = storiesResponse.data['data'] as List<dynamic>;
+      } else if (storiesResponse.data is List) {
+        storiesDataList = storiesResponse.data as List<dynamic>;
+      }
+      final stories = storiesDataList
           .map((s) => Story.fromJson(s as Map<String, dynamic>))
           .toList();
       
       // Fetch banners from Railway backend
       final bannersResponse = await _apiClient.get('/homepage-banners');
-      final bannersData = bannersResponse.data as List<dynamic>? ?? [];
+      List<dynamic> bannersDataList = [];
+      if (bannersResponse.data is Map && bannersResponse.data['data'] is List) {
+        bannersDataList = bannersResponse.data['data'] as List<dynamic>;
+      } else if (bannersResponse.data is List) {
+        bannersDataList = bannersResponse.data as List<dynamic>;
+      }
+      final bannersData = bannersDataList;
       
       // Fetch gallery from Railway backend
       final galleryResponse = await _apiClient.get('/gallery');
-      final galleryData = galleryResponse.data['data'] as List<dynamic>? ?? [];
+      List<dynamic> galleryDataList = [];
+      if (galleryResponse.data is Map && galleryResponse.data['data'] is List) {
+        galleryDataList = galleryResponse.data['data'] as List<dynamic>;
+      } else if (galleryResponse.data is List) {
+        galleryDataList = galleryResponse.data as List<dynamic>;
+      }
+      final galleryData = galleryDataList;
 
       // Fetch news from Railway backend
       final newsResponse = await _apiClient.get('/news?limit=100');

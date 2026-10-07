@@ -129,6 +129,12 @@ class _TeamsScreenState extends State<TeamsScreen> {
     final teamCity = team['city'] ?? '';
     final isActive = team['isActive'] ?? true;
 
+    // Handle logo URL - if it's a relative path, prepend backend URL
+    String logoUrl = teamLogo;
+    if (logoUrl.isNotEmpty && !logoUrl.startsWith('http')) {
+      logoUrl = '${AppConstants.baseUrl}$logoUrl';
+    }
+
     final colors = [
       const Color(0xFF9333EA),
       const Color(0xFFEC4899),
@@ -198,10 +204,10 @@ class _TeamsScreenState extends State<TeamsScreen> {
                   ],
                 ),
               ),
-              child: teamLogo.isNotEmpty
+              child: logoUrl.isNotEmpty
                   ? ClipOval(
                       child: Image.network(
-                        teamLogo,
+                        logoUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(

@@ -25,7 +25,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
   Future<void> _fetchTeams() async {
     try {
       final dio = Dio();
-      final response = await dio.get('${AppConstants.baseUrl}/teams');
+      final response = await dio.get('${AppConstants.baseUrl}/api/teams');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -133,7 +133,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
     // Handle logo URL - if it's a relative path, prepend backend URL
     String logoUrl = teamLogo;
     if (logoUrl.isNotEmpty && !logoUrl.startsWith('http')) {
-      logoUrl = '${AppConstants.baseUrl}$logoUrl';
+      logoUrl = '${AppConstants.baseUrl}/api$logoUrl';
     }
 
     final colors = [

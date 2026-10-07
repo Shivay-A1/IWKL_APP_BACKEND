@@ -69,13 +69,13 @@ class TeamModel {
   String get logoUrl {
     if (logo == null) return '';
     if (logo!.startsWith('http')) return logo!;
-    return '${AppConstants.baseUrl}$logo';
+    return '${AppConstants.baseUrl}/api$logo';
   }
 
   String get bannerUrl {
     if (banner == null) return '';
     if (banner!.startsWith('http')) return banner!;
-    return '${AppConstants.baseUrl}$banner';
+    return '${AppConstants.baseUrl}/api$banner';
   }
 }
 

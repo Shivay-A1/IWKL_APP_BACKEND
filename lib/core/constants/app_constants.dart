@@ -1,6 +1,6 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'https://iwklappbackend-production.up.railway.app/api';
+  static const String baseUrl = 'https://iwklappbackend-production.up.railway.app';
   static const String socketUrl = 'https://iwklappbackend-production.up.railway.app';
   
   // App Info

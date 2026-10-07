@@ -7,7 +7,7 @@ class TeamApiService {
   Future<Map<String, dynamic>> getTeamById(String teamId) async {
     try {
       final response = await _dio.get(
-        '${AppConstants.baseUrl}/teams/$teamId',
+        '${AppConstants.baseUrl}/api/teams/$teamId',
       );
 
       // Handle both direct response and nested response formats
@@ -29,7 +29,7 @@ class TeamApiService {
   Future<Map<String, dynamic>> getTeamStats(String teamId) async {
     try {
       final response = await _dio.get(
-        '${AppConstants.baseUrl}/teams/$teamId/stats',
+        '${AppConstants.baseUrl}/api/teams/$teamId/stats',
       );
 
       final data = response.data;

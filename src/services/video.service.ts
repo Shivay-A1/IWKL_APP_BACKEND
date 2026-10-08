@@ -75,7 +75,7 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
       description: data.description,
       categoryId: categoryId || null,
       youtubeUrl: videoUrl || null,
-      thumbnailUrl: thumbnailUrl || null,
+      thumbnailUrl: thumbnailUrl || videoUrl || null, // Use video URL as thumbnail if not provided
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,
       duration: duration || null,

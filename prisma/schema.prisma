@@ -523,11 +523,11 @@ model VideoCategory {
 
 model Video {
   id             String         @id @default(cuid())
-  categoryId     String
-  category       VideoCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId     String?
+  category       VideoCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   title          String
   description    String?
-  thumbnailUrl   String
+  thumbnailUrl   String?
   youtubeUrl     String?
   youtubeVideoId String?
   duration       Int?           // in seconds

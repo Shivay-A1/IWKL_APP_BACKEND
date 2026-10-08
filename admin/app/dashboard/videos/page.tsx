@@ -411,16 +411,15 @@ export default function VideosPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail URL</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail URL (Optional)</label>
                 <input
                   type="url"
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
                   placeholder="https://example.com/thumbnail.jpg"
                 />
-                <p className="text-gray-500 text-xs mt-1">Recommended size: 1280x720px</p>
+                <p className="text-gray-500 text-xs mt-1">Recommended size: 1280x720px. Leave empty for default thumbnail.</p>
               </div>
 
               <div>

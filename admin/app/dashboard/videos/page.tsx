@@ -68,7 +68,7 @@ export default function VideosPage() {
       if (uploadType === 'file' && videoFile) {
         const formDataFile = new FormData();
         formDataFile.append('file', videoFile);
-        formDataFile.append('type', 'video');
+        formDataFile.append('fileType', 'video'); // Use 'fileType' instead of 'type'
 
         // Simulate upload progress
         const progressInterval = setInterval(() => {
@@ -417,9 +417,8 @@ export default function VideosPage() {
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  placeholder="https://example.com/thumbnail.jpg"
+                  placeholder="Leave empty to use video thumbnail"
                 />
-                <p className="text-gray-500 text-xs mt-1">Recommended size: 1280x720px. Leave empty for default thumbnail.</p>
               </div>
 
               <div>
@@ -431,7 +430,6 @@ export default function VideosPage() {
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                   min="0"
                 />
-                <p className="text-gray-500 text-xs mt-1">Lower numbers appear first</p>
               </div>
 
               <div className="flex items-center gap-4">

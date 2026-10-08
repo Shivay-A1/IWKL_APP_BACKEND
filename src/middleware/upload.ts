@@ -91,7 +91,7 @@ export const uploadMemory = multer({
   storage: memoryStorage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit for memory storage
+    fileSize: 1024 * 1024 * 1024, // 1GB limit for video uploads
   },
 });
 

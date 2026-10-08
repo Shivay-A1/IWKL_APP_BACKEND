@@ -11,7 +11,7 @@ interface Video {
   title: string;
   videoUrl: string;
   thumbnailUrl: string;
-  category?: string;
+  category: 'featured' | 'videos';
   isFeatured: boolean;
   isActive: boolean;
   order: number;
@@ -22,11 +22,16 @@ export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState<'featured' | 'videos'>('featured');
   const [formData, setFormData] = useState({
     title: '',
     videoUrl: '',
     thumbnailUrl: '',
-    category: '',
+    category: 'featured' as 'featured' | 'videos',
     isFeatured: false,
     isActive: true,
     order: 0,
@@ -52,22 +57,60 @@ export default function VideosPage() {
 
   const handleCreateVideo = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
+    setUploadProgress(0);
     try {
-      await api.post('/videos', formData);
+      let finalVideoUrl = formData.videoUrl;
+
+      // If file upload selected, upload the file first
+      if (uploadType === 'file' && videoFile) {
+        const formDataFile = new FormData();
+        formDataFile.append('file', videoFile);
+        formDataFile.append('type', 'video');
+
+        // Simulate upload progress
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => Math.min(prev + 20, 90));
+        }, 300);
+
+        const uploadResponse = await api.post('/files/upload', formDataFile, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+        finalVideoUrl = uploadResponse.data.url;
+      }
+
+      const videoData = {
+        ...formData,
+        videoUrl: finalVideoUrl,
+      };
+
+      await api.post('/videos', videoData);
       toast.success('Video created successfully');
       setShowCreateModal(false);
       setFormData({
         title: '',
         videoUrl: '',
         thumbnailUrl: '',
-        category: '',
+        category: activeTab,
         isFeatured: false,
         isActive: true,
         order: 0,
       });
+      setVideoFile(null);
+      setUploadType('url');
+      setUploadProgress(0);
       fetchVideos();
-    } catch (error) {
-      toast.error('Failed to create video');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create video';
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -140,16 +183,49 @@ export default function VideosPage() {
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">Videos</h2>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setFormData({
+                ...formData,
+                category: activeTab,
+              });
+              setShowCreateModal(true);
+            }}
             className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
-            Add Video
+            Add {activeTab === 'featured' ? 'Featured' : 'Video'}
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab('featured')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'featured'
+                ? 'bg-primary text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Featured (OTT)
+          </button>
+          <button
+            onClick={() => setActiveTab('videos')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'videos'
+                ? 'bg-primary text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Videos (Top Videos)
+          </button>
+        </div>
+
+        {/* Videos Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.map((video) => (
+          {videos
+            .filter((video) => video.category === activeTab)
+            .map((video) => (
             <div key={video.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-48 bg-background">
                 {video.thumbnailUrl ? (
@@ -182,7 +258,7 @@ export default function VideosPage() {
               <div className="p-4">
                 <h3 className="text-white font-semibold mb-2">{video.title}</h3>
                 {video.category && (
-                  <p className="text-gray-400 text-sm mb-2">{video.category}</p>
+                  <p className="text-gray-400 text-sm mb-2 capitalize">{video.category}</p>
                 )}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2">
@@ -212,12 +288,22 @@ export default function VideosPage() {
             </div>
           ))}
         </div>
+
+        {videos.filter((video) => video.category === activeTab).length === 0 && (
+          <div className="text-center py-12">
+            <Upload className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg">No {activeTab} videos yet</p>
+            <p className="text-gray-500 text-sm mt-2">Click "Add {activeTab === 'featured' ? 'Featured' : 'Video'}" to get started</p>
+          </div>
+        )}
       </main>
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold text-white mb-6">Add Video</h3>
+          <div className="bg-card rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold text-white mb-6">
+              Add {activeTab === 'featured' ? 'Featured' : 'Video'}
+            </h3>
             <form onSubmit={handleCreateVideo} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
@@ -227,18 +313,101 @@ export default function VideosPage() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                   required
+                  placeholder="Enter video title"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Video URL</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value as 'featured' | 'videos' })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
-                />
+                >
+                  <option value="featured">Featured (OTT heading)</option>
+                  <option value="videos">Videos (Top Videos section)</option>
+                </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Upload Type</label>
+                <div className="flex gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setUploadType('url')}
+                    className={`flex-1 py-2 rounded-lg ${uploadType === 'url' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                  >
+                    URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadType('file')}
+                    className={`flex-1 py-2 rounded-lg ${uploadType === 'file' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                  >
+                    File Upload (Max 1GB)
+                  </button>
+                </div>
+              </div>
+
+              {uploadType === 'url' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Video URL (YouTube or other)</label>
+                  <input
+                    type="url"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    required
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                  <p className="text-gray-500 text-xs mt-1">Supports YouTube, Vimeo, and other video platforms</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Video File (Max 1GB)</label>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 1024 * 1024 * 1024) {
+                          toast.error('File size must be less than 1GB');
+                          return;
+                        }
+                        setVideoFile(file);
+                      }
+                    }}
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    required
+                  />
+                  {videoFile && (
+                    <div className="mt-2">
+                      <p className="text-gray-400 text-sm">
+                        Selected: {videoFile.name}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Size: {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
+                  {uploading && uploadProgress > 0 && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-sm text-gray-400 mb-1">
+                        <span>Uploading...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail URL</label>
                 <input
@@ -247,17 +416,11 @@ export default function VideosPage() {
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                   required
+                  placeholder="https://example.com/thumbnail.jpg"
                 />
+                <p className="text-gray-500 text-xs mt-1">Recommended size: 1280x720px</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
                 <input
@@ -265,8 +428,11 @@ export default function VideosPage() {
                   value={formData.order}
                   onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  min="0"
                 />
+                <p className="text-gray-500 text-xs mt-1">Lower numbers appear first</p>
               </div>
+
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <input
@@ -289,17 +455,24 @@ export default function VideosPage() {
                   <label htmlFor="isActive" className="text-gray-300">Active</label>
                 </div>
               </div>
+
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Add Video
+                  {uploading ? 'Uploading...' : `Add ${activeTab === 'featured' ? 'Featured' : 'Video'}`}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setVideoFile(null);
+                    setUploadType('url');
+                    setUploadProgress(0);
+                  }}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg transition-all"
                 >
                   Cancel
                 </button>

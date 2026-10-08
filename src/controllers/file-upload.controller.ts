@@ -64,7 +64,7 @@ export const uploadFileToDB = async (req: AuthRequest, res: Response, next: any)
     console.log('[DB UPLOAD] File saved to database:', uploadedFile.id)
 
     // Return the full URL that can be used to retrieve the file
-    const backendUrl = process.env.BACKEND_URL || 'https://iwkl-backend-lg6t-production.up.railway.app';
+    const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
     const fullUrl = `${backendUrl}/api/files/${uploadedFile.id}`;
     res.json({ 
       success: true, 

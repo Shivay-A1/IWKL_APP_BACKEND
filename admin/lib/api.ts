@@ -4,6 +4,9 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://iwklappbackend-produc
 
 const api = axios.create({
   baseURL: apiUrl,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Commented out auth for now - to be re-enabled after proper setup

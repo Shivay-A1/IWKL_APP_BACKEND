@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 import { AppError } from '../middleware/error';
 import { uploadToS3, generateS3Key, deleteFromS3 } from '../utils';
 import { getPaginationParams, calculatePagination } from '../utils';

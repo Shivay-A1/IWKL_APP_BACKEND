@@ -31,8 +31,10 @@ export const uploadFileToDB = async (req: AuthRequest, res: Response, next: any)
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { fileType } = req.body;
-    if (!fileType) {
+    const { type, fileType } = req.body;
+    const finalFileType = fileType || type; // Accept both 'type' and 'fileType'
+    
+    if (!finalFileType) {
       console.log('[DB UPLOAD] No fileType provided')
       return res.status(400).json({ error: 'File type is required' });
     }
@@ -41,7 +43,7 @@ export const uploadFileToDB = async (req: AuthRequest, res: Response, next: any)
       originalname: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      fileType: fileType
+      fileType: finalFileType
     })
 
     // Convert file to base64

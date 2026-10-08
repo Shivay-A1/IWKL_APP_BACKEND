@@ -48,13 +48,34 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
     publishedAt = new Date(publishedAt);
   }
 
+  // Handle category - if it's a string like 'featured' or 'videos', find or create the category
+  let categoryId = data.categoryId || data.category;
+  if (categoryId && typeof categoryId === 'string' && !categoryId.startsWith('cuid')) {
+    // Find category by name
+    const category = await prisma.videoCategory.findFirst({
+      where: { name: categoryId },
+    });
+    if (category) {
+      categoryId = category.id;
+    } else {
+      // Create category if it doesn't exist
+      const newCategory = await prisma.videoCategory.create({
+        data: {
+          name: categoryId,
+          slug: categoryId.toLowerCase().replace(/\s+/g, '-'),
+        },
+      });
+      categoryId = newCategory.id;
+    }
+  }
+
   const video = await prisma.video.create({
     data: {
       title: data.title,
       description: data.description,
-      categoryId: data.categoryId || data.category,
-      youtubeUrl: videoUrl || '',
-      thumbnailUrl: thumbnailUrl || '',
+      categoryId: categoryId || null,
+      youtubeUrl: videoUrl || null,
+      thumbnailUrl: thumbnailUrl || null,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,
       duration: duration || null,

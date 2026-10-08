@@ -14,12 +14,13 @@ router.get('/:id', videoController.getVideoById);
 // All routes - authentication removed for now
 router.post('/', apiLimiter, uploadMultiple('files', 2), [
   body('title').trim().notEmpty().withMessage('Title is required'),
-  body('category').notEmpty().withMessage('Category is required'),
 ], validate, videoController.createVideo);
 
 router.put('/:id', uploadMultiple('files', 2), [
   body('title').optional().trim().notEmpty(),
 ], validate, videoController.updateVideo);
+
+router.patch('/:id', videoController.updateVideo);
 
 router.delete('/:id', videoController.deleteVideo);
 

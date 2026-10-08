@@ -69,13 +69,20 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
     }
   }
 
+  // Detect if videoUrl is a YouTube URL
+  const isYouTube = videoUrl && (
+    videoUrl.includes('youtube.com') ||
+    videoUrl.includes('youtu.be') ||
+    videoUrl.includes('youtube-nocookie.com')
+  );
+
   const video = await prisma.video.create({
     data: {
       title: data.title,
       description: data.description,
       categoryId: categoryId || null,
-      youtubeUrl: videoUrl || null,
-      thumbnailUrl: thumbnailUrl || null,
+      youtubeUrl: isYouTube ? videoUrl : null,
+      thumbnailUrl: thumbnailUrl || data.thumbnailUrl || videoUrl || null,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,
       duration: duration || null,
@@ -123,15 +130,15 @@ export const getVideos = async (query: any) => {
         updatedAt: true,
       },
       orderBy: { [sortBy || 'displayOrder']: sortOrder || 'asc' },
-      skip: ((page || 1) - 1) * (limit || 10),
-      take: limit || 10,
+      skip: ((page || 1) - 1) * (limit || 1000),
+      take: limit || 1000,
     }),
     prisma.video.count({ where }),
   ]);
 
   return {
     data: videos,
-    pagination: calculatePagination(page || 1, limit || 10, total),
+    pagination: calculatePagination(page || 1, limit || 1000, total),
   };
 };
 
@@ -211,6 +218,7 @@ export const updateVideo = async (id: string, data: any, files?: Express.Multer.
     ...(publishedAt !== undefined && { publishedAt }),
     ...(tags !== undefined && { tags }),
     ...(data.displayOrder !== undefined && { displayOrder: data.displayOrder }),
+    ...(data.order !== undefined && { displayOrder: data.order }),
   };
 
   const video = await prisma.video.update({

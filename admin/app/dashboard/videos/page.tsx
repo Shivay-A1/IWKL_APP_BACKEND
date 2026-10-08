@@ -11,10 +11,14 @@ interface Video {
   title: string;
   videoUrl: string;
   thumbnailUrl: string;
-  category: 'featured' | 'videos';
+  categoryId: string;
+  category: {
+    id: string;
+    name: string;
+  };
   isFeatured: boolean;
   isActive: boolean;
-  order: number;
+  displayOrder: number;
 }
 
 export default function VideosPage() {
@@ -31,7 +35,6 @@ export default function VideosPage() {
     title: '',
     videoUrl: '',
     thumbnailUrl: '',
-    category: 'featured' as 'featured' | 'videos',
     isFeatured: false,
     isActive: true,
     order: 0,
@@ -87,8 +90,13 @@ export default function VideosPage() {
       }
 
       const videoData = {
-        ...formData,
+        title: formData.title,
         videoUrl: finalVideoUrl,
+        thumbnailUrl: formData.thumbnailUrl || finalVideoUrl,
+        categoryId: activeTab === 'featured' ? 'featured' : 'videos',
+        isFeatured: activeTab === 'featured',
+        isActive: true,
+        displayOrder: formData.order,
       };
 
       await api.post('/videos', videoData);
@@ -98,7 +106,6 @@ export default function VideosPage() {
         title: '',
         videoUrl: '',
         thumbnailUrl: '',
-        category: activeTab,
         isFeatured: false,
         isActive: true,
         order: 0,
@@ -138,7 +145,7 @@ export default function VideosPage() {
 
   const handleReorderVideo = async (videoId: string, newOrder: number) => {
     try {
-      await api.patch(`/videos/${videoId}`, { order: newOrder });
+      await api.patch(`/videos/${videoId}`, { displayOrder: newOrder });
       toast.success('Video reordered');
       fetchVideos();
     } catch (error) {
@@ -186,10 +193,6 @@ export default function VideosPage() {
           <h2 className="text-3xl font-bold text-white">Videos</h2>
           <button
             onClick={() => {
-              setFormData({
-                ...formData,
-                category: activeTab,
-              });
               setShowCreateModal(true);
             }}
             className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg flex items-center gap-2"
@@ -226,7 +229,10 @@ export default function VideosPage() {
         {/* Videos Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {videos
-            .filter((video) => video.category === activeTab)
+            .filter((video) => {
+              const categoryName = video.category?.name || 'videos';
+              return activeTab === 'featured' ? categoryName === 'featured' : categoryName === 'videos';
+            })
             .map((video) => (
             <div key={video.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-48 bg-background">
@@ -260,20 +266,20 @@ export default function VideosPage() {
               <div className="p-4">
                 <h3 className="text-white font-semibold mb-2">{video.title}</h3>
                 {video.category && (
-                  <p className="text-gray-400 text-sm mb-2 capitalize">{video.category}</p>
+                  <p className="text-gray-400 text-sm mb-2 capitalize">{video.category.name}</p>
                 )}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleReorderVideo(video.id, Math.max(0, video.order - 1))}
+                      onClick={() => handleReorderVideo(video.id, Math.max(0, video.displayOrder - 1))}
                       className="text-gray-400 hover:text-white"
-                      disabled={video.order === 0}
+                      disabled={video.displayOrder === 0}
                     >
                       <ArrowUp className="w-4 h-4" />
                     </button>
-                    <span className="text-gray-500 text-sm">Order: {video.order}</span>
+                    <span className="text-gray-500 text-sm">Order: {video.displayOrder}</span>
                     <button
-                      onClick={() => handleReorderVideo(video.id, video.order + 1)}
+                      onClick={() => handleReorderVideo(video.id, video.displayOrder + 1)}
                       className="text-gray-400 hover:text-white"
                     >
                       <ArrowDown className="w-4 h-4" />
@@ -291,7 +297,10 @@ export default function VideosPage() {
           ))}
         </div>
 
-        {videos.filter((video) => video.category === activeTab).length === 0 && (
+        {videos.filter((video) => {
+          const categoryName = video.category?.name || 'videos';
+          return activeTab === 'featured' ? categoryName === 'featured' : categoryName === 'videos';
+        }).length === 0 && (
           <div className="text-center py-12">
             <Upload className="w-16 h-16 text-gray-500 mx-auto mb-4" />
             <p className="text-gray-400 text-lg">No {activeTab} videos yet</p>
@@ -317,18 +326,6 @@ export default function VideosPage() {
                   required
                   placeholder="Enter video title"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value as 'featured' | 'videos' })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                >
-                  <option value="featured">Featured (OTT heading)</option>
-                  <option value="videos">Videos (Top Videos section)</option>
-                </select>
               </div>
 
               <div>
@@ -417,7 +414,7 @@ export default function VideosPage() {
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  placeholder="Leave empty to use video thumbnail"
+                  placeholder="Custom thumbnail URL"
                 />
               </div>
 

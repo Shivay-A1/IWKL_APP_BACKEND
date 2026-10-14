@@ -4,6 +4,35 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+class GalleryItem {
+  final String id;
+  final String title;
+  final String imageUrl;
+  final String? category;
+  final String? description;
+  final bool isActive;
+
+  GalleryItem({
+    required this.id,
+    required this.title,
+    required this.imageUrl,
+    this.category,
+    this.description,
+    required this.isActive,
+  });
+
+  factory GalleryItem.fromJson(Map<String, dynamic> json) {
+    return GalleryItem(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      category: json['category'],
+      description: json['description'],
+      isActive: json['isActive'] ?? true,
+    );
+  }
+}
+
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
 
@@ -12,7 +41,7 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  List<String> _galleryImages = [];
+  List<GalleryItem> _galleryItems = [];
   bool _isLoading = true;
   String? _error;
 
@@ -25,33 +54,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Future<void> _loadGalleryImages() async {
     try {
       final response = await http.get(
-        Uri.parse('https://iwklappbackend-production.up.railway.app/api/gallery'),
+        Uri.parse('https://iwklappbackend-production.up.railway.app/gallery'),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        // Handle both response formats: {success: true, data: [...]} and {data: [...]}
-        final galleryData = data['data'] ?? data;
-        if (galleryData is List) {
-          setState(() {
-            _galleryImages = galleryData
-                .map((item) {
-                  String mediaUrl = item['mediaUrl'] as String;
-                  // Convert relative path to full URL
-                  if (mediaUrl.startsWith('/uploads/')) {
-                    mediaUrl = 'https://iwklappbackend-production.up.railway.app$mediaUrl';
-                  }
-                  return mediaUrl;
-                })
-                .toList();
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _galleryImages = [];
-            _isLoading = false;
-          });
-        }
+        final List<dynamic> items = data['data'] ?? [];
+        setState(() {
+          _galleryItems = items
+              .map((item) => GalleryItem.fromJson(item))
+              .where((item) => item.isActive)
+              .toList();
+          _isLoading = false;
+        });
       } else {
         setState(() {
           _error = 'Failed to load gallery';
@@ -114,7 +129,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     ],
                   ),
                 )
-              : _galleryImages.isEmpty
+              : _galleryItems.isEmpty
                   ? const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -132,19 +147,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       padding: const EdgeInsets.all(16),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 1,
+                        childAspectRatio: 0.8,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
-                      itemCount: _galleryImages.length,
+                      itemCount: _galleryItems.length,
                       itemBuilder: (context, index) {
-                        return _buildGalleryItem(_galleryImages[index], index);
+                        return _buildGalleryItem(_galleryItems[index], index);
                       },
                     ),
     );
   }
 
-  Widget _buildGalleryItem(String imageUrl, int index) {
+  Widget _buildGalleryItem(GalleryItem item, int index) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -158,29 +173,85 @@ class _GalleryScreenState extends State<GalleryScreen> {
           color: const Color(0xFF9333EA).withOpacity(0.3),
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            color: const Color(0xFF2D1B4E),
-            child: const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF9333EA),
-                strokeWidth: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: CachedNetworkImage(
+                imageUrl: item.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (context, url) => Container(
+                  color: const Color(0xFF2D1B4E),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF9333EA),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: const Color(0xFF2D1B4E),
+                  child: const Center(
+                    child: Icon(Icons.image, size: 40, color: Colors.white30),
+                  ),
+                ),
+                memCacheWidth: 400,
+                memCacheHeight: 400,
               ),
             ),
           ),
-          errorWidget: (context, url, error) => Container(
-            color: const Color(0xFF2D1B4E),
-            child: const Center(
-              child: Icon(Icons.image, size: 40, color: Colors.white30),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (item.category != null && item.category!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF9333EA).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item.category!,
+                      style: const TextStyle(
+                        color: Color(0xFF9333EA),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+                if (item.description != null && item.description!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    item.description!,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
             ),
           ),
-          memCacheWidth: 400,
-          memCacheHeight: 400,
-        ),
+        ],
       ),
     ).animate().fadeIn(duration: 300.ms, delay: (index * 100).ms).scale(begin: const Offset(0.9, 0.9));
   }

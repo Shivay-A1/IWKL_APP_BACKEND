@@ -25,6 +25,9 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late final html.IFrameElement _iframeElement;
+  bool _isLoading = true;
+  bool _isYouTube = false;
   List<dynamic> _filteredSuggestedVideos = [];
 
   @override
@@ -45,17 +48,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     } else {
       print('VideoPlayerScreen: suggestedVideos is null');
     }
-    setState(() {});
-  }
-
-  @override
-  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
-}
-
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late final html.IFrameElement _iframeElement;
-  bool _isLoading = true;
-  bool _isYouTube = false;
 
   @override
   void initState() {

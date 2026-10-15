@@ -24,6 +24,25 @@ class _VideoData {
   });
 
   factory _VideoData.fromDynamic(dynamic data) {
+    // Handle if data is already a Video entity
+    if (data.toString().contains('Video') && data is! Map) {
+      // Try to access properties directly if it's a Video object
+      try {
+        return _VideoData(
+          id: data.id as String? ?? '',
+          title: data.title as String? ?? '',
+          description: data.description as String?,
+          thumbnail: (data.thumbnail as String?) ?? '',
+          videoUrl: (data.videoUrl as String?) ?? (data.youtubeUrl as String?) ?? '',
+          duration: data.duration as int?,
+          viewCount: data.viewCount as int?,
+        );
+      } catch (e) {
+        // If direct access fails, fall back to Map access
+      }
+    }
+    
+    // Handle Map data
     return _VideoData(
       id: data['id'] as String? ?? '',
       title: data['title'] as String? ?? '',

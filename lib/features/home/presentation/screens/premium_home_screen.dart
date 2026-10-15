@@ -1537,11 +1537,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildTopVideos(List<dynamic> videos) {
-    // Filter videos that are NOT featured (for Top Videos section)
-    final videoVideos = videos.where((video) {
-      final isFeatured = video is Map ? video['isFeatured'] : video.isFeatured;
-      return isFeatured == false;
-    }).toList();
+    // Use all videos without filtering
+    final videoVideos = videos;
 
     if (videoVideos.isEmpty) {
       return const SizedBox.shrink(); // Don't show videos section if no data

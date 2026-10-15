@@ -2378,11 +2378,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildOTTSection(List<dynamic> videos) {
-    // Filter videos that are featured
-    final featuredVideos = videos.where((video) {
-      final isFeatured = video is Map ? video['isFeatured'] : video.isFeatured;
-      return isFeatured == true;
-    }).toList();
+    // Use all videos without filtering
+    final featuredVideos = videos;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

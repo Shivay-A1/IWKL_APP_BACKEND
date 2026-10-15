@@ -138,15 +138,19 @@ class LiveMatchCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/live-match');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF4B400),
-              foregroundColor: Colors.black,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('Watch Live'),
+            child: const Text(
+              'Use Live button in bottom navigation',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
           ),
         ],
       ),

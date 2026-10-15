@@ -1,5 +1,7 @@
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/rendering.dart';
 import '../../../../core/theme/app_design_system.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -17,29 +19,34 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late final WebViewController _controller;
+  late final html.IFrameElement _iframeElement;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(_getEmbedUrl(widget.videoUrl)));
+    _iframeElement = html.IFrameElement()
+      ..src = _getEmbedUrl(widget.videoUrl)
+      ..style.width = '100%'
+      ..style.height = '100%'
+      ..style.border = 'none'
+      ..allowFullscreen = true;
+
+    // Register the iframe element with Flutter
+    // ignore: undefined_prefixed_name
+    ui_web.platformViewRegistry.registerViewFactory(
+      'video-player-${widget.videoUrl}',
+      (int viewId) => _iframeElement,
+    );
+
+    // Listen for iframe load event
+    _iframeElement.onLoad.listen((_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   String _getEmbedUrl(String url) {
@@ -62,6 +69,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     
     // If not a YouTube URL, return the original URL
     return url;
+  }
+
+  @override
+  void dispose() {
+    _iframeElement.remove();
+    super.dispose();
   }
 
   @override
@@ -88,7 +101,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       ),
       body: Stack(
         children: [
-          WebViewWidget(controller: _controller),
+          HtmlElementView(viewType: 'video-player-${widget.videoUrl}'),
           if (_isLoading)
             const Center(
               child: CircularProgressIndicator(

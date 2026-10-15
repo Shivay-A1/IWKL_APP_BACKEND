@@ -49,9 +49,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       print('VideoPlayerScreen: suggestedVideos is null');
     }
 
-  @override
-  void initState() {
-    super.initState();
     _isYouTube = _isYouTubeUrl(widget.videoUrl);
     
     if (_isYouTube) {

@@ -298,7 +298,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
 
   Widget _buildSuggestedVideos() {
     return SizedBox(
-      height: 150,
+      height: 180,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -306,7 +306,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
         itemBuilder: (context, index) {
           final video = _VideoData.fromDynamic(widget.suggestedVideos![index]);
           return Container(
-            width: 250,
+            width: 280,
             margin: const EdgeInsets.only(right: 12),
             child: _buildSuggestedVideoCard(video),
           );
@@ -358,12 +358,12 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
                   imageUrl: video.thumbnail,
-                  height: 70,
-                  width: 200,
+                  height: 110,
+                  width: 280,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
-                    height: 70,
-                    width: 200,
+                    height: 110,
+                    width: 280,
                     color: Colors.grey[800],
                     child: const Center(
                       child: CircularProgressIndicator(
@@ -373,8 +373,8 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
                     ),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    height: 70,
-                    width: 200,
+                    height: 110,
+                    width: 280,
                     color: Colors.grey[800],
                     child: const Icon(Icons.play_circle_outline, color: Colors.grey),
                   ),

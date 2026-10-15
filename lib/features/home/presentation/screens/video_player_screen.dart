@@ -232,7 +232,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Widget _buildSuggestedVideos() {
     return SizedBox(
-      height: 150,
+      height: 180,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -240,7 +240,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         itemBuilder: (context, index) {
           final video = widget.suggestedVideos![index];
           return Container(
-            width: 250,
+            width: 280,
             margin: const EdgeInsets.only(right: 12),
             child: _buildSuggestedVideoCard(video),
           );
@@ -295,12 +295,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
                   imageUrl: finalThumbnail ?? '',
-                  height: 90,
-                  width: 250,
+                  height: 110,
+                  width: 280,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
-                    height: 90,
-                    width: 250,
+                    height: 110,
+                    width: 280,
                     color: Colors.grey[800],
                     child: const Center(
                       child: CircularProgressIndicator(
@@ -310,8 +310,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     ),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    height: 90,
-                    width: 250,
+                    height: 110,
+                    width: 280,
                     color: Colors.grey[800],
                     child: const Icon(Icons.play_circle_outline, color: Colors.grey),
                   ),

@@ -45,6 +45,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     } else {
       print('VideoPlayerScreen: suggestedVideos is null');
     }
+    setState(() {});
   }
 
   @override
@@ -235,7 +236,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               ),
             ),
             // Suggested Videos
-            if (widget.suggestedVideos != null && widget.suggestedVideos!.isNotEmpty) ...[
+            if (_filteredSuggestedVideos.isNotEmpty) ...[
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),

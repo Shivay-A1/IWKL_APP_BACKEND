@@ -2518,30 +2518,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           gradient: LinearGradient(
             colors: [
               AppDesignSystem.cardBackground,
-            ),
-          );
-        } else {
-          // Use Chewie player for direct video files - also pass suggestedVideos
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CinematicVideoPlayerScreen(
-                videoUrl: rawVideoUrl.toString(),
-                title: title,
-                description: description,
-                thumbnailUrl: thumbnailUrl,
-                suggestedVideos: allVideos,
-              ),
-            ),
-          );
-        }
-      },
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppDesignSystem.cardBackground,
               AppDesignSystem.secondaryCard,
             ],
           ),
@@ -2559,7 +2535,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           ],
         ),
         child: Stack(
-        children: [
+          children: [
           Positioned.fill(
             child: thumbnailUrl != null
                 ? Image.network(

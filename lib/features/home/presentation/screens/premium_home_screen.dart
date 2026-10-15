@@ -1578,7 +1578,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         SizedBox(
-          height: 270,
+          height: 320,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
@@ -1599,32 +1599,54 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   Widget _buildVideoCard(dynamic video, List<dynamic> allVideos) {
     // Handle both Map format and Video entity format
     final videoUrl = video is Map ? video['videoUrl'] : video.videoUrl;
+    final youtubeUrl = video is Map ? video['youtubeUrl'] : video.youtubeUrl;
     final title = video is Map ? video['title'] : video.title;
     final thumbnailUrl = video is Map ? video['thumbnailUrl'] : video.thumbnailUrl;
     final category = video is Map ? video['category'] : video.category;
     final duration = video is Map ? video['durationFormatted'] ?? video['duration'] : video.durationFormatted;
     final description = video is Map ? video['description'] : video.description;
 
+    // Use youtubeUrl if available, otherwise use videoUrl
+    final actualVideoUrl = (youtubeUrl != null && youtubeUrl.isNotEmpty) ? youtubeUrl : videoUrl;
+
     return GestureDetector(
       onTap: () {
-        if (videoUrl != null && videoUrl.isNotEmpty) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CinematicVideoPlayerScreen(
-                videoUrl: videoUrl,
-                title: title ?? 'Video',
-                description: description,
-                thumbnailUrl: thumbnailUrl,
-                suggestedVideos: allVideos,
+        if (actualVideoUrl != null && actualVideoUrl.isNotEmpty) {
+          // Check if it's a YouTube URL
+          final isYouTube = actualVideoUrl.contains('youtube.com') || actualVideoUrl.contains('youtu.be');
+          
+          if (isYouTube) {
+            // Use WebView player for YouTube
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                  videoUrl: actualVideoUrl,
+                  title: title ?? 'Video',
+                  description: description,
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            // Use Chewie player for direct video files
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CinematicVideoPlayerScreen(
+                  videoUrl: actualVideoUrl,
+                  title: title ?? 'Video',
+                  description: description,
+                  thumbnailUrl: thumbnailUrl,
+                  suggestedVideos: allVideos,
+                ),
+              ),
+            );
+          }
         }
       },
       child: Container(
-        width: 280,
-        height: 180,
+        width: 320,
+        height: 220,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -2416,7 +2438,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     }
 
     return SizedBox(
-      height: 200,
+      height: 250,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
@@ -2424,7 +2446,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         itemBuilder: (context, index) {
           final video = videos[index];
           return Container(
-            width: 280,
+            width: 320,
             margin: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
             child: _buildVideoCard(video, videos),
           );
@@ -2455,18 +2477,36 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CinematicVideoPlayerScreen(
-              videoUrl: rawVideoUrl.toString(),
-              title: title,
-              description: description,
-              thumbnailUrl: thumbnailUrl,
-              suggestedVideos: allVideos,
+        // Check if it's a YouTube URL
+        final isYouTube = rawVideoUrl.toString().contains('youtube.com') || rawVideoUrl.toString().contains('youtu.be');
+        
+        if (isYouTube) {
+          // Use WebView player for YouTube
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VideoPlayerScreen(
+                videoUrl: rawVideoUrl.toString(),
+                title: title,
+                description: description,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Use Chewie player for direct video files
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CinematicVideoPlayerScreen(
+                videoUrl: rawVideoUrl.toString(),
+                title: title,
+                description: description,
+                thumbnailUrl: thumbnailUrl,
+                suggestedVideos: allVideos,
+              ),
+            ),
+          );
+        }
       },
       child: Container(
         height: 200,

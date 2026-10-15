@@ -109,28 +109,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
         allowPlaybackSpeedChanging: true,
         autoInitialize: true,
         errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading video',
-                  style: TextStyle(color: AppDesignSystem.getPrimaryText(context)),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  errorMessage,
-                  style: TextStyle(
-                    color: AppDesignSystem.getSecondaryText(context),
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
+          return _buildErrorWidget(errorMessage);
         },
       );
 
@@ -260,7 +239,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
     );
   }
 
-  Widget _buildErrorWidget() {
+  Widget _buildErrorWidget([String? customMessage]) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -268,19 +247,34 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
-            'Error loading video',
+            'Video format not supported',
             style: TextStyle(color: AppDesignSystem.getPrimaryText(context)),
           ),
           const SizedBox(height: 8),
-          if (_errorMessage != null)
+          if (customMessage != null)
             Text(
-              _errorMessage!,
+              customMessage,
               style: TextStyle(
                 color: AppDesignSystem.getSecondaryText(context),
                 fontSize: 12,
               ),
               textAlign: TextAlign.center,
             ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final uri = Uri.parse(widget.videoUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open in Browser'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppDesignSystem.primaryPurple,
+              foregroundColor: Colors.white,
+            ),
+          ),
         ],
       ),
     );

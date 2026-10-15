@@ -4,6 +4,7 @@ import 'package:chewie/chewie.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_design_system.dart';
+import 'video_player_screen.dart';
 
 class _VideoData {
   final String id;
@@ -283,7 +284,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
 
   Widget _buildSuggestedVideos() {
     return SizedBox(
-      height: 120,
+      height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -291,7 +292,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
         itemBuilder: (context, index) {
           final video = _VideoData.fromDynamic(widget.suggestedVideos![index]);
           return Container(
-            width: 200,
+            width: 250,
             margin: const EdgeInsets.only(right: 12),
             child: _buildSuggestedVideoCard(video),
           );
@@ -303,18 +304,36 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
   Widget _buildSuggestedVideoCard(_VideoData video) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CinematicVideoPlayerScreen(
-              videoUrl: video.videoUrl,
-              title: video.title,
-              description: video.description,
-              thumbnailUrl: video.thumbnail,
-              suggestedVideos: widget.suggestedVideos,
+        // Check if it's a YouTube URL
+        final isYouTube = video.videoUrl.contains('youtube.com') || video.videoUrl.contains('youtu.be');
+        
+        if (isYouTube) {
+          // Use WebView player for YouTube
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VideoPlayerScreen(
+                videoUrl: video.videoUrl,
+                title: video.title,
+                description: video.description,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Use Chewie player for direct video files
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CinematicVideoPlayerScreen(
+                videoUrl: video.videoUrl,
+                title: video.title,
+                description: video.description,
+                thumbnailUrl: video.thumbnail,
+                suggestedVideos: widget.suggestedVideos,
+              ),
+            ),
+          );
+        }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

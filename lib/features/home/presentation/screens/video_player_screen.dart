@@ -256,6 +256,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final finalThumbnail = (thumbnail != null && thumbnail.isNotEmpty) ? thumbnail : thumbnailUrl;
     final videoUrl = video is Map ? video['youtubeUrl'] : video.youtubeUrl;
     final actualVideoUrl = (videoUrl != null && videoUrl.isNotEmpty) ? videoUrl : (video is Map ? video['videoUrl'] : video.videoUrl);
+    final createdAt = video is Map ? video['createdAt'] : video.createdAt;
+
+    String formattedDate = '';
+    if (createdAt != null) {
+      try {
+        final date = DateTime.parse(createdAt);
+        formattedDate = '${date.day}/${date.month}/${date.year}';
+      } catch (e) {
+        formattedDate = '';
+      }
+    }
 
     return GestureDetector(
       onTap: () {
@@ -334,6 +345,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formattedDate,
+            style: TextStyle(
+              color: AppDesignSystem.getSecondaryText(context),
+              fontSize: 10,
+            ),
           ),
         ],
       ),

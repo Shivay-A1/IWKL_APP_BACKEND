@@ -13,6 +13,7 @@ class Video {
   final bool? isFeatured;
   final List<String>? tags;
   final int? displayOrder;
+  final String? createdAt;
 
   Video({
     required this.id,
@@ -29,6 +30,7 @@ class Video {
     this.isFeatured,
     this.tags,
     this.displayOrder,
+    this.createdAt,
   });
 
   String get durationString => duration != null ? _formatDuration(duration!) : '0:00';
@@ -36,6 +38,16 @@ class Video {
   // Helper getter for backward compatibility
   String get thumbnailUrl => thumbnail ?? '';
   String get durationFormatted => durationString;
+
+  String get formattedDate {
+    if (createdAt == null) return '';
+    try {
+      final date = DateTime.parse(createdAt!);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return '';
+    }
+  }
 
   String _formatDuration(int seconds) {
     final minutes = seconds ~/ 60;
@@ -68,6 +80,7 @@ class Video {
           ? (json['tags'] as List).map((e) => e.toString()).toList()
           : null,
       displayOrder: json['displayOrder'] as int?,
+      createdAt: json['createdAt'] as String?,
     );
   }
 }

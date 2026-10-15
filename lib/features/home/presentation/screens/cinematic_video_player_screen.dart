@@ -14,6 +14,7 @@ class _VideoData {
   final String videoUrl;
   final int? duration;
   final int? viewCount;
+  final String? createdAt;
 
   _VideoData({
     required this.id,
@@ -23,6 +24,7 @@ class _VideoData {
     required this.videoUrl,
     this.duration,
     this.viewCount,
+    this.createdAt,
   });
 
   factory _VideoData.fromDynamic(dynamic data) {
@@ -38,6 +40,7 @@ class _VideoData {
           videoUrl: (data.videoUrl as String?) ?? (data.youtubeUrl as String?) ?? '',
           duration: data.duration as int?,
           viewCount: data.viewCount as int?,
+          createdAt: data.createdAt as String?,
         );
       } catch (e) {
         // If direct access fails, fall back to Map access
@@ -55,7 +58,18 @@ class _VideoData {
                 (data['youtubeUrl'] as String?) ?? '',
       duration: data['duration'] as int?,
       viewCount: data['viewCount'] as int?,
+      createdAt: data['createdAt'] as String?,
     );
+  }
+
+  String get formattedDate {
+    if (createdAt == null) return '';
+    try {
+      final date = DateTime.parse(createdAt!);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return '';
+    }
   }
 }
 
@@ -399,7 +413,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            video.viewCount != null ? '${video.viewCount} views' : '0 views',
+            video.formattedDate,
             style: TextStyle(
               color: AppDesignSystem.getSecondaryText(context),
               fontSize: 10,

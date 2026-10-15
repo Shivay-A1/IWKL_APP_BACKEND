@@ -1596,7 +1596,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     );
   }
 
-  Widget _buildVideoCard(dynamic video) {
+  Widget _buildVideoCard(dynamic video, List<dynamic> allVideos) {
     // Handle both Map format and Video entity format
     final videoUrl = video is Map ? video['videoUrl'] : video.videoUrl;
     final title = video is Map ? video['title'] : video.title;
@@ -1616,7 +1616,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 title: title ?? 'Video',
                 description: description,
                 thumbnailUrl: thumbnailUrl,
-                suggestedVideos: state.videos,
+                suggestedVideos: allVideos,
               ),
             ),
           );
@@ -2401,7 +2401,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         const SizedBox(height: AppDesignSystem.mdSpacing),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-          child: _buildFeaturedContent(featuredVideos.isNotEmpty ? featuredVideos.first : null),
+          child: _buildFeaturedContent(featuredVideos.isNotEmpty ? featuredVideos.first : null, videos),
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         // Horizontal list of all videos
@@ -2426,14 +2426,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           return Container(
             width: 280,
             margin: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
-            child: _buildVideoCard(video),
+            child: _buildVideoCard(video, videos),
           );
         },
       ),
     );
   }
 
-  Widget _buildFeaturedContent(dynamic video) {
+  Widget _buildFeaturedContent(dynamic video, List<dynamic> allVideos) {
     // Handle both Map format and Video entity format
     if (video == null) {
       return _buildEmptyFeaturedContent();
@@ -2463,7 +2463,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               title: title,
               description: description,
               thumbnailUrl: thumbnailUrl,
-              suggestedVideos: state.videos,
+              suggestedVideos: allVideos,
             ),
           ),
         );

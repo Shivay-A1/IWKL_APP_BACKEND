@@ -310,7 +310,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    _formatDuration(video.duration),
+                    video.duration != null ? _formatDuration(video.duration!) : '',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -333,7 +333,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            '${video.viewCount} views',
+            video.viewCount != null ? '${video.viewCount} views' : '0 views',
             style: TextStyle(
               color: AppDesignSystem.getSecondaryText(context),
               fontSize: 10,

@@ -68,7 +68,7 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
         slivers: [
           // Hero Banner
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: 400,
             pinned: true,
             backgroundColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(

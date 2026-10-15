@@ -1617,6 +1617,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           
           if (isYouTube) {
             // Use WebView player for YouTube - ALWAYS pass suggestedVideos
+            print('Navigating to VideoPlayerScreen with ${allVideos.length} suggested videos');
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -2483,6 +2484,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         
         if (isYouTube) {
           // Use WebView player for YouTube
+          print('Navigating to VideoPlayerScreen (featured) with ${allVideos.length} suggested videos');
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -2492,6 +2494,30 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 description: description,
                 suggestedVideos: allVideos,
               ),
+            ),
+          );
+        } else {
+          // Use Chewie player for direct video files - also pass suggestedVideos
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CinematicVideoPlayerScreen(
+                videoUrl: rawVideoUrl.toString(),
+                title: title,
+                description: description,
+                thumbnailUrl: thumbnailUrl,
+                suggestedVideos: allVideos,
+              ),
+            ),
+          );
+        }
+      },
+      child: Container(
+        height: 200,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppDesignSystem.cardBackground,
             ),
           );
         } else {

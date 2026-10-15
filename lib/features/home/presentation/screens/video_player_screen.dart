@@ -25,6 +25,33 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  List<dynamic> _filteredSuggestedVideos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Filter out the current video from suggested videos
+    if (widget.suggestedVideos != null) {
+      print('VideoPlayerScreen: Total suggested videos received: ${widget.suggestedVideos!.length}');
+      _filteredSuggestedVideos = widget.suggestedVideos!.where((video) {
+        final videoUrl = video is Map ? video['youtubeUrl'] : video.youtubeUrl;
+        final altVideoUrl = video is Map ? video['videoUrl'] : video.videoUrl;
+        final actualUrl = (videoUrl != null && videoUrl.isNotEmpty) ? videoUrl : altVideoUrl;
+        final isDifferent = actualUrl != widget.videoUrl;
+        print('VideoPlayerScreen: Video URL - $actualUrl, Current - ${widget.videoUrl}, Keep: $isDifferent');
+        return isDifferent;
+      }).toList();
+      print('VideoPlayerScreen: Filtered suggested videos count: ${_filteredSuggestedVideos.length}');
+    } else {
+      print('VideoPlayerScreen: suggestedVideos is null');
+    }
+  }
+
+  @override
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+}
+
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final html.IFrameElement _iframeElement;
   bool _isLoading = true;
   bool _isYouTube = false;
@@ -236,9 +263,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: widget.suggestedVideos!.length,
+        itemCount: _filteredSuggestedVideos.length,
         itemBuilder: (context, index) {
-          final video = widget.suggestedVideos![index];
+          final video = _filteredSuggestedVideos[index];
           return Container(
             width: 250,
             margin: const EdgeInsets.only(right: 12),

@@ -2055,7 +2055,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     final imageUrl = isNewsEntity ? newsItem.thumbnail : (newsItem['imageUrl'] ?? '');
     final category = isNewsEntity ? newsItem.category : (newsItem['category'] ?? 'NEWS');
     final excerpt = isNewsEntity ? newsItem.excerpt : (newsItem['excerpt'] ?? '');
-    final content = isNewsEntity ? newsItem.content : (newsItem['content'] ?? '');
     final publishedAt = isNewsEntity ? newsItem.publishedAt : (newsItem['publishedAt'] != null ? DateTime.parse(newsItem['publishedAt']) : DateTime.now());
     final link = isNewsEntity ? newsItem.link : (newsItem['link'] ?? '');
     final id = isNewsEntity ? newsItem.id : (newsItem['id'] ?? '');
@@ -2065,7 +2064,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
       id: id,
       title: title,
       excerpt: excerpt,
-      content: content.isNotEmpty ? content : null,
       thumbnail: imageUrl != null && imageUrl.isNotEmpty ? imageUrl : null,
       publishedAt: publishedAt,
       category: category,

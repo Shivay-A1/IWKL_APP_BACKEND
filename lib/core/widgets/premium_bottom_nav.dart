@@ -55,14 +55,14 @@ class PremiumBottomNav extends StatelessWidget {
                   isActive: currentIndex == 0,
                 ),
                 _buildNavItem(
-                  icon: Icons.sports_cricket,
-                  label: 'Live',
+                  icon: Icons.play_circle,
+                  label: 'OTT',
                   index: 1,
                   isActive: currentIndex == 1,
                 ),
                 _buildNavItem(
-                  icon: Icons.play_circle,
-                  label: 'OTT',
+                  icon: Icons.sports_cricket,
+                  label: 'Live',
                   index: 2,
                   isActive: currentIndex == 2,
                 ),

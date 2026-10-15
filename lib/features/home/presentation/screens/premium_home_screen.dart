@@ -22,6 +22,7 @@ import '../../domain/entities/news.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import 'video_player_screen.dart';
+import 'news_detail_screen.dart';
 
 class PremiumHomeScreen extends StatefulWidget {
   const PremiumHomeScreen({super.key});
@@ -140,9 +141,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                           _buildBannersSection(state.banners),
                           const SizedBox(height: AppDesignSystem.lgSpacing),
 
-                          // Hero Banner (Immediately after banners)
-                          _buildHeroBanner(state.sliders),
-                          const SizedBox(height: AppDesignSystem.lgSpacing),
+                          // Hero Banner (Commented out on 2026-10-08)
+                          // _buildHeroBanner(state.sliders),
+                          // const SizedBox(height: AppDesignSystem.lgSpacing),
 
                           // Live Match Card - Always show with placeholder if empty
                           Padding(
@@ -222,13 +223,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               case 0:
                 break;
               case 1:
-                Navigator.pushNamed(context, '/live-match');
-                break;
-              case 2:
                 Navigator.pushNamed(context, '/ott');
                 break;
+              case 2:
+                Navigator.pushNamed(context, '/live-match');
+                break;
               case 3:
-                Navigator.pushNamed(context, '/teams');
+                Navigator.pushNamed(context, '/news');
                 break;
               case 4:
                 Navigator.pushNamed(context, '/profile');
@@ -462,18 +463,19 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-          child: Text(
-            'Banners',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppDesignSystem.getPrimaryText(context),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
+        // Banners heading removed as requested
+        // Padding(
+        //   padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+        //   child: Text(
+        //     'Banners',
+        //     style: TextStyle(
+        //       fontSize: 18,
+        //       fontWeight: FontWeight.bold,
+        //       color: AppDesignSystem.getPrimaryText(context),
+        //       letterSpacing: 0.5,
+        //     ),
+        //   ),
+        // ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         SizedBox(
           height: 200,
@@ -546,93 +548,96 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildHeroBanner(List<dynamic> sliders) {
+    // Hero banner commented out as requested on 2026-10-08
+    return const SizedBox.shrink();
+
     // Use data from admin panel, fallback to reference image if empty
-    if (sliders.isNotEmpty && sliders[0] != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-        child: Container(
-          height: 180,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-            boxShadow: [
-              BoxShadow(
-                color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-            child: Image.network(
-              sliders[0].toString(),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: AppDesignSystem.primaryGradient,
-                    borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Hero Banner',
-                      style: TextStyle(
-                        color: AppDesignSystem.getPrimaryText(context),
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      );
-    }
-    
-    // Fallback to reference image
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-          boxShadow: [
-            BoxShadow(
-              color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-          child: Image.asset(
-            'assets/banners/hero_banner_reference.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: AppDesignSystem.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Hero Banner',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+    // if (sliders.isNotEmpty && sliders[0] != null) {
+    //   return Padding(
+    //     padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+    //     child: Container(
+    //       height: 180,
+    //       decoration: BoxDecoration(
+    //         borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //         boxShadow: [
+    //           BoxShadow(
+    //             color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+    //             blurRadius: 20,
+    //             offset: const Offset(0, 8),
+    //           ),
+    //         ],
+    //       ),
+    //       child: ClipRRect(
+    //         borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //         child: Image.network(
+    //           sliders[0].toString(),
+    //           fit: BoxFit.cover,
+    //           errorBuilder: (context, error, stackTrace) {
+    //             return Container(
+    //               decoration: BoxDecoration(
+    //                 gradient: AppDesignSystem.primaryGradient,
+    //                 borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //               ),
+    //               child: Center(
+    //                 child: Text(
+    //                   'Hero Banner',
+    //                   style: TextStyle(
+    //                     color: AppDesignSystem.getPrimaryText(context),
+    //                     fontSize: 20,
+    //                     fontWeight: FontWeight.bold,
+    //                   ),
+    //                 ),
+    //               ),
+    //             );
+    //           },
+    //         ),
+    //       ),
+    //     ),
+    //   );
+    // }
+    //
+    // // Fallback to reference image
+    // return Padding(
+    //   padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+    //   child: Container(
+    //     height: 180,
+    //     decoration: BoxDecoration(
+    //       borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //       boxShadow: [
+    //         BoxShadow(
+    //           color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+    //           blurRadius: 20,
+    //           offset: const Offset(0, 8),
+    //         ),
+    //       ],
+    //     ),
+    //     child: ClipRRect(
+    //       borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //       child: Image.asset(
+    //         'assets/banners/hero_banner_reference.png',
+    //         fit: BoxFit.cover,
+    //         errorBuilder: (context, error, stackTrace) {
+    //           return Container(
+    //             decoration: BoxDecoration(
+    //               gradient: AppDesignSystem.primaryGradient,
+    //               borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+    //             ),
+    //             child: const Center(
+    //               child: Text(
+    //                 'Hero Banner',
+    //                 style: TextStyle(
+    //                   color: Colors.white,
+    //                   fontSize: 20,
+    //                   fontWeight: FontWeight.bold,
+    //                 ),
+    //               ),
+    //             ),
+    //           );
+    //         },
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 
   Widget _buildLiveMatchCard(dynamic liveMatch) {
@@ -1533,10 +1538,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildTopVideos(List<dynamic> videos) {
-    // Convert Video entities to the format expected by _buildVideoCard
-    final displayVideos = videos;
+    // Filter videos that are NOT featured (for Top Videos section)
+    final videoVideos = videos.where((video) {
+      final isFeatured = video is Map ? video['isFeatured'] : video.isFeatured;
+      return isFeatured == false;
+    }).toList();
 
-    if (displayVideos.isEmpty) {
+    if (videoVideos.isEmpty) {
       return const SizedBox.shrink(); // Don't show videos section if no data
     }
 
@@ -1577,9 +1585,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-            itemCount: displayVideos.length > 5 ? 5 : displayVideos.length,
+            itemCount: videoVideos.length > 5 ? 5 : videoVideos.length,
             itemBuilder: (context, index) {
-              final video = displayVideos[index];
+              final video = videoVideos[index];
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
                 child: _buildVideoCard(video),
@@ -1689,21 +1697,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      duration ?? '00:00',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -2062,123 +2055,96 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     final title = isNewsEntity ? newsItem.title : (newsItem['title'] ?? '');
     final imageUrl = isNewsEntity ? newsItem.thumbnail : (newsItem['imageUrl'] ?? '');
     final category = isNewsEntity ? newsItem.category : (newsItem['category'] ?? 'NEWS');
-    final date = isNewsEntity ? newsItem.date : (newsItem['date'] ?? '');
+    final excerpt = isNewsEntity ? newsItem.excerpt : (newsItem['excerpt'] ?? '');
+    final content = isNewsEntity ? newsItem.content : (newsItem['content'] ?? '');
+    final publishedAt = isNewsEntity ? newsItem.publishedAt : (newsItem['publishedAt'] != null ? DateTime.parse(newsItem['publishedAt']) : DateTime.now());
+    final link = isNewsEntity ? newsItem.link : (newsItem['link'] ?? '');
+    final id = isNewsEntity ? newsItem.id : (newsItem['id'] ?? '');
 
-    return Container(
-      width: 280,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppDesignSystem.cardBackground,
-            AppDesignSystem.secondaryCard,
+    // Create News object for navigation
+    final news = News(
+      id: id,
+      title: title,
+      excerpt: excerpt,
+      content: content.isNotEmpty ? content : null,
+      thumbnail: imageUrl != null && imageUrl.isNotEmpty ? imageUrl : null,
+      publishedAt: publishedAt,
+      category: category,
+      link: link != null && link.isNotEmpty ? link : null,
+    );
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NewsDetailScreen(news: news),
+          ),
+        );
+      },
+      child: Container(
+        width: 280,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppDesignSystem.cardBackground,
+              AppDesignSystem.secondaryCard,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+          border: Border.all(
+            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-        border: Border.all(
-          color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppDesignSystem.lgRadius),
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  height: 130,
-                  color: AppDesignSystem.cardBackground,
-                  child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.article,
-                              size: 50,
-                              color: AppDesignSystem.secondaryText,
-                            );
-                          },
-                        )
-                      : const Icon(
-                          Icons.article,
-                          size: 50,
-                          color: AppDesignSystem.secondaryText,
-                        ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppDesignSystem.primaryPurple.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      category ?? 'NEWS',
-                      style: TextStyle(
-                        color: AppDesignSystem.getPrimaryText(context),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppDesignSystem.lgRadius),
+              ),
+              child: Stack(
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: AppDesignSystem.getPrimaryText(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    date,
-                    style: TextStyle(
-                      color: AppDesignSystem.getSecondaryText(context),
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppDesignSystem.primaryPurple,
-                          AppDesignSystem.primaryPurple.withValues(alpha: 0.8),
-                        ],
+                    height: 130,
+                    color: AppDesignSystem.cardBackground,
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.article,
+                                size: 50,
+                                color: AppDesignSystem.secondaryText,
+                              );
+                            },
+                          )
+                        : const Icon(
+                            Icons.article,
+                            size: 50,
+                            color: AppDesignSystem.secondaryText,
+                          ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppDesignSystem.primaryPurple.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
                       child: Text(
-                        'Read News',
+                        category ?? 'NEWS',
                         style: TextStyle(
                           color: AppDesignSystem.getPrimaryText(context),
                           fontSize: 10,
@@ -2190,9 +2156,29 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: AppDesignSystem.getPrimaryText(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ).animate().fadeIn().scale(),
     );
   }
 
@@ -2372,6 +2358,12 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildOTTSection(List<dynamic> videos) {
+    // Filter videos that are featured
+    final featuredVideos = videos.where((video) {
+      final isFeatured = video is Map ? video['isFeatured'] : video.isFeatured;
+      return isFeatured == true;
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2390,7 +2382,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         const SizedBox(height: AppDesignSystem.mdSpacing),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-          child: _buildFeaturedContent(videos.isNotEmpty ? videos.first : null),
+          child: _buildFeaturedContent(featuredVideos.isNotEmpty ? featuredVideos.first : null),
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         _buildOTTCategories(),
@@ -2404,48 +2396,79 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
       return _buildEmptyFeaturedContent();
     }
 
-    final thumbnailUrl = video is Map ? video['thumbnailUrl'] : video.thumbnailUrl;
+    final rawThumbnail = video is Map ? video['thumbnailUrl'] : video.thumbnail;
+    final rawVideoUrl = video is Map ? video['youtubeUrl'] : video.videoUrl;
     final title = video is Map ? video['title'] : video.title;
+    final videoId = video is Map ? video['id'] : video.id;
 
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppDesignSystem.cardBackground,
-            AppDesignSystem.secondaryCard,
+    // Only use thumbnail if it's provided and not a YouTube URL
+    final thumbnailUrl = (rawThumbnail != null && 
+                         rawThumbnail.toString().isNotEmpty && 
+                         !rawThumbnail.toString().contains('youtube.com') && 
+                         !rawThumbnail.toString().contains('youtu.be'))
+        ? rawThumbnail.toString()
+        : null;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VideoPlayerScreen(
+              videoUrl: rawVideoUrl.toString(),
+              title: title,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        height: 200,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppDesignSystem.cardBackground,
+              AppDesignSystem.secondaryCard,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+          border: Border.all(
+            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-        border: Border.all(
-          color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
+        child: Stack(
         children: [
           Positioned.fill(
-            child: Image.network(
-              thumbnailUrl ?? '',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppDesignSystem.cardBackground,
-                  child: const Icon(
-                    Icons.play_circle,
-                    size: 70,
-                    color: AppDesignSystem.secondaryText,
+            child: thumbnailUrl != null
+                ? Image.network(
+                    thumbnailUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppDesignSystem.cardBackground,
+                        child: const Icon(
+                          Icons.play_circle,
+                          size: 70,
+                          color: AppDesignSystem.secondaryText,
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    color: AppDesignSystem.cardBackground,
+                    child: const Icon(
+                      Icons.play_circle,
+                      size: 70,
+                      color: AppDesignSystem.secondaryText,
+                    ),
                   ),
-                );
-              },
-            ),
           ),
           Positioned.fill(
             child: Container(
@@ -2518,6 +2541,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -2796,7 +2820,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                       child: InkWell(
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.pushNamed(context, '/team-profile', arguments: team['teamName']);
+                          Navigator.pushNamed(context, '/team-profile', arguments: team['id']);
                         },
                         borderRadius: BorderRadius.circular(26),
                         child: Center(

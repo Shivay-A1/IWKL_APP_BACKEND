@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import 'package:iwkl_app/core/constants/app_constants.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class LiveMatchScreen extends StatefulWidget {
   const LiveMatchScreen({super.key});
@@ -109,7 +110,31 @@ class _LiveMatchScreenState extends State<LiveMatchScreen> {
                         style: TextStyle(color: Colors.white70),
                       ),
                     )
-                  : SingleChildScrollView(
+                  : Column(
+                      children: [
+                        // Stream Video Player
+                        if (_liveMatch['streamUrl'] != null && _liveMatch['streamUrl'].toString().isNotEmpty)
+                          Container(
+                            height: 250,
+                            margin: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFF9333EA).withOpacity(0.5),
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: WebViewWidget(
+                                controller: WebViewController()
+                                  ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                                  ..loadRequest(Uri.parse(_liveMatch['streamUrl'])),
+                              ),
+                            ),
+                          ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.9, 0.9)),
+                        // Match Content
+                        Expanded(
+                          child: SingleChildScrollView(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,6 +301,9 @@ class _LiveMatchScreenState extends State<LiveMatchScreen> {
                           _buildInfoRow('Half', _liveMatch['halfTimeStatus'] ?? 'Unknown'),
                         ],
                       ),
+                          ),
+                        ),
+                      ],
                     ),
     );
   }

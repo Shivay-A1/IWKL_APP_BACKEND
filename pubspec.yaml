@@ -54,6 +54,7 @@ dependencies:
   cached_network_image: ^3.4.1
   video_player: ^2.9.1
   chewie: ^1.7.5
+  webview_flutter: ^4.4.2
 
   # UI Components
   flutter_svg: ^2.0.10+1

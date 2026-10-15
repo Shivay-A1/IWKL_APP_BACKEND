@@ -22,7 +22,6 @@ import '../../domain/entities/news.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import 'video_player_screen.dart';
-import 'news_detail_screen.dart';
 
 class PremiumHomeScreen extends StatefulWidget {
   const PremiumHomeScreen({super.key});
@@ -2075,10 +2074,33 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NewsDetailScreen(news: news),
+        // Show news detail in a simple dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF13051E),
+            title: Text(news.title, style: const TextStyle(color: Colors.white)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (news.thumbnail != null)
+                    Image.network(news.thumbnail!, height: 200, fit: BoxFit.cover),
+                  const SizedBox(height: 16),
+                  Text(
+                    news.excerpt,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close', style: TextStyle(color: Color(0xFF9333EA))),
+              ),
+            ],
           ),
         );
       },

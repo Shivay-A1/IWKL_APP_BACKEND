@@ -3,14 +3,47 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_design_system.dart';
-import '../../domain/entities/video.dart';
+
+class _VideoData {
+  final String id;
+  final String title;
+  final String? description;
+  final String thumbnail;
+  final String videoUrl;
+  final int? duration;
+  final int? viewCount;
+
+  _VideoData({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.thumbnail,
+    required this.videoUrl,
+    this.duration,
+    this.viewCount,
+  });
+
+  factory _VideoData.fromDynamic(dynamic data) {
+    return _VideoData(
+      id: data['id'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String?,
+      thumbnail: (data['thumbnail'] as String?) ?? 
+                 (data['thumbnailUrl'] as String?) ?? '',
+      videoUrl: (data['videoUrl'] as String?) ?? 
+                (data['youtubeUrl'] as String?) ?? '',
+      duration: data['duration'] as int?,
+      viewCount: data['viewCount'] as int?,
+    );
+  }
+}
 
 class CinematicVideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final String title;
   final String? description;
   final String? thumbnailUrl;
-  final List<Video>? suggestedVideos;
+  final List<dynamic>? suggestedVideos;
 
   const CinematicVideoPlayerScreen({
     super.key,
@@ -242,7 +275,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: widget.suggestedVideos!.length,
         itemBuilder: (context, index) {
-          final video = widget.suggestedVideos![index];
+          final video = _VideoData.fromDynamic(widget.suggestedVideos![index]);
           return Container(
             width: 200,
             margin: const EdgeInsets.only(right: 12),
@@ -253,7 +286,7 @@ class _CinematicVideoPlayerScreenState extends State<CinematicVideoPlayerScreen>
     );
   }
 
-  Widget _buildSuggestedVideoCard(Video video) {
+  Widget _buildSuggestedVideoCard(_VideoData video) {
     return GestureDetector(
       onTap: () {
         Navigator.pushReplacement(

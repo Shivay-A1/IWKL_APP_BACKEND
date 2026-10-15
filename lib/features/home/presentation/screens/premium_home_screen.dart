@@ -1587,7 +1587,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               final video = videoVideos[index];
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
-                child: _buildVideoCard(video),
+                child: _buildVideoCard(video, videoVideos),
               );
             },
           ),

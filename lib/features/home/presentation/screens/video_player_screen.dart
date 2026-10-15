@@ -3,18 +3,21 @@ import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_design_system.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final String title;
   final String? description;
+  final List<dynamic>? suggestedVideos;
 
   const VideoPlayerScreen({
     super.key,
     required this.videoUrl,
     required this.title,
     this.description,
+    this.suggestedVideos,
   });
 
   @override
@@ -204,8 +207,135 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 ],
               ),
             ),
+            // Suggested Videos
+            if (widget.suggestedVideos != null && widget.suggestedVideos!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Suggested Videos',
+                  style: TextStyle(
+                    color: AppDesignSystem.getPrimaryText(context),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSuggestedVideos(),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestedVideos() {
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: widget.suggestedVideos!.length,
+        itemBuilder: (context, index) {
+          final video = widget.suggestedVideos![index];
+          return Container(
+            width: 250,
+            margin: const EdgeInsets.only(right: 12),
+            child: _buildSuggestedVideoCard(video),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSuggestedVideoCard(dynamic video) {
+    final title = video is Map ? video['title'] : video.title;
+    final thumbnail = video is Map ? video['thumbnail'] : video.thumbnail;
+    final thumbnailUrl = video is Map ? video['thumbnailUrl'] : video.thumbnailUrl;
+    final finalThumbnail = (thumbnail != null && thumbnail.isNotEmpty) ? thumbnail : thumbnailUrl;
+    final videoUrl = video is Map ? video['youtubeUrl'] : video.youtubeUrl;
+    final actualVideoUrl = (videoUrl != null && videoUrl.isNotEmpty) ? videoUrl : (video is Map ? video['videoUrl'] : video.videoUrl);
+
+    return GestureDetector(
+      onTap: () {
+        final isYouTube = actualVideoUrl.contains('youtube.com') || actualVideoUrl.contains('youtu.be');
+        
+        if (isYouTube) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VideoPlayerScreen(
+                videoUrl: actualVideoUrl,
+                title: title ?? 'Video',
+                description: video is Map ? video['description'] : video.description,
+                suggestedVideos: widget.suggestedVideos,
+              ),
+            ),
+          );
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: finalThumbnail ?? '',
+                  height: 90,
+                  width: 250,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 90,
+                    width: 250,
+                    color: Colors.grey[800],
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppDesignSystem.primaryPurple,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 90,
+                    width: 250,
+                    color: Colors.grey[800],
+                    child: const Icon(Icons.play_circle_outline, color: Colors.grey),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 4,
+                right: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Icon(
+                    Icons.play_circle,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title ?? 'Video',
+            style: TextStyle(
+              color: AppDesignSystem.getPrimaryText(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

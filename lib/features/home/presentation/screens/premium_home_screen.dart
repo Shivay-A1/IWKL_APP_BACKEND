@@ -1616,7 +1616,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           final isYouTube = actualVideoUrl.contains('youtube.com') || actualVideoUrl.contains('youtu.be');
           
           if (isYouTube) {
-            // Use WebView player for YouTube
+            // Use WebView player for YouTube - ALWAYS pass suggestedVideos
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1624,6 +1624,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                   videoUrl: actualVideoUrl,
                   title: title ?? 'Video',
                   description: description,
+                  suggestedVideos: allVideos,
                 ),
               ),
             );
@@ -2489,6 +2490,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 videoUrl: rawVideoUrl.toString(),
                 title: title,
                 description: description,
+                suggestedVideos: allVideos,
               ),
             ),
           );

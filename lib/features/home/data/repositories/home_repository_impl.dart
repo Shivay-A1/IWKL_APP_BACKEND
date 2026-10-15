@@ -69,6 +69,18 @@ class HomeRepositoryImpl implements HomeRepository {
       final news = newsDataList
           .map((n) => News.fromJson(n as Map<String, dynamic>))
           .toList();
+
+      // Fetch videos from Railway backend
+      final videosResponse = await _apiClient.get('/videos');
+      List<dynamic> videosDataList = [];
+      if (videosResponse.data is Map && videosResponse.data['data'] is List) {
+        videosDataList = videosResponse.data['data'] as List<dynamic>;
+      } else if (videosResponse.data is List) {
+        videosDataList = videosResponse.data as List<dynamic>;
+      }
+      final videos = videosDataList
+          .map((v) => Video.fromJson(v as Map<String, dynamic>))
+          .toList();
       
       // Extract image URLs from banners for slider
       final sliderImages = bannersData
@@ -95,38 +107,7 @@ class HomeRepositoryImpl implements HomeRepository {
         'liveMatch': liveMatch,
         'upcomingMatches': upcomingMatchEntities,
         'news': news,
-        'videos': [
-          Video(
-            id: '1',
-            title: 'IWKL Kabaddi Highlight 1',
-            thumbnail: 'https://img.youtube.com/vi/E8YS-cPPdZY/hqdefault.jpg',
-            videoUrl: 'https://youtube.com/shorts/E8YS-cPPdZY?si=JgGJfcXqrXCRqWK9',
-            category: 'Highlights',
-            duration: 30,
-            isPremium: false,
-            viewCount: 0,
-          ),
-          Video(
-            id: '2',
-            title: 'IWKL Kabaddi Highlight 2',
-            thumbnail: 'https://img.youtube.com/vi/YZjFff0rfqE/hqdefault.jpg',
-            videoUrl: 'https://youtube.com/shorts/YZjFff0rfqE?si=9YAFEtAKNtyH_IQP',
-            category: 'Highlights',
-            duration: 30,
-            isPremium: false,
-            viewCount: 0,
-          ),
-          Video(
-            id: '3',
-            title: 'IWKL Kabaddi Highlight 3',
-            thumbnail: 'https://img.youtube.com/vi/KMIeFlYcPg0/hqdefault.jpg',
-            videoUrl: 'https://youtube.com/shorts/KMIeFlYcPg0?si=n45a687cXbkcnQb6',
-            category: 'Highlights',
-            duration: 30,
-            isPremium: false,
-            viewCount: 0,
-          ),
-        ],
+        'videos': videos,
         'pointsTable': <Map<String, dynamic>>[],
         'sponsors': <String>[],
         'gallery': galleryData,

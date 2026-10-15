@@ -2508,20 +2508,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               ),
             ),
           );
-        } else {
-          // Use Chewie player for direct video files
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CinematicVideoPlayerScreen(
-                videoUrl: rawVideoUrl.toString(),
-                title: title,
-                description: description,
-                thumbnailUrl: thumbnailUrl,
-                suggestedVideos: allVideos,
-              ),
-            ),
-          );
         }
       },
       child: Container(

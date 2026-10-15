@@ -1629,6 +1629,20 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               ),
             );
           } else {
+            // Use Chewie player for direct video files - also pass suggestedVideos
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CinematicVideoPlayerScreen(
+                  videoUrl: actualVideoUrl,
+                  title: title ?? 'Video',
+                  description: description,
+                  thumbnailUrl: thumbnailUrl,
+                  suggestedVideos: allVideos,
+                ),
+              ),
+            );
+          } else {
             // Use Chewie player for direct video files
             Navigator.push(
               context,
@@ -2490,6 +2504,20 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 videoUrl: rawVideoUrl.toString(),
                 title: title,
                 description: description,
+                suggestedVideos: allVideos,
+              ),
+            ),
+          );
+        } else {
+          // Use Chewie player for direct video files - also pass suggestedVideos
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CinematicVideoPlayerScreen(
+                videoUrl: rawVideoUrl.toString(),
+                title: title,
+                description: description,
+                thumbnailUrl: thumbnailUrl,
                 suggestedVideos: allVideos,
               ),
             ),

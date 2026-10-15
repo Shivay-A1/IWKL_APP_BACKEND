@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
+import 'cinematic_video_player_screen.dart';
 import '../../../../core/widgets/premium_drawer.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/theme_provider.dart';
@@ -1610,10 +1611,12 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => VideoPlayerScreen(
+              builder: (context) => CinematicVideoPlayerScreen(
                 videoUrl: videoUrl,
                 title: title ?? 'Video',
                 description: description,
+                thumbnailUrl: thumbnailUrl,
+                suggestedVideos: state.videos,
               ),
             ),
           );
@@ -2455,10 +2458,12 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VideoPlayerScreen(
+            builder: (context) => CinematicVideoPlayerScreen(
               videoUrl: rawVideoUrl.toString(),
               title: title,
               description: description,
+              thumbnailUrl: thumbnailUrl,
+              suggestedVideos: state.videos,
             ),
           ),
         );

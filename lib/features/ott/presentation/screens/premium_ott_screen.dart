@@ -1,10 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
+import '../../../home/domain/entities/video.dart';
+import '../../../home/presentation/screens/video_player_screen.dart';
 
-class PremiumOTTScreen extends StatelessWidget {
+class PremiumOTTScreen extends StatefulWidget {
   const PremiumOTTScreen({super.key});
+
+  @override
+  State<PremiumOTTScreen> createState() => _PremiumOTTScreenState();
+}
+
+class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
+  List<Video> _videos = [];
+  bool _isLoading = true;
+  Map<String, List<Video>> _videosByCategory = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVideos();
+  }
+
+  Future<void> _fetchVideos() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/videos'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> videosData = data['data'] ?? [];
+        
+        setState(() {
+          _videos = videosData.map((json) => Video.fromJson(json)).toList();
+          _groupVideosByCategory();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching videos: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _groupVideosByCategory() {
+    _videosByCategory = {};
+    for (final video in _videos) {
+      final category = video.category ?? 'All';
+      if (!_videosByCategory.containsKey(category)) {
+        _videosByCategory[category] = [];
+      }
+      _videosByCategory[category]!.add(video);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,45 +183,27 @@ class PremiumOTTScreen extends StatelessWidget {
             ),
           ),
 
-          // Continue Watching
-          SliverToBoxAdapter(
-            child: _buildSection('Continue Watching'),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHorizontalVideoList(),
-          ),
+          // Featured Videos
+          if (_videosByCategory['featured'] != null && _videosByCategory['featured']!.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: _buildSection('Featured'),
+            ),
+            SliverToBoxAdapter(
+              child: _buildHorizontalVideoList(_videosByCategory['featured']!),
+            ),
+          ],
 
-          // Live Matches
-          SliverToBoxAdapter(
-            child: _buildSection('Live Matches'),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHorizontalVideoList(),
-          ),
-
-          // Highlights
-          SliverToBoxAdapter(
-            child: _buildSection('Highlights'),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHorizontalVideoList(),
-          ),
-
-          // Exclusive Content
-          SliverToBoxAdapter(
-            child: _buildSection('Exclusive'),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHorizontalVideoList(),
-          ),
-
-          // Replay
-          SliverToBoxAdapter(
-            child: _buildSection('Replay'),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHorizontalVideoList(),
-          ),
+          // Videos by Category
+          ..._videosByCategory.entries.where((e) => e.key != 'featured').map((entry) {
+            return [
+              SliverToBoxAdapter(
+                child: _buildSection(entry.key),
+              ),
+              SliverToBoxAdapter(
+                child: _buildHorizontalVideoList(entry.value),
+              ),
+            ];
+          }).expand((e) => e),
         ],
       ),
     );
@@ -202,27 +238,46 @@ class PremiumOTTScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHorizontalVideoList() {
+  Widget _buildHorizontalVideoList(List<Video> videos) {
+    if (videos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return SizedBox(
-      height: 180,
+      height: 200,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.lgSpacing),
-        itemCount: 6,
+        itemCount: videos.length,
         itemBuilder: (context, index) {
-          return _buildVideoCard(index);
+          return _buildVideoCard(videos[index], index);
         },
       ),
     );
   }
 
-  Widget _buildVideoCard(int index) {
+  Widget _buildVideoCard(Video video, int index) {
+    final videoUrl = video.youtubeUrl ?? video.videoUrl;
+    final isYouTube = videoUrl.contains('youtube.com') || videoUrl.contains('youtu.be');
+
     return Container(
-      width: 280,
+      width: 320,
       margin: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
       child: PremiumCard(
         onTap: () {
-          // Play video
+          if (isYouTube) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                  videoUrl: videoUrl,
+                  title: video.title,
+                  description: video.description,
+                  suggestedVideos: _videos,
+                ),
+              ),
+            );
+          }
         },
         padding: EdgeInsets.zero,
         child: Column(
@@ -237,55 +292,39 @@ class PremiumOTTScreen extends StatelessWidget {
                       topLeft: Radius.circular(AppDesignSystem.xlRadius),
                       topRight: Radius.circular(AppDesignSystem.xlRadius),
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: AppDesignSystem.cardGradient,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.play_circle,
-                          size: 50,
-                          color: AppDesignSystem.mutedText,
-                        ),
-                      ),
+                    child: Image.network(
+                      video.thumbnail,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: AppDesignSystem.cardGradient,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle,
+                              size: 50,
+                              color: AppDesignSystem.mutedText,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   // Duration Badge
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        '1:30:45',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                  ),
-                  // Live Badge
-                  if (index == 0)
+                  if (video.duration != null)
                     Positioned(
                       top: 8,
-                      left: 8,
+                      right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Colors.red, Colors.redAccent],
-                          ),
+                          color: Colors.black.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'LIVE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Text(
+                          video.durationString,
+                          style: const TextStyle(color: Colors.white, fontSize: 10),
                         ),
                       ),
                     ),
@@ -307,14 +346,14 @@ class PremiumOTTScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Match ${index + 1}: Delhi vs Punjab',
+                    video.title,
                     style: AppDesignSystem.readableBody,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'IWKL Season 2026 • 2 days ago',
+                    video.formattedDate,
                     style: AppDesignSystem.softGreyCaption,
                   ),
                 ],

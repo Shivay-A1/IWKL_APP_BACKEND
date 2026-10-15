@@ -1602,6 +1602,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     final thumbnailUrl = video is Map ? video['thumbnailUrl'] : video.thumbnailUrl;
     final category = video is Map ? video['category'] : video.category;
     final duration = video is Map ? video['durationFormatted'] ?? video['duration'] : video.durationFormatted;
+    final description = video is Map ? video['description'] : video.description;
 
     return GestureDetector(
       onTap: () {
@@ -1612,6 +1613,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
               builder: (context) => VideoPlayerScreen(
                 videoUrl: videoUrl,
                 title: title ?? 'Video',
+                description: description,
               ),
             ),
           );
@@ -2399,8 +2401,32 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           child: _buildFeaturedContent(featuredVideos.isNotEmpty ? featuredVideos.first : null),
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
-        _buildOTTCategories(),
+        // Horizontal list of all videos
+        _buildHorizontalVideoList(videos),
       ],
+    );
+  }
+
+  Widget _buildHorizontalVideoList(List<dynamic> videos) {
+    if (videos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+        itemCount: videos.length,
+        itemBuilder: (context, index) {
+          final video = videos[index];
+          return Container(
+            width: 280,
+            margin: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
+            child: _buildVideoCard(video),
+          );
+        },
+      ),
     );
   }
 
@@ -2414,6 +2440,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     final rawVideoUrl = video is Map ? video['youtubeUrl'] : video.videoUrl;
     final title = video is Map ? video['title'] : video.title;
     final videoId = video is Map ? video['id'] : video.id;
+    final description = video is Map ? video['description'] : video.description;
 
     // Only use thumbnail if it's provided and not a YouTube URL
     final thumbnailUrl = (rawThumbnail != null && 
@@ -2431,6 +2458,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             builder: (context) => VideoPlayerScreen(
               videoUrl: rawVideoUrl.toString(),
               title: title,
+              description: description,
             ),
           ),
         );

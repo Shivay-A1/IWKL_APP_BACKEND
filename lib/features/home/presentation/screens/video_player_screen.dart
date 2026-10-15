@@ -2,16 +2,19 @@ import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_design_system.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final String title;
+  final String? description;
 
   const VideoPlayerScreen({
     super.key,
     required this.videoUrl,
     required this.title,
+    this.description,
   });
 
   @override
@@ -21,32 +24,59 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final html.IFrameElement _iframeElement;
   bool _isLoading = true;
+  bool _isYouTube = false;
 
   @override
   void initState() {
     super.initState();
-    _iframeElement = html.IFrameElement()
-      ..src = _getEmbedUrl(widget.videoUrl)
-      ..style.width = '100%'
-      ..style.height = '100%'
-      ..style.border = 'none'
-      ..allowFullscreen = true;
+    _isYouTube = _isYouTubeUrl(widget.videoUrl);
+    
+    if (_isYouTube) {
+      final embedUrl = _getEmbedUrl(widget.videoUrl);
+      _iframeElement = html.IFrameElement()
+        ..src = embedUrl
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..style.border = 'none'
+        ..allowFullscreen = true;
 
-    // Register the iframe element with Flutter
-    // ignore: undefined_prefixed_name
-    ui_web.platformViewRegistry.registerViewFactory(
-      'video-player-${widget.videoUrl}',
-      (int viewId) => _iframeElement,
-    );
+      // Register the iframe element with Flutter
+      // ignore: undefined_prefixed_name
+      ui_web.platformViewRegistry.registerViewFactory(
+        'video-player-${widget.videoUrl}',
+        (int viewId) => _iframeElement,
+      );
 
-    // Listen for iframe load event
-    _iframeElement.onLoad.listen((_) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    });
+      // Listen for iframe load event
+      _iframeElement.onLoad.listen((_) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    } else {
+      // For non-YouTube URLs, open externally after a short delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _launchExternalVideo();
+        }
+      });
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  bool _isYouTubeUrl(String url) {
+    return url.contains('youtube.com') || url.contains('youtu.be');
+  }
+
+  Future<void> _launchExternalVideo() async {
+    final uri = Uri.parse(widget.videoUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   String _getEmbedUrl(String url) {
@@ -73,7 +103,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    _iframeElement.remove();
+    if (_isYouTube) {
+      _iframeElement.remove();
+    }
     super.dispose();
   }
 
@@ -99,16 +131,81 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          HtmlElementView(viewType: 'video-player-${widget.videoUrl}'),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppDesignSystem.primaryPurple,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Video Player
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Stack(
+                children: [
+                  if (_isYouTube)
+                    HtmlElementView(viewType: 'video-player-${widget.videoUrl}')
+                  else
+                    Container(
+                      color: Colors.black,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.play_circle_outline,
+                              size: 64,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _launchExternalVideo,
+                              icon: const Icon(Icons.open_in_new),
+                              label: const Text('Watch Video'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppDesignSystem.primaryPurple,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (_isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: AppDesignSystem.primaryPurple,
+                      ),
+                    ),
+                ],
               ),
             ),
-        ],
+            // Title and Description
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      color: AppDesignSystem.getPrimaryText(context),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (widget.description != null && widget.description!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.description!,
+                      style: TextStyle(
+                        color: AppDesignSystem.getSecondaryText(context),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

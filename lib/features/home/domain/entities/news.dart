@@ -2,6 +2,7 @@ class News {
   final String id;
   final String title;
   final String excerpt;
+  final String? content;
   final String? thumbnail;
   final DateTime publishedAt;
   final String? category;
@@ -11,6 +12,7 @@ class News {
     required this.id,
     required this.title,
     required this.excerpt,
+    this.content,
     this.thumbnail,
     required this.publishedAt,
     this.category,
@@ -44,6 +46,7 @@ class News {
       id: json['id'] as String,
       title: json['title'] as String,
       excerpt: json['excerpt'] ?? '',
+      content: json['content'] as String?,
       thumbnail: (json['thumbnail'] as String?) ?? (json['featuredImage'] as String?),
       publishedAt: json['publishedAt'] != null
           ? DateTime.parse(json['publishedAt'] as String)

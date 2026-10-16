@@ -2209,6 +2209,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       title,
@@ -2219,6 +2220,14 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Read More',
+                      style: TextStyle(
+                        color: AppDesignSystem.primaryPurple,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),

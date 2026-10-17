@@ -93,9 +93,10 @@ export const createNews = async (data: any, file?: Express.Multer.File, files?: 
     return !!existing;
   });
 
+  const { imageUrl, ...newsData } = data;
   const news = await prisma.news.create({
     data: {
-      ...data,
+      ...newsData,
       slug,
       featuredImage,
       link: data.link || null,
@@ -262,10 +263,11 @@ export const updateNews = async (id: string, data: any, file?: Express.Multer.Fi
     });
   }
 
+  const { imageUrl, ...newsData } = data;
   const news = await prisma.news.update({
     where: { id },
     data: {
-      ...data,
+      ...newsData,
       ...(featuredImage !== undefined && { featuredImage }),
       ...(data.link !== undefined && { link: data.link || null }),
     },

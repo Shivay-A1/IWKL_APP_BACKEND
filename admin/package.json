@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 3000",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
     "dev:prod": "NEXT_PUBLIC_API_URL=https://iwklappbackend-production.up.railway.app/api next dev -p 3000"
   },

@@ -29,6 +29,8 @@ export default function NewsPage() {
     category: '',
     isPublished: true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchNews();
@@ -90,6 +92,42 @@ export default function NewsPage() {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      toast.error('Failed to upload image');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imageUrl = await handleImageUpload(file);
+      setFormData({ ...formData, featuredImage: imageUrl });
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -100,12 +138,12 @@ export default function NewsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">News Management</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">News Management</h1>
             </div>
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-300 hover:text-white px-4 py-2"
+                className="text-gray-300 hover:text-white px-3 sm:px-4 py-2 text-sm sm:text-base"
               >
                 Back to Dashboard
               </button>
@@ -114,22 +152,22 @@ export default function NewsPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-white">Latest News</h2>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Latest News</h2>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg flex items-center gap-2 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             Create News
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {news.map((item) => (
             <div key={item.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
-              <div className="relative h-48 bg-background">
+              <div className="relative h-40 sm:h-48 bg-background">
                 {item.featuredImage ? (
                   <img
                     src={item.featuredImage}
@@ -138,7 +176,7 @@ export default function NewsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Upload className="w-12 h-12 text-gray-500" />
+                    <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-gray-500" />
                   </div>
                 )}
                 <div className="absolute top-2 right-2">
@@ -152,15 +190,15 @@ export default function NewsPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4">
-                <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+              <div className="p-3 sm:p-4">
+                <h3 className="text-white font-semibold mb-2 text-sm sm:text-base">{item.title}</h3>
                 {item.category && (
-                  <p className="text-gray-400 text-sm mb-2">{item.category}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2">{item.category}</p>
                 )}
-                <p className="text-gray-300 text-sm mb-4 line-clamp-3">{item.content}</p>
+                <p className="text-gray-300 text-xs sm:text-sm mb-4 line-clamp-3">{item.content}</p>
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Calendar className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-gray-500 text-xs sm:text-sm">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                   </div>
                   <button
@@ -177,9 +215,9 @@ export default function NewsPage() {
       </main>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold text-white mb-6">Create News</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">Create News</h3>
             <form onSubmit={handleCreateNews} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
@@ -202,13 +240,38 @@ export default function NewsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Featured Image URL</label>
-                <input
-                  type="url"
-                  value={formData.featuredImage}
-                  onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
+                <label className="block text-sm font-medium text-gray-300 mb-2">Featured Image</label>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="flex-1 text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
+                      disabled={uploading}
+                    />
+                  </div>
+                  <div className="text-center text-gray-400 text-sm">OR</div>
+                  <input
+                    type="url"
+                    value={formData.featuredImage}
+                    onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  />
+                </div>
+                {uploading && (
+                  <div className="text-center text-primary text-sm mt-2">Uploading image...</div>
+                )}
+                {formData.featuredImage && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.featuredImage}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
@@ -229,16 +292,27 @@ export default function NewsPage() {
                 />
                 <label htmlFor="isPublished" className="text-gray-300">Published</label>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
                   className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
                 >
                   Create News
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setFormData({
+                      title: '',
+                      content: '',
+                      featuredImage: '',
+                      category: '',
+                      isPublished: true,
+                    });
+                    setImageFile(null);
+                  }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg"
                 >
                   Cancel

@@ -99,7 +99,6 @@ export const createNews = async (data: any, file?: Express.Multer.File, files?: 
       ...newsData,
       slug,
       featuredImage,
-      link: data.link || null,
     },
   });
 
@@ -269,7 +268,6 @@ export const updateNews = async (id: string, data: any, file?: Express.Multer.Fi
     data: {
       ...newsData,
       ...(featuredImage !== undefined && { featuredImage }),
-      ...(data.link !== undefined && { link: data.link || null }),
     },
   });
 

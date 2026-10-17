@@ -17,4 +17,4 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx next start -p $PORT"]
+CMD ["sh", "-c", "next start -p $PORT"]

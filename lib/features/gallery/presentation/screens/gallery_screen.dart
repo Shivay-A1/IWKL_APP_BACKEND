@@ -23,28 +23,28 @@ import 'dart:convert';
 class GalleryItem {
   final String id;
   final String title;
-  final String imageUrl;
+  final String mediaUrl;
   final String? category;
   final String? description;
-  final bool isActive;
+  final bool isFeatured;
 
   GalleryItem({
     required this.id,
     required this.title,
-    required this.imageUrl,
+    required this.mediaUrl,
     this.category,
     this.description,
-    required this.isActive,
+    required this.isFeatured,
   });
 
   factory GalleryItem.fromJson(Map<String, dynamic> json) {
     return GalleryItem(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+      mediaUrl: json['mediaUrl'] ?? json['imageUrl'] ?? '',
       category: json['category'],
       description: json['description'],
-      isActive: json['isActive'] ?? true,
+      isFeatured: json['isFeatured'] ?? json['isActive'] ?? true,
     );
   }
 }
@@ -70,7 +70,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Future<void> _loadGalleryImages() async {
     try {
       final response = await http.get(
-        Uri.parse('https://iwklappbackend-production.up.railway.app/gallery'),
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/gallery'),
       );
 
       if (response.statusCode == 200) {
@@ -79,7 +79,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         setState(() {
           _galleryItems = items
               .map((item) => GalleryItem.fromJson(item))
-              .where((item) => item.isActive)
+              .where((item) => item.isFeatured)
               .toList();
           _isLoading = false;
         });
@@ -196,7 +196,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: CachedNetworkImage(
-                imageUrl: item.imageUrl,
+                imageUrl: item.mediaUrl.startsWith('http') 
+                    ? item.mediaUrl 
+                    : 'https://iwklappbackend-production.up.railway.app${item.mediaUrl}',
                 fit: BoxFit.cover,
                 width: double.infinity,
                 placeholder: (context, url) => Container(

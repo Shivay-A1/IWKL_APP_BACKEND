@@ -1,3 +1,19 @@
+// ============================================================================
+// ⚠️  NEWS FUNCTIONALITY LOCKED - DO NOT MODIFY WITHOUT APPROVAL ⚠️
+// ============================================================================
+// This file contains the news management functionality for the admin panel.
+// Any changes to this file must be approved by the project owner.
+//
+// BEFORE MAKING CHANGES:
+// 1. Get explicit approval from project owner
+// 2. Document changes in project documentation
+// 3. Test thoroughly in development environment
+//
+// LOCKED BY: Project Owner
+// LOCKED DATE: 2026-10-21
+// STATUS: 🔒 LOCKED
+// ============================================================================
+
 'use client';
 
 import { useEffect, useState } from 'react';

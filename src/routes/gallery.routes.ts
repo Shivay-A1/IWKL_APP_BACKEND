@@ -17,6 +17,10 @@ router.get('/album/:album', galleryController.getGalleryByAlbum);
 
 router.get('/:id', galleryController.getGalleryItemById);
 
+router.patch('/:id', uploadMultiple('files', 2), [
+  body('title').optional().trim().notEmpty(),
+], validate, galleryController.updateGalleryItem);
+
 router.put('/:id', uploadMultiple('files', 2), [
   body('title').optional().trim().notEmpty(),
 ], validate, galleryController.updateGalleryItem);

@@ -1,3 +1,19 @@
+// ============================================================================
+// ⚠️  GALLERY FUNCTIONALITY LOCKED - DO NOT MODIFY WITHOUT APPROVAL ⚠️
+// ============================================================================
+// This file contains the gallery management functionality for the admin panel.
+// Any changes to this file must be approved by the project owner.
+//
+// BEFORE MAKING CHANGES:
+// 1. Get explicit approval from project owner
+// 2. Document changes in project documentation
+// 3. Test thoroughly in development environment
+//
+// LOCKED BY: Project Owner
+// LOCKED DATE: 2026-10-21
+// STATUS: 🔒 LOCKED
+// ============================================================================
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -29,6 +45,8 @@ export default function GalleryPage() {
     isActive: true,
     order: 0,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchGallery();
@@ -101,6 +119,43 @@ export default function GalleryPage() {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileType', 'gallery');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      toast.error('Failed to upload image');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imageUrl = await handleImageUpload(file);
+      setFormData({ ...formData, imageUrl });
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -111,12 +166,12 @@ export default function GalleryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">Gallery Management</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Gallery Management</h1>
             </div>
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-300 hover:text-white px-4 py-2"
+                className="text-gray-300 hover:text-white px-3 sm:px-4 py-2 text-sm sm:text-base"
               >
                 Back to Dashboard
               </button>
@@ -125,22 +180,22 @@ export default function GalleryPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-white">Gallery</h2>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Gallery</h2>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg flex items-center gap-2 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             Add Image
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {gallery.map((item) => (
             <div key={item.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
-              <div className="relative h-48 bg-background">
+              <div className="relative h-40 sm:h-48 bg-background">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
@@ -149,7 +204,7 @@ export default function GalleryPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Upload className="w-12 h-12 text-gray-500" />
+                    <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-gray-500" />
                   </div>
                 )}
                 <div className="absolute top-2 right-2">
@@ -163,13 +218,13 @@ export default function GalleryPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4">
-                <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+              <div className="p-3 sm:p-4">
+                <h3 className="text-white font-semibold mb-2 text-sm sm:text-base">{item.title}</h3>
                 {item.category && (
-                  <p className="text-gray-400 text-sm mb-2">{item.category}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2">{item.category}</p>
                 )}
                 {item.description && (
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">{item.description}</p>
+                  <p className="text-gray-300 text-xs sm:text-sm mb-4 line-clamp-2">{item.description}</p>
                 )}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2">
@@ -178,14 +233,14 @@ export default function GalleryPage() {
                       className="text-gray-400 hover:text-white"
                       disabled={item.order === 0}
                     >
-                      <ArrowUp className="w-4 h-4" />
+                      <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
-                    <span className="text-gray-500 text-sm">Order: {item.order}</span>
+                    <span className="text-gray-500 text-xs sm:text-sm">Order: {item.order}</span>
                     <button
                       onClick={() => handleReorderGalleryItem(item.id, item.order + 1)}
                       className="text-gray-400 hover:text-white"
                     >
-                      <ArrowDown className="w-4 h-4" />
+                      <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                   <button
@@ -202,9 +257,9 @@ export default function GalleryPage() {
       </main>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold text-white mb-6">Add Gallery Image</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">Add Gallery Image</h3>
             <form onSubmit={handleCreateGalleryItem} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
@@ -217,14 +272,38 @@ export default function GalleryPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-300 mb-2">Image</label>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="flex-1 text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
+                      disabled={uploading}
+                    />
+                  </div>
+                  <div className="text-center text-gray-400 text-sm">OR</div>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  />
+                </div>
+                {uploading && (
+                  <div className="text-center text-primary text-sm mt-2">Uploading image...</div>
+                )}
+                {formData.imageUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
@@ -263,16 +342,28 @@ export default function GalleryPage() {
                 />
                 <label htmlFor="isActive" className="text-gray-300">Active</label>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
                   className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
                 >
                   Add Image
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setFormData({
+                      title: '',
+                      imageUrl: '',
+                      category: '',
+                      description: '',
+                      isActive: true,
+                      order: 0,
+                    });
+                    setImageFile(null);
+                  }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg"
                 >
                   Cancel

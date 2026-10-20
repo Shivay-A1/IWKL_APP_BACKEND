@@ -28,7 +28,7 @@ interface GalleryItem {
   imageUrl: string;
   category?: string;
   description?: string;
-  isActive: boolean;
+  isFeatured?: boolean;
   order: number;
 }
 
@@ -42,11 +42,13 @@ export default function GalleryPage() {
     imageUrl: '',
     category: '',
     description: '',
-    isActive: true,
+    isFeatured: false,
     order: 0,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
 
   useEffect(() => {
     fetchGallery();
@@ -79,7 +81,7 @@ export default function GalleryPage() {
         imageUrl: '',
         category: '',
         description: '',
-        isActive: true,
+        isFeatured: false,
         order: 0,
       });
       fetchGallery();
@@ -88,9 +90,9 @@ export default function GalleryPage() {
     }
   };
 
-  const handleToggleGalleryItem = async (itemId: string, isActive: boolean) => {
+  const handleToggleGalleryItem = async (itemId: string, isFeatured: boolean) => {
     try {
-      await api.patch(`/gallery/${itemId}`, { isActive });
+      await api.patch(`/gallery/${itemId}`, { isFeatured });
       toast.success('Gallery item status updated');
       fetchGallery();
     } catch (error) {
@@ -116,6 +118,42 @@ export default function GalleryPage() {
       fetchGallery();
     } catch (error) {
       toast.error('Failed to delete gallery item');
+    }
+  };
+
+  const handleEditGalleryItem = (item: GalleryItem) => {
+    setEditingItem(item);
+    setFormData({
+      title: item.title,
+      imageUrl: item.imageUrl,
+      category: item.category || '',
+      description: item.description || '',
+      isFeatured: item.isFeatured || false,
+      order: item.order,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateGalleryItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    try {
+      await api.patch(`/gallery/${editingItem.id}`, formData);
+      toast.success('Gallery item updated successfully');
+      setShowEditModal(false);
+      setEditingItem(null);
+      setFormData({
+        title: '',
+        imageUrl: '',
+        category: '',
+        description: '',
+        isFeatured: false,
+        order: 0,
+      });
+      setImageFile(null);
+      fetchGallery();
+    } catch (error) {
+      toast.error('Failed to update gallery item');
     }
   };
 
@@ -209,12 +247,12 @@ export default function GalleryPage() {
                 )}
                 <div className="absolute top-2 right-2">
                   <button
-                    onClick={() => handleToggleGalleryItem(item.id, !item.isActive)}
+                    onClick={() => handleToggleGalleryItem(item.id, !item.isFeatured)}
                     className={`p-2 rounded-full ${
-                      item.isActive ? 'bg-green-600' : 'bg-gray-600'
+                      item.isFeatured ? 'bg-green-600' : 'bg-gray-600'
                     }`}
                   >
-                    {item.isActive ? <Eye className="w-4 h-4 text-white" /> : <EyeOff className="w-4 h-4 text-white" />}
+                    {item.isFeatured ? <Eye className="w-4 h-4 text-white" /> : <EyeOff className="w-4 h-4 text-white" />}
                   </button>
                 </div>
               </div>
@@ -243,12 +281,20 @@ export default function GalleryPage() {
                       <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => handleDeleteGalleryItem(item.id)}
-                    className="text-red-500 hover:text-red-400"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditGalleryItem(item)}
+                      className="text-blue-500 hover:text-blue-400"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGalleryItem(item.id)}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -335,12 +381,12 @@ export default function GalleryPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  id="isFeatured"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isActive" className="text-gray-300">Active</label>
+                <label htmlFor="isFeatured" className="text-gray-300">Featured</label>
               </div>
               <div className="flex gap-4 pt-4">
                 <button
@@ -354,6 +400,125 @@ export default function GalleryPage() {
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
+                    setFormData({
+                      title: '',
+                      imageUrl: '',
+                      category: '',
+                      description: '',
+                      isActive: true,
+                      order: 0,
+                    });
+                    setImageFile(null);
+                  }}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && editingItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">Edit Gallery Image</h3>
+            <form onSubmit={handleUpdateGalleryItem} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Image</label>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="flex-1 text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
+                      disabled={uploading}
+                    />
+                  </div>
+                  <div className="text-center text-gray-400 text-sm">OR</div>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  />
+                </div>
+                {uploading && (
+                  <div className="text-center text-primary text-sm mt-2">Uploading image...</div>
+                )}
+                {formData.imageUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isFeatured" className="text-gray-300">Featured</label>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                >
+                  Update Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingItem(null);
                     setFormData({
                       title: '',
                       imageUrl: '',

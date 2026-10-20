@@ -155,6 +155,8 @@ model Team {
   stadiumId       String?
   stadium         Stadium? @relation(fields: [stadiumId], references: [id])
   coach           String?
+  captain         String?
+  homeGround      String?
   description     String?
   socialMedia     Json?    // { twitter, instagram, facebook }
   isActive        Boolean  @default(true)

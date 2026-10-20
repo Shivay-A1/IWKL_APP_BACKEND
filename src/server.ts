@@ -213,7 +213,7 @@ app.use(helmet({
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
       "frame-ancestors": ["'self'", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
-      "img-src": ["'self'", "data:", "https://*.up.railway.app", "https://*.railway.app", "https://iwkl-backend-lg6t-production.up.railway.app", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
+      "img-src": ["'self'", "data:", "https://*.up.railway.app", "https://*.railway.app", "https://iwklappbackend-production.up.railway.app", "https://iwkl.in", "https://www.iwkl.in", "https://iwkl.org"],
     },
   } : false,
   crossOriginEmbedderPolicy: false,

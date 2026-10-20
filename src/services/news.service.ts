@@ -12,7 +12,7 @@ const getAbsoluteImageUrl = (relativePath: string) => {
     return relativePath;
   }
   // Use hardcoded backend URL without /api for static files
-  const baseUrl = 'https://iwkl-backend-lg6t-production.up.railway.app';
+  const baseUrl = 'https://iwklappbackend-production.up.railway.app';
   return `${baseUrl}${relativePath}`;
 };
 

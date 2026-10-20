@@ -25,7 +25,7 @@ import toast from 'react-hot-toast';
 interface GalleryItem {
   id: string;
   title: string;
-  imageUrl: string;
+  mediaUrl: string;
   category?: string;
   description?: string;
   isFeatured?: boolean;
@@ -39,14 +39,13 @@ export default function GalleryPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    imageUrl: '',
+    mediaUrl: '',
     category: '',
     description: '',
     isFeatured: false,
     order: 0,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
 
@@ -73,17 +72,32 @@ export default function GalleryPage() {
   const handleCreateGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/gallery', formData);
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('mediaUrl', formData.mediaUrl);
+      data.append('category', formData.category);
+      data.append('description', formData.description);
+      data.append('isFeatured', formData.isFeatured.toString());
+      data.append('order', formData.order.toString());
+      if (imageFile) {
+        data.append('files', imageFile);
+      }
+      await api.post('/gallery', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       toast.success('Gallery item created successfully');
       setShowCreateModal(false);
       setFormData({
         title: '',
-        imageUrl: '',
+        mediaUrl: '',
         category: '',
         description: '',
         isFeatured: false,
         order: 0,
       });
+      setImageFile(null);
       fetchGallery();
     } catch (error) {
       toast.error('Failed to create gallery item');
@@ -125,7 +139,7 @@ export default function GalleryPage() {
     setEditingItem(item);
     setFormData({
       title: item.title,
-      imageUrl: item.imageUrl,
+      mediaUrl: item.mediaUrl,
       category: item.category || '',
       description: item.description || '',
       isFeatured: item.isFeatured || false,
@@ -138,13 +152,27 @@ export default function GalleryPage() {
     e.preventDefault();
     if (!editingItem) return;
     try {
-      await api.patch(`/gallery/${editingItem.id}`, formData);
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('mediaUrl', formData.mediaUrl);
+      data.append('category', formData.category);
+      data.append('description', formData.description);
+      data.append('isFeatured', formData.isFeatured.toString());
+      data.append('order', formData.order.toString());
+      if (imageFile) {
+        data.append('files', imageFile);
+      }
+      await api.patch(`/gallery/${editingItem.id}`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       toast.success('Gallery item updated successfully');
       setShowEditModal(false);
       setEditingItem(null);
       setFormData({
         title: '',
-        imageUrl: '',
+        mediaUrl: '',
         category: '',
         description: '',
         isFeatured: false,
@@ -157,41 +185,10 @@ export default function GalleryPage() {
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileType', 'gallery');
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-
-      const data = await response.json();
-      return data.url;
-    } catch (error) {
-      toast.error('Failed to upload image');
-      throw error;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    try {
-      const imageUrl = await handleImageUpload(file);
-      setFormData({ ...formData, imageUrl });
-      toast.success('Image uploaded successfully');
-    } catch (error) {
-      console.error('Upload error:', error);
-    }
+    setImageFile(file);
   };
 
   if (loading) {
@@ -234,9 +231,9 @@ export default function GalleryPage() {
           {gallery.map((item) => (
             <div key={item.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
               <div className="relative h-40 sm:h-48 bg-background">
-                {item.imageUrl ? (
+                {item.mediaUrl ? (
                   <img
-                    src={item.imageUrl}
+                    src={item.mediaUrl.startsWith('http') ? item.mediaUrl : `https://iwklappbackend-production.up.railway.app${item.mediaUrl}`}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
@@ -326,25 +323,31 @@ export default function GalleryPage() {
                       accept="image/*"
                       onChange={handleFileChange}
                       className="flex-1 text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
-                      disabled={uploading}
+
                     />
                   </div>
                   <div className="text-center text-gray-400 text-sm">OR</div>
                   <input
                     type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    value={formData.mediaUrl}
+                    onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
                     placeholder="https://example.com/image.jpg"
                     className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                   />
                 </div>
-                {uploading && (
-                  <div className="text-center text-primary text-sm mt-2">Uploading image...</div>
-                )}
-                {formData.imageUrl && (
+                {imageFile && (
                   <div className="mt-2">
                     <img
-                      src={formData.imageUrl}
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                {formData.mediaUrl && !imageFile && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.mediaUrl}
                       alt="Preview"
                       className="w-full h-40 object-cover rounded-lg"
                     />
@@ -392,7 +395,7 @@ export default function GalleryPage() {
                 <button
                   type="submit"
                   className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
-                  disabled={uploading}
+
                 >
                   Add Image
                 </button>
@@ -402,10 +405,10 @@ export default function GalleryPage() {
                     setShowCreateModal(false);
                     setFormData({
                       title: '',
-                      imageUrl: '',
+                      mediaUrl: '',
                       category: '',
                       description: '',
-                      isActive: true,
+                      isFeatured: false,
                       order: 0,
                     });
                     setImageFile(null);
@@ -444,25 +447,31 @@ export default function GalleryPage() {
                       accept="image/*"
                       onChange={handleFileChange}
                       className="flex-1 text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
-                      disabled={uploading}
+
                     />
                   </div>
                   <div className="text-center text-gray-400 text-sm">OR</div>
                   <input
                     type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    value={formData.mediaUrl}
+                    onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
                     placeholder="https://example.com/image.jpg"
                     className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                   />
                 </div>
-                {uploading && (
-                  <div className="text-center text-primary text-sm mt-2">Uploading image...</div>
-                )}
-                {formData.imageUrl && (
+                {imageFile && (
                   <div className="mt-2">
                     <img
-                      src={formData.imageUrl}
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                {formData.mediaUrl && !imageFile && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.mediaUrl}
                       alt="Preview"
                       className="w-full h-40 object-cover rounded-lg"
                     />
@@ -510,7 +519,7 @@ export default function GalleryPage() {
                 <button
                   type="submit"
                   className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
-                  disabled={uploading}
+
                 >
                   Update Image
                 </button>
@@ -521,10 +530,10 @@ export default function GalleryPage() {
                     setEditingItem(null);
                     setFormData({
                       title: '',
-                      imageUrl: '',
+                      mediaUrl: '',
                       category: '',
                       description: '',
-                      isActive: true,
+                      isFeatured: false,
                       order: 0,
                     });
                     setImageFile(null);

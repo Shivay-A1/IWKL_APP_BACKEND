@@ -76,7 +76,7 @@ export const getGalleryItems = async (query: any) => {
       where,
       orderBy: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
-      take: limit,
+      take: limit === 10 ? 1000 : limit,
       select: {
         id: true,
         title: true,
@@ -94,9 +94,15 @@ export const getGalleryItems = async (query: any) => {
     prisma.galleryItem.count({ where }),
   ]);
 
+  const itemsWithImageUrl = items.map(item => ({
+    ...item,
+    imageUrl: item.mediaUrl,
+    isActive: item.isFeatured,
+  }));
+
   return {
-    data: items,
-    pagination: calculatePagination(page, limit, total),
+    data: itemsWithImageUrl,
+    pagination: calculatePagination(page, limit === 10 ? 1000 : limit, total),
   };
 };
 

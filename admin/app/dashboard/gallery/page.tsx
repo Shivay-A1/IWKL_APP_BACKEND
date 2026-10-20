@@ -55,7 +55,7 @@ export default function GalleryPage() {
 
   const fetchGallery = async () => {
     try {
-      const response = await api.get('/gallery');
+      const response = await api.get('/gallery?limit=1000');
       console.log('Gallery response:', response.data);
       // Handle both direct array and paginated response
       const galleryData = response.data?.data || response.data || [];

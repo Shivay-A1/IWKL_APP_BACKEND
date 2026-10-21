@@ -70,7 +70,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Future<void> _loadGalleryImages() async {
     try {
       final response = await http.get(
-        Uri.parse('https://iwklappbackend-production.up.railway.app/api/gallery'),
+        Uri.parse('https://iwklappbackend-production.up.railway.app/api/gallery?limit=1000'),
       );
 
       if (response.statusCode == 200) {

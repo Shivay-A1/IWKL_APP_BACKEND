@@ -49,7 +49,7 @@ class HomeRepositoryImpl implements HomeRepository {
       final bannersData = bannersDataList;
 
       // Fetch gallery from Railway backend
-      final galleryResponse = await _apiClient.get('/api/gallery?limit=1000');
+      final galleryResponse = await _apiClient.get('/gallery?limit=1000');
       List<dynamic> galleryDataList = [];
       if (galleryResponse.data is Map && galleryResponse.data['data'] is List) {
         galleryDataList = galleryResponse.data['data'] as List<dynamic>;

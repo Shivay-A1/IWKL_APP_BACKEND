@@ -7,21 +7,61 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let videoUrl = data.videoUrl;
   let thumbnailUrl = data.thumbnail;
 
-  // Only upload to S3 if files are provided AND uploadType is 'upload'
-  // If videoUrl is provided (YouTube URL), skip S3 upload
-  if (files && files.length > 0 && !data.videoUrl) {
-    // Files are uploaded with field name 'files' from frontend
-    // First file is video, second file is thumbnail (if provided)
-    if (files.length > 0) {
-      const videoFile = files[0];
-      const key = generateS3Key('videos', videoFile.originalname);
-      videoUrl = await uploadToS3(videoFile.buffer, key, videoFile.mimetype);
-    }
+  // For file uploads, store in database as base64 (Railway database storage)
+  // Handle files even when videoUrl is provided (for YouTube thumbnail uploads)
+  if (files && files.length > 0) {
+    try {
+      const { prisma: prismaDB } = await import('../config');
+      const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
 
-    if (files.length > 1) {
-      const thumbnailFile = files[1];
-      const key = generateS3Key('videos/thumbnails', thumbnailFile.originalname);
-      thumbnailUrl = await uploadToS3(thumbnailFile.buffer, key, thumbnailFile.mimetype);
+      // If uploading video file (first file is video when no videoUrl)
+      if (files.length > 0 && !data.videoUrl) {
+        const videoFile = files[0];
+        const videoBase64 = videoFile.buffer.toString('base64');
+        const uploadedVideo = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: videoFile.originalname,
+            fileType: 'video',
+            mimeType: videoFile.mimetype,
+            fileData: videoBase64,
+            fileSize: videoFile.size
+          }
+        });
+        videoUrl = `${backendUrl}/api/files/${uploadedVideo.id}`;
+      }
+
+      // Handle thumbnail (second file or first file if only thumbnail for YouTube)
+      if (files.length > 1) {
+        const thumbnailFile = files[1];
+        const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
+        const uploadedThumbnail = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: thumbnailFile.originalname,
+            fileType: 'image',
+            mimeType: thumbnailFile.mimetype,
+            fileData: thumbnailBase64,
+            fileSize: thumbnailFile.size
+          }
+        });
+        thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
+      } else if (files.length === 1 && data.videoUrl) {
+        // Single file upload with YouTube URL - treat as thumbnail
+        const thumbnailFile = files[0];
+        const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
+        const uploadedThumbnail = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: thumbnailFile.originalname,
+            fileType: 'image',
+            mimeType: thumbnailFile.mimetype,
+            fileData: thumbnailBase64,
+            fileSize: thumbnailFile.size
+          }
+        });
+        thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
+      }
+    } catch (dbError) {
+      console.error('Database upload error:', dbError);
+      throw new Error('Failed to upload video file to database.');
     }
   }
 
@@ -46,6 +86,14 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let publishedAt = data.publishedAt;
   if (publishedAt && typeof publishedAt === 'string') {
     publishedAt = new Date(publishedAt);
+  }
+
+  // Parse displayOrder - ensure it's an integer
+  let displayOrder = data.displayOrder;
+  if (typeof displayOrder === 'string') {
+    displayOrder = parseInt(displayOrder) || 0;
+  } else if (displayOrder === undefined || displayOrder === null) {
+    displayOrder = 0;
   }
 
   // Handle category - if it's a string like 'featured' or 'videos', find or create the category
@@ -79,16 +127,16 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   const video = await prisma.video.create({
     data: {
       title: data.title,
-      description: data.description,
+      description: data.description || null,
       categoryId: categoryId || null,
-      youtubeUrl: isYouTube ? videoUrl : null,
-      thumbnailUrl: thumbnailUrl || data.thumbnailUrl || videoUrl || null,
+      youtubeUrl: isYouTube ? videoUrl : (videoUrl || null),
+      thumbnailUrl: thumbnailUrl || data.thumbnailUrl || null,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,
       duration: duration || null,
       publishedAt: publishedAt || null,
       tags: tags || [],
-      displayOrder: data.displayOrder || 0,
+      displayOrder: displayOrder,
     },
   });
 

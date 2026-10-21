@@ -187,15 +187,13 @@ export const getVideos = async (query: any) => {
         updatedAt: true,
       },
       orderBy: { [sortBy || 'displayOrder']: sortOrder || 'asc' },
-      skip: ((page || 1) - 1) * (limit || 1000),
-      take: limit || 1000,
     }),
     prisma.video.count({ where }),
   ]);
 
   return {
     data: videos,
-    pagination: calculatePagination(page || 1, limit || 1000, total),
+    pagination: calculatePagination(1, videos.length, total),
   };
 };
 
@@ -330,7 +328,6 @@ export const getFeaturedVideos = async () => {
   const videos = await prisma.video.findMany({
     where: { isFeatured: true },
     orderBy: { publishedAt: 'desc' },
-    take: 10,
     select: {
       id: true,
       title: true,

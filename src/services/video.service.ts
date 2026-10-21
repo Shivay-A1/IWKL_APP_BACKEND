@@ -17,6 +17,9 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
       // If uploading video file (first file is video when no videoUrl)
       if (files.length > 0 && !data.videoUrl) {
         const videoFile = files[0];
+        if (!videoFile.buffer) {
+          throw new Error('Video file buffer is missing. File might have been saved to disk instead of memory.');
+        }
         const videoBase64 = videoFile.buffer.toString('base64');
         const uploadedVideo = await prismaDB.uploadedFile.create({
           data: {
@@ -33,6 +36,9 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
       // Handle thumbnail (second file or first file if only thumbnail for YouTube)
       if (files.length > 1) {
         const thumbnailFile = files[1];
+        if (!thumbnailFile.buffer) {
+          throw new Error('Thumbnail file buffer is missing. File might have been saved to disk instead of memory.');
+        }
         const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
         const uploadedThumbnail = await prismaDB.uploadedFile.create({
           data: {
@@ -47,6 +53,9 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
       } else if (files.length === 1 && data.videoUrl) {
         // Single file upload with YouTube URL - treat as thumbnail
         const thumbnailFile = files[0];
+        if (!thumbnailFile.buffer) {
+          throw new Error('Thumbnail file buffer is missing. File might have been saved to disk instead of memory.');
+        }
         const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
         const uploadedThumbnail = await prismaDB.uploadedFile.create({
           data: {

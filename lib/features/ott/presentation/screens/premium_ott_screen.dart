@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../home/domain/entities/video.dart';
@@ -20,11 +21,37 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
   bool _isLoading = true;
   Map<String, List<Video>> _videosByCategory = {};
   List<String> _categories = [];
+  PageController? _pageController;
+  Timer? _autoScrollTimer;
+  int _currentFeaturedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchVideos();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_pageController != null && mounted) {
+        final featuredVideos = _videosByCategory['featured']?.take(5).toList() ?? [];
+        if (featuredVideos.isNotEmpty) {
+          _currentFeaturedIndex = (_currentFeaturedIndex + 1) % featuredVideos.length;
+          _pageController!.animateToPage(
+            _currentFeaturedIndex,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    _autoScrollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchVideos() async {
@@ -43,6 +70,12 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
           _extractCategories();
           _isLoading = false;
         });
+
+        // Start auto-scroll for Featured section
+        if (_videosByCategory['featured'] != null && _videosByCategory['featured']!.isNotEmpty) {
+          _pageController = PageController();
+          _startAutoScroll();
+        }
       }
     } catch (e) {
       print('Error fetching videos: $e');
@@ -206,13 +239,13 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
             ),
           ),
 
-          // Featured Videos
+          // Featured Videos - Auto-scrolling Carousel
           if (_videosByCategory['featured'] != null && _videosByCategory['featured']!.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: _buildSection('Featured'),
             ),
             SliverToBoxAdapter(
-              child: _buildHorizontalVideoList(_videosByCategory['featured']!),
+              child: _buildFeaturedCarousel(),
             ),
           ],
 
@@ -272,6 +305,160 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturedCarousel() {
+    final featuredVideos = _videosByCategory['featured']?.take(5).toList() ?? [];
+    if (featuredVideos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 280,
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: featuredVideos.length,
+        onPageChanged: (index) {
+          _currentFeaturedIndex = index;
+        },
+        itemBuilder: (context, index) {
+          return _buildFeaturedVideoCard(featuredVideos[index]);
+        },
+      ),
+    );
+  }
+
+  Widget _buildFeaturedVideoCard(Video video) {
+    final videoUrl = video.youtubeUrl ?? video.videoUrl;
+    final isYouTube = videoUrl.contains('youtube.com') || videoUrl.contains('youtu.be');
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.lgSpacing),
+      child: PremiumCard(
+        onTap: () {
+          if (isYouTube) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                  videoUrl: videoUrl,
+                  title: video.title,
+                  description: video.description,
+                  suggestedVideos: _videos,
+                ),
+              ),
+            );
+          }
+        },
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(AppDesignSystem.xlRadius),
+                      topRight: Radius.circular(AppDesignSystem.xlRadius),
+                    ),
+                    child: Image.network(
+                      video.thumbnail,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: AppDesignSystem.cardGradient,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle,
+                              size: 80,
+                              color: AppDesignSystem.mutedText,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // Duration Badge
+                  if (video.duration != null)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          video.durationString,
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  // Play Button Overlay
+                  const Center(
+                    child: Icon(
+                      Icons.play_circle_outline,
+                      size: 80,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  // Featured Badge
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: AppDesignSystem.goldGradient,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'FEATURED',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Info
+            Padding(
+              padding: const EdgeInsets.all(AppDesignSystem.lgSpacing),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    video.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    video.formattedDate,
+                    style: AppDesignSystem.softGreyCaption,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

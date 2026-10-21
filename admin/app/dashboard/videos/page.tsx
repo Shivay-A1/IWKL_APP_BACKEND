@@ -26,6 +26,7 @@ export default function VideosPage() {
   const [uploadType, setUploadType] = useState<'youtube' | 'upload'>('youtube');
   const [formData, setFormData] = useState({
     title: '',
+    description: '',
     videoUrl: '',
     thumbnailUrl: '',
     videoFile: null as File | null,
@@ -83,6 +84,7 @@ export default function VideosPage() {
     try {
       const data = new FormData();
       data.append('title', formData.title);
+      data.append('description', formData.description);
       data.append('category', formData.category);
       data.append('isFeatured', formData.isFeatured.toString());
       data.append('isActive', formData.isActive.toString());
@@ -90,6 +92,9 @@ export default function VideosPage() {
 
       if (uploadType === 'youtube') {
         data.append('videoUrl', formData.videoUrl);
+        if (formData.thumbnailFile) {
+          data.append('files', formData.thumbnailFile);
+        }
       } else {
         if (formData.videoFile) {
           data.append('files', formData.videoFile);
@@ -98,6 +103,16 @@ export default function VideosPage() {
           data.append('files', formData.thumbnailFile);
         }
       }
+
+      console.log('Submitting video data:', {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        displayOrder: formData.order,
+        uploadType,
+        hasVideoFile: !!formData.videoFile,
+        hasThumbnailFile: !!formData.thumbnailFile,
+      });
 
       await api.post('/videos', data, {
         headers: {
@@ -109,6 +124,7 @@ export default function VideosPage() {
       setShowCreateModal(false);
       setFormData({
         title: '',
+        description: '',
         videoUrl: '',
         thumbnailUrl: '',
         videoFile: null,
@@ -292,6 +308,16 @@ export default function VideosPage() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  rows={3}
+                  placeholder="Enter video description..."
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">Upload Type</label>
@@ -335,6 +361,25 @@ export default function VideosPage() {
                       placeholder="https://www.youtube.com/watch?v=..."
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail Image (optional)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setFormData({ ...formData, thumbnailFile: file });
+                        }
+                      }}
+                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                    />
+                    {formData.thumbnailFile && (
+                      <p className="text-gray-400 text-sm mt-1">
+                        Selected: {formData.thumbnailFile.name}
+                      </p>
+                    )}
                   </div>
                 </>
               ) : (
@@ -438,6 +483,7 @@ export default function VideosPage() {
                     setShowCreateModal(false);
                     setFormData({
                       title: '',
+                      description: '',
                       videoUrl: '',
                       thumbnailUrl: '',
                       videoFile: null,

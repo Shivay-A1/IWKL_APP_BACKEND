@@ -8,13 +8,13 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let thumbnailUrl = data.thumbnail;
 
   // For file uploads, store in database as base64 (similar to other uploads)
-  // Only upload to S3 if files are provided AND no videoUrl is provided AND S3 is configured
-  if (files && files.length > 0 && !data.videoUrl) {
+  // Handle files even when videoUrl is provided (for YouTube thumbnail uploads)
+  if (files && files.length > 0) {
     try {
       const { prisma: prismaDB } = await import('../config');
 
-      // First file is video, second file is thumbnail (if provided)
-      if (files.length > 0) {
+      // If uploading video file (first file is video when no videoUrl)
+      if (files.length > 0 && !data.videoUrl) {
         const videoFile = files[0];
         const videoBase64 = videoFile.buffer.toString('base64');
         const uploadedVideo = await prismaDB.uploadedFile.create({
@@ -30,8 +30,24 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
         videoUrl = `${backendUrl}/api/files/${uploadedVideo.id}`;
       }
 
+      // Handle thumbnail (second file or first file if only thumbnail for YouTube)
       if (files.length > 1) {
         const thumbnailFile = files[1];
+        const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
+        const uploadedThumbnail = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: thumbnailFile.originalname,
+            fileType: 'image',
+            mimeType: thumbnailFile.mimetype,
+            fileData: thumbnailBase64,
+            fileSize: thumbnailFile.size
+          }
+        });
+        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
+        thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
+      } else if (files.length === 1 && data.videoUrl) {
+        // Single file upload with YouTube URL - treat as thumbnail
+        const thumbnailFile = files[0];
         const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
         const uploadedThumbnail = await prismaDB.uploadedFile.create({
           data: {
@@ -113,9 +129,9 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   const video = await prisma.video.create({
     data: {
       title: data.title,
-      description: data.description,
+      description: data.description || null,
       categoryId: categoryId || null,
-      youtubeUrl: isYouTube ? videoUrl : null,
+      youtubeUrl: isYouTube ? videoUrl : (videoUrl || null),
       thumbnailUrl: thumbnailUrl || data.thumbnailUrl || null,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,

@@ -90,9 +90,6 @@ export default function VideosPage() {
 
       if (uploadType === 'youtube') {
         data.append('videoUrl', formData.videoUrl);
-        if (formData.thumbnailUrl) {
-          data.append('thumbnailUrl', formData.thumbnailUrl);
-        }
       } else {
         if (formData.videoFile) {
           data.append('files', formData.videoFile);
@@ -337,16 +334,6 @@ export default function VideosPage() {
                       className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
                       placeholder="https://www.youtube.com/watch?v=..."
                       required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail URL (optional)</label>
-                    <input
-                      type="url"
-                      value={formData.thumbnailUrl}
-                      onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                      placeholder="https://example.com/thumbnail.jpg"
                     />
                   </div>
                 </>

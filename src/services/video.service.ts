@@ -7,21 +7,47 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let videoUrl = data.videoUrl;
   let thumbnailUrl = data.thumbnail;
 
-  // Only upload to S3 if files are provided AND uploadType is 'upload'
-  // If videoUrl is provided (YouTube URL), skip S3 upload
+  // For file uploads, store in database as base64 (similar to other uploads)
+  // Only upload to S3 if files are provided AND no videoUrl is provided AND S3 is configured
   if (files && files.length > 0 && !data.videoUrl) {
-    // Files are uploaded with field name 'files' from frontend
-    // First file is video, second file is thumbnail (if provided)
-    if (files.length > 0) {
-      const videoFile = files[0];
-      const key = generateS3Key('videos', videoFile.originalname);
-      videoUrl = await uploadToS3(videoFile.buffer, key, videoFile.mimetype);
-    }
+    try {
+      const { prisma: prismaDB } = await import('../config');
 
-    if (files.length > 1) {
-      const thumbnailFile = files[1];
-      const key = generateS3Key('videos/thumbnails', thumbnailFile.originalname);
-      thumbnailUrl = await uploadToS3(thumbnailFile.buffer, key, thumbnailFile.mimetype);
+      // First file is video, second file is thumbnail (if provided)
+      if (files.length > 0) {
+        const videoFile = files[0];
+        const videoBase64 = videoFile.buffer.toString('base64');
+        const uploadedVideo = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: videoFile.originalname,
+            fileType: 'video',
+            mimeType: videoFile.mimetype,
+            fileData: videoBase64,
+            fileSize: videoFile.size
+          }
+        });
+        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
+        videoUrl = `${backendUrl}/api/files/${uploadedVideo.id}`;
+      }
+
+      if (files.length > 1) {
+        const thumbnailFile = files[1];
+        const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
+        const uploadedThumbnail = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: thumbnailFile.originalname,
+            fileType: 'image',
+            mimeType: thumbnailFile.mimetype,
+            fileData: thumbnailBase64,
+            fileSize: thumbnailFile.size
+          }
+        });
+        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
+        thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
+      }
+    } catch (dbError) {
+      console.error('Database upload error:', dbError);
+      throw new Error('Failed to upload video file to database.');
     }
   }
 
@@ -46,6 +72,14 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let publishedAt = data.publishedAt;
   if (publishedAt && typeof publishedAt === 'string') {
     publishedAt = new Date(publishedAt);
+  }
+
+  // Parse displayOrder - ensure it's an integer
+  let displayOrder = data.displayOrder;
+  if (typeof displayOrder === 'string') {
+    displayOrder = parseInt(displayOrder) || 0;
+  } else if (displayOrder === undefined || displayOrder === null) {
+    displayOrder = 0;
   }
 
   // Handle category - if it's a string like 'featured' or 'videos', find or create the category
@@ -82,13 +116,13 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
       description: data.description,
       categoryId: categoryId || null,
       youtubeUrl: isYouTube ? videoUrl : null,
-      thumbnailUrl: thumbnailUrl || data.thumbnailUrl || videoUrl || null,
+      thumbnailUrl: thumbnailUrl || data.thumbnailUrl || null,
       isFeatured: data.isFeatured === 'true' || data.isFeatured === true,
       isActive: data.isActive !== 'false' && data.isActive !== false,
       duration: duration || null,
       publishedAt: publishedAt || null,
       tags: tags || [],
-      displayOrder: data.displayOrder || 0,
+      displayOrder: displayOrder,
     },
   });
 

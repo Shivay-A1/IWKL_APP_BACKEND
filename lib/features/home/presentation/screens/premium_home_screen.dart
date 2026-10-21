@@ -38,6 +38,9 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   int _unreadNotificationCount = 0;
   int _bannerCount = 0;
   final SocketClient _socketClient = SocketClient();
+  PageController? _featuredPageController;
+  Timer? _featuredAutoScrollTimer;
+  int _currentFeaturedIndex = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -57,6 +60,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   void dispose() {
     _bannerPageController.dispose();
     _bannerAutoScrollTimer.cancel();
+    _featuredPageController?.dispose();
+    _featuredAutoScrollTimer?.cancel();
     _socketClient.offNewNotification();
     super.dispose();
   }
@@ -77,6 +82,23 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         final nextPage = (currentPage + 1) % _bannerCount;
         _bannerPageController.animateToPage(
           nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _startFeaturedAutoScroll(List<dynamic> videos) {
+    final featuredVideos = videos.take(5).toList();
+    if (featuredVideos.isEmpty) return;
+
+    _featuredPageController = PageController();
+    _featuredAutoScrollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_featuredPageController != null && mounted) {
+        _currentFeaturedIndex = (_currentFeaturedIndex + 1) % featuredVideos.length;
+        _featuredPageController!.animateToPage(
+          _currentFeaturedIndex,
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
@@ -2458,8 +2480,13 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildOTTSection(List<dynamic> videos) {
-    // Use all videos without filtering
-    final featuredVideos = videos;
+    // Use latest 5 videos for featured carousel
+    final featuredVideos = videos.take(5).toList();
+
+    // Start auto-scroll for featured section
+    if (featuredVideos.isNotEmpty && _featuredPageController == null) {
+      _startFeaturedAutoScroll(videos);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2477,10 +2504,21 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
           ),
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-          child: _buildFeaturedContent(featuredVideos.isNotEmpty ? featuredVideos.first : null, videos),
-        ),
+        // Auto-scrolling Featured Carousel
+        if (featuredVideos.isNotEmpty)
+          SizedBox(
+            height: 280,
+            child: PageView.builder(
+              controller: _featuredPageController,
+              itemCount: featuredVideos.length,
+              onPageChanged: (index) {
+                _currentFeaturedIndex = index;
+              },
+              itemBuilder: (context, index) {
+                return _buildFeaturedCarouselCard(context, featuredVideos[index], videos);
+              },
+            ),
+          ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         // Horizontal list of all videos
         _buildHorizontalVideoList(videos),
@@ -2507,6 +2545,170 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
             child: _buildVideoCard(video, videos),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFeaturedCarouselCard(BuildContext context, dynamic video, List<dynamic> allVideos) {
+    final rawThumbnail = video is Map ? video['thumbnailUrl'] : video.thumbnail;
+    final rawVideoUrl = video is Map ? video['youtubeUrl'] : video.videoUrl;
+    final title = video is Map ? video['title'] : video.title;
+    final description = video is Map ? video['description'] : video.description;
+
+    // Only use thumbnail if it's provided and not a YouTube URL
+    final thumbnailUrl = (rawThumbnail != null && 
+                         rawThumbnail.toString().isNotEmpty && 
+                         !rawThumbnail.toString().contains('youtube.com') && 
+                         !rawThumbnail.toString().contains('youtu.be'))
+        ? rawThumbnail.toString()
+        : null;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
+      child: GestureDetector(
+        onTap: () {
+          final isYouTube = rawVideoUrl.toString().contains('youtube.com') || rawVideoUrl.toString().contains('youtu.be');
+          
+          if (isYouTube) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                  videoUrl: rawVideoUrl.toString(),
+                  title: title,
+                  description: description,
+                  suggestedVideos: allVideos,
+                ),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CinematicVideoPlayerScreen(
+                  videoUrl: rawVideoUrl.toString(),
+                  title: title,
+                  description: description,
+                  thumbnailUrl: thumbnailUrl,
+                  suggestedVideos: allVideos,
+                ),
+              ),
+            );
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppDesignSystem.cardBackground,
+                AppDesignSystem.secondaryCard,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+            border: Border.all(
+              color: AppDesignSystem.primaryPurple.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppDesignSystem.primaryPurple.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: thumbnailUrl != null
+                    ? Image.network(
+                        thumbnailUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppDesignSystem.cardBackground,
+                            child: const Icon(
+                              Icons.play_circle,
+                              size: 80,
+                              color: AppDesignSystem.secondaryText,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: AppDesignSystem.cardBackground,
+                        child: const Icon(
+                          Icons.play_circle,
+                          size: 80,
+                          color: AppDesignSystem.secondaryText,
+                        ),
+                      ),
+              ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        AppDesignSystem.primaryBackground.withValues(alpha: 0.95),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: AppDesignSystem.goldGradient,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'FEATURED',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: AppDesignSystem.lgSpacing,
+                left: AppDesignSystem.lgSpacing,
+                right: AppDesignSystem.lgSpacing,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: AppDesignSystem.getPrimaryText(context),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              // Play button overlay
+              const Center(
+                child: Icon(
+                  Icons.play_circle_outline,
+                  size: 80,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

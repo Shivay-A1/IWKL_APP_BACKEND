@@ -122,8 +122,8 @@ async function seedVideoCategories() {
     console.log('🗄️ Seeding video categories...');
     
     const categories = [
-      { name: 'Featured', slug: 'featured', description: 'Featured videos', displayOrder: 0 },
-      { name: 'Videos', slug: 'videos', description: 'All videos', displayOrder: 1 },
+      { name: 'Featured', slug: 'featured', description: 'Featured videos', displayOrder: 0, isActive: true },
+      { name: 'Videos', slug: 'videos', description: 'All videos', displayOrder: 1, isActive: true },
     ];
     
     for (const category of categories) {
@@ -133,6 +133,7 @@ async function seedVideoCategories() {
           update: {},
           create: category
         });
+        console.log(`✅ Category "${category.name}" seeded successfully`);
       } catch (catError: any) {
         console.log(`⚠️ Category "${category.name}" seeding failed (may already exist):`, catError.message);
       }

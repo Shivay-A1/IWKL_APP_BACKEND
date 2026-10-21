@@ -24,6 +24,8 @@ export default function VideosPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [uploadType, setUploadType] = useState<'youtube' | 'upload'>('youtube');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -81,6 +83,9 @@ export default function VideosPage() {
       return;
     }
 
+    setUploading(true);
+    setUploadProgress(0);
+
     try {
       const data = new FormData();
       data.append('title', formData.title);
@@ -118,6 +123,12 @@ export default function VideosPage() {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / (progressEvent.total || 1)
+          );
+          setUploadProgress(progress);
+        },
       });
 
       toast.success('Video created successfully');
@@ -135,10 +146,13 @@ export default function VideosPage() {
         order: 0,
       });
       setUploadType('youtube');
+      setUploadProgress(0);
       fetchVideos();
     } catch (error) {
       console.error('Error creating video:', error);
       toast.error('Failed to create video');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -473,9 +487,10 @@ export default function VideosPage() {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg"
+                  disabled={uploading}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Video
+                  {uploading ? `Uploading... ${uploadProgress}%` : 'Add Video'}
                 </button>
                 <button
                   type="button"

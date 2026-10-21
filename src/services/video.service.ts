@@ -7,11 +7,12 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
   let videoUrl = data.videoUrl;
   let thumbnailUrl = data.thumbnail;
 
-  // For file uploads, store in database as base64 (similar to other uploads)
+  // For file uploads, store in database as base64 (Railway database storage)
   // Handle files even when videoUrl is provided (for YouTube thumbnail uploads)
   if (files && files.length > 0) {
     try {
       const { prisma: prismaDB } = await import('../config');
+      const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
 
       // If uploading video file (first file is video when no videoUrl)
       if (files.length > 0 && !data.videoUrl) {
@@ -26,7 +27,6 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
             fileSize: videoFile.size
           }
         });
-        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
         videoUrl = `${backendUrl}/api/files/${uploadedVideo.id}`;
       }
 
@@ -43,7 +43,6 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
             fileSize: thumbnailFile.size
           }
         });
-        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
         thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
       } else if (files.length === 1 && data.videoUrl) {
         // Single file upload with YouTube URL - treat as thumbnail
@@ -58,7 +57,6 @@ export const createVideo = async (data: any, files?: Express.Multer.File[]) => {
             fileSize: thumbnailFile.size
           }
         });
-        const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
         thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
       }
     } catch (dbError) {

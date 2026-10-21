@@ -214,19 +214,46 @@ export const updateVideo = async (id: string, data: any, files?: Express.Multer.
   let videoUrl = data.videoUrl;
   let thumbnailUrl = data.thumbnail;
 
-  if (files) {
-    // Files are uploaded with field name 'files' from frontend
-    // First file is video, second file is thumbnail (if provided)
-    if (files.length > 0) {
-      const videoFile = files[0];
-      const key = generateS3Key('videos', videoFile.originalname);
-      videoUrl = await uploadToS3(videoFile.buffer, key, videoFile.mimetype);
-    }
+  // For file uploads, store in database as base64 (Railway database storage)
+  if (files && files.length > 0) {
+    try {
+      const { prisma: prismaDB } = await import('../config');
+      const backendUrl = process.env.BACKEND_URL || 'https://iwklappbackend-production.up.railway.app';
 
-    if (files.length > 1) {
-      const thumbnailFile = files[1];
-      const key = generateS3Key('videos/thumbnails', thumbnailFile.originalname);
-      thumbnailUrl = await uploadToS3(thumbnailFile.buffer, key, thumbnailFile.mimetype);
+      // First file is video
+      if (files.length > 0) {
+        const videoFile = files[0];
+        const videoBase64 = videoFile.buffer.toString('base64');
+        const uploadedVideo = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: videoFile.originalname,
+            fileType: 'video',
+            mimeType: videoFile.mimetype,
+            fileData: videoBase64,
+            fileSize: videoFile.size
+          }
+        });
+        videoUrl = `${backendUrl}/api/files/${uploadedVideo.id}`;
+      }
+
+      // Second file is thumbnail
+      if (files.length > 1) {
+        const thumbnailFile = files[1];
+        const thumbnailBase64 = thumbnailFile.buffer.toString('base64');
+        const uploadedThumbnail = await prismaDB.uploadedFile.create({
+          data: {
+            fileName: thumbnailFile.originalname,
+            fileType: 'image',
+            mimeType: thumbnailFile.mimetype,
+            fileData: thumbnailBase64,
+            fileSize: thumbnailFile.size
+          }
+        });
+        thumbnailUrl = `${backendUrl}/api/files/${uploadedThumbnail.id}`;
+      }
+    } catch (dbError) {
+      console.error('Database upload error:', dbError);
+      throw new Error('Failed to upload video file to database.');
     }
   }
 
@@ -283,11 +310,9 @@ export const deleteVideo = async (id: string) => {
     throw new AppError('Video not found', 404);
   }
 
-  // Delete from S3
-  if (video.youtubeUrl) {
-    const key = video.youtubeUrl.split('/').pop();
-    await deleteFromS3(`videos/${key}`);
-  }
+  // Delete from database (uploaded files)
+  // Note: We're not deleting the actual files from UploadedFile table to keep it simple
+  // In production, you might want to clean up orphaned files
 
   await prisma.video.delete({ where: { id } });
 };

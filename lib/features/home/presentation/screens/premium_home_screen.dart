@@ -2240,19 +2240,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
   }
 
   Widget _buildGalleryPreview(List<dynamic> gallery) {
-    // Get gallery from parameter or use empty list
-    final galleryImages = gallery.isNotEmpty
-        ? (gallery as List).map((item) {
-            String mediaUrl = item['mediaUrl'] as String;
-            // Convert relative path to full URL
-            if (mediaUrl.startsWith('/uploads/')) {
-              mediaUrl = 'https://iwklappbackend-production.up.railway.app$mediaUrl';
-            }
-            return mediaUrl;
-          }).toList()
-        : <String>[];
-    
-    if (galleryImages.isEmpty) {
+    if (gallery.isEmpty) {
       return const SizedBox.shrink(); // Hide gallery section if no images
     }
     
@@ -2289,15 +2277,15 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         ),
         const SizedBox(height: AppDesignSystem.mdSpacing),
         SizedBox(
-          height: 300,
+          height: 320,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.mdSpacing),
-            itemCount: galleryImages.length > 5 ? 5 : galleryImages.length,
+            itemCount: gallery.length > 5 ? 5 : gallery.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(right: AppDesignSystem.mdSpacing),
-                child: _buildGalleryPhoto(galleryImages[index], index),
+                child: _buildGalleryPhoto(gallery[index] as Map<String, dynamic>, index),
               );
             },
           ),
@@ -2306,13 +2294,21 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
     );
   }
 
-  Widget _buildGalleryPhoto(String imageUrl, int index) {
+  Widget _buildGalleryPhoto(Map<String, dynamic> item, int index) {
+    String mediaUrl = item['mediaUrl'] as String? ?? item['imageUrl'] as String? ?? '';
+    // Convert relative path to full URL
+    if (mediaUrl.startsWith('/uploads/')) {
+      mediaUrl = 'https://iwklappbackend-production.up.railway.app$mediaUrl';
+    }
+    final title = item['title'] as String? ?? '';
+    final description = item['description'] as String? ?? '';
+    
     return GestureDetector(
       onTap: () {
-        _showFullScreenImage(imageUrl);
+        _showFullScreenImage(mediaUrl);
       },
       child: Container(
-        width: 300,
+        width: 280,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
           border: Border.all(
@@ -2329,14 +2325,19 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppDesignSystem.lgRadius),
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Image.network(
+                  mediaUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
                       AppDesignSystem.cardBackground,
                       AppDesignSystem.secondaryCard,
                     ],
@@ -2366,6 +2367,48 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> with AutomaticKee
                 ),
               );
             },
+          ),
+              ),
+              if (title.isNotEmpty || description.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppDesignSystem.cardBackground,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(AppDesignSystem.lgRadius),
+                      bottomRight: Radius.circular(AppDesignSystem.lgRadius),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (title.isNotEmpty)
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: AppDesignSystem.getPrimaryText(context),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            color: AppDesignSystem.getSecondaryText(context),
+                            fontSize: 12,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
       ),

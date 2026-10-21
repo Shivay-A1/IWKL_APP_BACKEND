@@ -47,6 +47,7 @@ import 'features/news/presentation/screens/news_screen.dart';
 import 'features/players/presentation/screens/players_screen.dart';
 import 'features/schedule/presentation/screens/premium_matches_screen.dart';
 import 'features/ott/presentation/screens/premium_ott_screen.dart';
+import 'features/ott/presentation/screens/category_videos_screen.dart';
 import 'features/live_match/presentation/screens/live_match_screen.dart';
 import 'core/constants/app_constants.dart';
 import 'screens/premium_splash_screen.dart';
@@ -122,6 +123,10 @@ class IWKLApp extends StatelessWidget {
               '/notifications': (context) => const PremiumNotificationsScreen(),
               '/live-match': (context) => const LiveMatchScreen(),
               '/ott': (context) => const PremiumOTTScreen(),
+              '/category-videos': (context) {
+                final category = ModalRoute.of(context)?.settings.arguments as String? ?? 'All';
+                return CategoryVideosScreen(category: category);
+              },
               '/schedule': (context) => const PremiumMatchesScreen(),
               '/profile': (context) => const ProfileScreen(),
               '/settings': (context) => const SettingsScreen(),

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/premium_widgets.dart';
 import '../../../home/domain/entities/video.dart';
 import '../../../home/presentation/screens/video_player_screen.dart';
+import 'category_videos_screen.dart';
 
 class PremiumOTTScreen extends StatefulWidget {
   const PremiumOTTScreen({super.key});
@@ -18,6 +19,7 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
   List<Video> _videos = [];
   bool _isLoading = true;
   Map<String, List<Video>> _videosByCategory = {};
+  List<String> _categories = [];
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
         setState(() {
           _videos = videosData.map((json) => Video.fromJson(json)).toList();
           _groupVideosByCategory();
+          _extractCategories();
           _isLoading = false;
         });
       }
@@ -60,21 +63,30 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
     }
   }
 
+  void _extractCategories() {
+    _categories = _videosByCategory.keys.toList();
+    // Ensure Featured is first
+    if (_categories.contains('Featured')) {
+      _categories.remove('Featured');
+      _categories.insert(0, 'Featured');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppDesignSystem.primaryBackground,
       body: CustomScrollView(
         slivers: [
-          // Hero Banner
+          // Hero Banner - Full Width Card
           SliverAppBar(
-            expandedHeight: 400,
-            pinned: true,
+            expandedHeight: 500,
+            pinned: false,
             backgroundColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
-                  // Hero Image
+                  // Full Width Banner Background
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -87,7 +99,7 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
                       ),
                     ),
                   ),
-                  // Gradient Overlay
+                  // Banner Image (Optional - you can add real image here)
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
@@ -103,79 +115,90 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
                       ),
                     ),
                   ),
-                  // Content
+                  // Banner Content
                   Positioned(
-                    bottom: 20,
+                    bottom: 30,
                     left: 20,
                     right: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: AppDesignSystem.goldGradient,
-                            borderRadius: BorderRadius.circular(4),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: AppDesignSystem.cardGradient,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppDesignSystem.gold.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: AppDesignSystem.goldGradient,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'LIVE NOW',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                          child: const Text(
-                            'LIVE NOW',
+                          const SizedBox(height: 16),
+                          const Text(
+                            'IWKL Season 2026',
                             style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 10,
+                              color: Colors.white,
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'IWKL Season 2026',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Watch all matches live and on-demand',
+                            style: TextStyle(
+                              color: AppDesignSystem.secondaryText,
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Watch all matches live and on-demand',
-                          style: TextStyle(
-                            color: AppDesignSystem.secondaryText,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.play_arrow, size: 18),
-                              label: const Text('Watch Now'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppDesignSystem.primaryPurple,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {},
+                                icon: const Icon(Icons.play_arrow, size: 20),
+                                label: const Text('Watch Now'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppDesignSystem.primaryPurple,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.info_outline, size: 18),
-                              label: const Text('Info'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(color: Colors.white),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                              const SizedBox(width: 16),
+                              OutlinedButton.icon(
+                                onPressed: () {},
+                                icon: const Icon(Icons.info_outline, size: 20),
+                                label: const Text('Info'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: const BorderSide(color: Colors.white),
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -194,16 +217,24 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
           ],
 
           // Videos by Category
-          ..._videosByCategory.entries.where((e) => e.key != 'featured').map((entry) {
+          ..._categories.where((cat) => cat != 'Featured').map((category) {
             return [
               SliverToBoxAdapter(
-                child: _buildSection(entry.key),
+                child: _buildSection(category),
               ),
               SliverToBoxAdapter(
-                child: _buildHorizontalVideoList(entry.value),
+                child: _buildHorizontalVideoList(_videosByCategory[category] ?? []),
               ),
             ];
           }).expand((e) => e),
+
+          // Categories Grid
+          SliverToBoxAdapter(
+            child: _buildSection('Categories'),
+          ),
+          SliverToBoxAdapter(
+            child: _buildCategoriesGrid(),
+          ),
         ],
       ),
     );
@@ -217,13 +248,20 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
       ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: AppDesignSystem.mediumSectionTitle,
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/category-videos', arguments: title);
+            },
+            child: Text(
+              title,
+              style: AppDesignSystem.mediumSectionTitle,
+            ),
           ),
           const Spacer(),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/category-videos', arguments: title);
+            },
             child: const Text(
               'See All',
               style: TextStyle(
@@ -368,5 +406,72 @@ class _PremiumOTTScreenState extends State<PremiumOTTScreen> {
       curve: AppDesignSystem.smoothCurve,
       delay: Duration(milliseconds: index * 50),
     );
+  }
+
+  Widget _buildCategoriesGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.lgSpacing),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 1.3,
+          crossAxisSpacing: AppDesignSystem.mdSpacing,
+          mainAxisSpacing: AppDesignSystem.mdSpacing,
+        ),
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/category-videos', arguments: category);
+            },
+            child: PremiumCard(
+              padding: const EdgeInsets.all(AppDesignSystem.mdSpacing),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _getCategoryIcon(category),
+                  color: AppDesignSystem.gold,
+                  size: 32,
+                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    category,
+                    style: AppDesignSystem.readableBody,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'featured':
+        return Icons.star;
+      case 'matches':
+        return Icons.sports_cricket;
+      case 'highlights':
+        return Icons.highlight;
+      case 'interviews':
+        return Icons.mic;
+      case 'documentaries':
+        return Icons.movie;
+      case 'behind scenes':
+        return Icons.video_camera_back;
+      case 'analysis':
+        return Icons.analytics;
+      default:
+        return Icons.video_library;
+    }
   }
 }

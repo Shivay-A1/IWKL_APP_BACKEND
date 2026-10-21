@@ -44,7 +44,7 @@ class GalleryItem {
       mediaUrl: json['mediaUrl'] ?? json['imageUrl'] ?? '',
       category: json['category'],
       description: json['description'],
-      isFeatured: json['isFeatured'] ?? json['isActive'] ?? true,
+      isFeatured: json['isFeatured'] ?? json['isActive'] ?? false,
     );
   }
 }
@@ -79,7 +79,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
         setState(() {
           _galleryItems = items
               .map((item) => GalleryItem.fromJson(item))
-              .where((item) => item.isFeatured)
               .toList();
           _isLoading = false;
         });

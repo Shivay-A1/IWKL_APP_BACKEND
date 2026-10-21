@@ -97,6 +97,39 @@ export const uploadMemory = multer({
 
 export const uploadMultipleMemory = (fieldName: string, maxCount: number) => uploadMemory.array(fieldName, maxCount);
 
+// Memory storage for video uploads with 1GB limit
+const videoMemoryStorage = multer.memoryStorage();
+
+export const uploadVideoMemory = multer({
+  storage: videoMemoryStorage,
+  fileFilter: (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    // Allow video files and images (for thumbnails)
+    const allowedTypes = [
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+      'video/x-msvideo',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new AppError('Invalid file type. Only videos (MP4, WebM, MOV) and images are allowed.', 400));
+    }
+  },
+  limits: {
+    fileSize: 1024 * 1024 * 1024, // 1GB limit for video uploads
+    fieldSize: 1024 * 1024 * 1024, // 1GB for field size
+    fields: 10, // Max 10 fields
+    files: 2, // Max 2 files (video + thumbnail)
+  },
+});
+
+export const uploadMultipleVideoMemory = (fieldName: string, maxCount: number) => uploadVideoMemory.array(fieldName, maxCount);
+
 export const upload = multer({
   storage,
   fileFilter,

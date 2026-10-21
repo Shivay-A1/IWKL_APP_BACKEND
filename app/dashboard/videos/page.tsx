@@ -282,6 +282,7 @@ export default function VideosPage() {
                   value={formData.categoryId}
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
+                  required
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (

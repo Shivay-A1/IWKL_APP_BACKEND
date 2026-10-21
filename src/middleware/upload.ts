@@ -123,6 +123,8 @@ export const uploadVideoMemory = multer({
   limits: {
     fileSize: 1024 * 1024 * 1024, // 1GB limit for video uploads
     fieldSize: 1024 * 1024 * 1024, // 1GB for field size
+    fields: 10, // Max 10 fields
+    files: 2, // Max 2 files (video + thumbnail)
   },
 });
 

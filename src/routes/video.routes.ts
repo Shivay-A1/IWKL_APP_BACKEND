@@ -13,13 +13,9 @@ router.get('/:id', videoController.getVideoById);
 
 // All routes - authentication removed for now
 // POST - Handle both YouTube URL and file upload (with 1GB limit)
-router.post('/', apiLimiter, uploadMultipleVideoMemory('files', 2), [
-  body('title').trim().notEmpty().withMessage('Title is required'),
-], validate, videoController.createVideo);
+router.post('/', apiLimiter, uploadMultipleVideoMemory('files', 2), videoController.createVideo);
 
-router.put('/:id', uploadMultipleVideoMemory('files', 2), [
-  body('title').optional().trim().notEmpty(),
-], validate, videoController.updateVideo);
+router.put('/:id', uploadMultipleVideoMemory('files', 2), videoController.updateVideo);
 
 router.patch('/:id', videoController.updateVideo);
 

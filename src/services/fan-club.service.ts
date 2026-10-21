@@ -1,3 +1,18 @@
+// ============================================================================
+// ⚠️  FAN CLUB FUNCTIONALITY LOCKED - DO NOT MODIFY WITHOUT APPROVAL ⚠️
+// ============================================================================
+// This file contains the fan club service functionality.
+// Any changes to this file must be approved by the project owner.
+//
+// BEFORE MAKING CHANGES:
+// 1. Get explicit approval from project owner
+// 2. Document changes in project documentation
+// 3. Test thoroughly in development environment
+// 4. Update lock date to reflect approval
+//
+// Lock date: 2026-10-21
+// ============================================================================
+
 import { prisma } from '../config';
 import { AppError } from '../middleware/error';
 

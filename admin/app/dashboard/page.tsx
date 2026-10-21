@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Users, Calendar, Video, Newspaper, Radio, Bell, Trophy, Send, Image } from 'lucide-react';
+import { Users, Calendar, Video, Newspaper, Radio, Bell, Trophy, Send, Image, Heart } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -203,6 +203,13 @@ export default function DashboardPage() {
               icon={<Bell className="w-6 h-6" />}
               path="/dashboard/notifications"
               color="bg-yellow-600"
+            />
+            <ManagementModule
+              title="Fan Club"
+              description="Manage fan club registrations"
+              icon={<Heart className="w-6 h-6" />}
+              path="/dashboard/fan-club"
+              color="bg-red-600"
             />
           </div>
         </div>

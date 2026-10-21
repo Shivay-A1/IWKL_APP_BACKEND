@@ -176,101 +176,208 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildGalleryItem(GalleryItem item, int index) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.05),
-            Colors.white.withOpacity(0.02),
-          ],
-        ),
-        border: Border.all(
-          color: const Color(0xFF9333EA).withOpacity(0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: CachedNetworkImage(
-                imageUrl: item.mediaUrl.startsWith('http') 
-                    ? item.mediaUrl 
-                    : 'https://iwklappbackend-production.up.railway.app${item.mediaUrl}',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                placeholder: (context, url) => Container(
-                  color: const Color(0xFF2D1B4E),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF9333EA),
-                      strokeWidth: 2,
-                    ),
-                  ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: const Color(0xFF2D1B4E),
-                  child: const Center(
-                    child: Icon(Icons.image, size: 40, color: Colors.white30),
-                  ),
-                ),
-                memCacheWidth: 400,
-                memCacheHeight: 400,
-              ),
-            ),
+    return GestureDetector(
+      onTap: () => _showDetailDialog(item),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withOpacity(0.05),
+              Colors.white.withOpacity(0.02),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (item.category != null && item.category!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF9333EA).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      item.category!,
-                      style: const TextStyle(
+          border: Border.all(
+            color: const Color(0xFF9333EA).withOpacity(0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: CachedNetworkImage(
+                  imageUrl: item.mediaUrl.startsWith('http')
+                      ? item.mediaUrl
+                      : 'https://iwklappbackend-production.up.railway.app${item.mediaUrl}',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  placeholder: (context, url) => Container(
+                    color: const Color(0xFF2D1B4E),
+                    child: const Center(
+                      child: CircularProgressIndicator(
                         color: Color(0xFF9333EA),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        strokeWidth: 2,
                       ),
                     ),
                   ),
-                ],
-                if (item.description != null && item.description!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFF2D1B4E),
+                    child: const Center(
+                      child: Icon(Icons.image, size: 40, color: Colors.white30),
+                    ),
+                  ),
+                  memCacheWidth: 400,
+                  memCacheHeight: 400,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    item.description!,
+                    item.title,
                     style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (item.category != null && item.category!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF9333EA).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item.category!,
+                        style: const TextStyle(
+                          color: Color(0xFF9333EA),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (item.description != null && item.description!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description!,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 300.ms, delay: (index * 100).ms).scale(begin: const Offset(0.9, 0.9)),
+    );
+  }
+
+  void _showDetailDialog(GalleryItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF13051E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: CachedNetworkImage(
+                  imageUrl: item.mediaUrl.startsWith('http')
+                      ? item.mediaUrl
+                      : 'https://iwklappbackend-production.up.railway.app${item.mediaUrl}',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  placeholder: (context, url) => Container(
+                    color: const Color(0xFF2D1B4E),
+                    height: 300,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF9333EA),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFF2D1B4E),
+                    height: 300,
+                    child: const Center(
+                      child: Icon(Icons.image, size: 60, color: Colors.white30),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    if (item.category != null && item.category!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF9333EA).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.category!,
+                          style: const TextStyle(
+                            color: Color(0xFF9333EA),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (item.description != null && item.description!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        item.description!,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFF9333EA),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ).animate().fadeIn(duration: 300.ms, delay: (index * 100).ms).scale(begin: const Offset(0.9, 0.9));
+    );
   }
 }

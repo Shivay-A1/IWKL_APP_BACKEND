@@ -11,7 +11,6 @@ RUN npm install
 COPY prisma ./prisma
 COPY src ./src
 COPY tsconfig.json ./
-COPY database_setup.sql ./
 
 # Generate Prisma client for production
 RUN npx prisma generate

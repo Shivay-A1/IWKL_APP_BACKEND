@@ -12,21 +12,32 @@ interface Video {
   videoUrl: string;
   thumbnailUrl: string;
   category?: string;
+  categoryId?: string;
   isFeatured: boolean;
   isActive: boolean;
   order: number;
 }
 
+interface VideoCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 export default function VideosPage() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
+  const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     videoUrl: '',
     thumbnailUrl: '',
-    category: '',
+    categoryId: '',
     isFeatured: false,
     isActive: true,
     order: 0,
@@ -34,6 +45,7 @@ export default function VideosPage() {
 
   useEffect(() => {
     fetchVideos();
+    fetchCategories();
   }, []);
 
   const fetchVideos = async () => {
@@ -52,6 +64,19 @@ export default function VideosPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/video-categories');
+      console.log('Categories response:', response.data);
+      const categoriesData = response.data?.data || response.data || [];
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      toast.error('Failed to load categories');
+      setCategories([]);
+    }
+  };
+
   const handleCreateVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -62,7 +87,7 @@ export default function VideosPage() {
         title: '',
         videoUrl: '',
         thumbnailUrl: '',
-        category: '',
+        categoryId: '',
         isFeatured: false,
         isActive: true,
         order: 0,
@@ -253,12 +278,18 @@ export default function VideosPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   className="w-full px-4 py-3 bg-background border border-gray-700 rounded-lg text-white"
-                />
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Order</label>

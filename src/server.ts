@@ -110,6 +110,40 @@ async function seedAdminUser() {
   }
 }
 
+// Seed video categories
+async function seedVideoCategories() {
+  try {
+    const { prisma } = require('./config');
+    if (!prisma) {
+      console.log('⚠️ Prisma not available for seeding');
+      return;
+    }
+    
+    console.log('🗄️ Seeding video categories...');
+    
+    const categories = [
+      { name: 'Featured', slug: 'featured', description: 'Featured videos', displayOrder: 0 },
+      { name: 'Videos', slug: 'videos', description: 'All videos', displayOrder: 1 },
+    ];
+    
+    for (const category of categories) {
+      try {
+        await prisma.videoCategory.upsert({
+          where: { slug: category.slug },
+          update: {},
+          create: category
+        });
+      } catch (catError: any) {
+        console.log(`⚠️ Category "${category.name}" seeding failed (may already exist):`, catError.message);
+      }
+    }
+    
+    console.log('✅ Video categories seeded successfully');
+  } catch (error) {
+    console.error('❌ Video categories seeding failed:', error);
+  }
+}
+
 // Startup logging
 console.log('🚀 Starting IWKL Backend Server...');
 console.log('📡 Environment:', process.env.NODE_ENV || 'development');
@@ -1279,14 +1313,16 @@ console.log('🚀 Starting IWKL Backend API Server...');
 // Run Prisma migrations before starting server
 runPrismaMigrations().then(() => {
   seedAdminUser().then(() => {
-    httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log('='.repeat(50));
-      console.log('✅ IWKL Backend API successfully started!');
-      console.log(`📝 Port: ${PORT}`);
-      console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
-      console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
-      console.log(`🔌 Socket.IO: ✅ Enabled`);
-      console.log('='.repeat(50));
+    seedVideoCategories().then(() => {
+      httpServer.listen(PORT, '0.0.0.0', () => {
+        console.log('='.repeat(50));
+        console.log('✅ IWKL Backend API successfully started!');
+        console.log(`📝 Port: ${PORT}`);
+        console.log(`🏥 Health Check: http://0.0.0.0:${PORT}/`);
+        console.log(`🗄️ Database: ${databaseUrl ? '✅ Configured' : '❌ Not configured'}`);
+        console.log(`🔌 Socket.IO: ✅ Enabled`);
+        console.log('='.repeat(50));
+      });
     });
   });
 }).catch((err) => {

@@ -32,6 +32,8 @@ import pushNotificationRoutes from './push-notification.routes';
 import appSettingsRoutes from './app-settings.routes';
 import mobileBannerRoutes from './mobile-banner.routes';
 import storyRoutes from './story.routes';
+import storyHighlightRoutes from './story-highlight.routes';
+import storyHighlightUploadRoutes from './story-highlight-upload.routes';
 import appManagementRoutes from './app-management.routes';
 import otpRoutes from './otp.routes';
 import settingsRoutes from './settings.routes';
@@ -114,6 +116,7 @@ router.get('/', (req, res) => {
       appSettings: '/api/app-settings',
       mobileBanners: '/api/mobile-banners',
       stories: '/api/stories',
+      highlights: '/api/highlights',
       appManagement: '/api/app-management',
       otp: '/api/otp',
       settings: '/api/settings',
@@ -156,6 +159,8 @@ router.use('/push-notifications', pushNotificationRoutes);
 router.use('/app-settings', appSettingsRoutes);
 router.use('/mobile-banners', mobileBannerRoutes);
 router.use('/stories', storyRoutes);
+router.use('/highlights', storyHighlightRoutes);
+router.use('/highlights-upload', storyHighlightUploadRoutes);
 router.use('/app-management', appManagementRoutes);
 router.use('/otp', otpRoutes);
 router.use('/settings', settingsRoutes);

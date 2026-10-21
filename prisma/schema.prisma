@@ -1236,6 +1236,40 @@ model Story {
 }
 
 // ============================================
+// STORY HIGHLIGHTS MANAGEMENT (Instagram-style)
+// ============================================
+
+model StoryHighlight {
+  id          String   @id @default(cuid())
+  name        String   @unique  // Highlight name (e.g., "Match Highlights", "Player Moments")
+  coverImage  String?  // Cover image for the highlight circle
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  media       StoryMedia[]
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model StoryMedia {
+  id          String   @id @default(cuid())
+  highlightId String
+  highlight   StoryHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  type        String   // "image" or "video"
+  url         String
+  caption     String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([highlightId])
+  @@index([order])
+}
+
+// ============================================
 // APP STORIES MANAGEMENT
 // ============================================
 

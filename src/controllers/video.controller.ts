@@ -4,7 +4,9 @@ import * as videoService from '../services/video.service';
 
 export const createVideo = async (req: FileRequest, res: Response, next: any) => {
   try {
-    const video = await videoService.createVideo(req.body, req.files);
+    // Handle both file upload and YouTube URL
+    const files = req.files || undefined;
+    const video = await videoService.createVideo(req.body, files);
     res.status(201).json(video);
   } catch (error) {
     next(error);
